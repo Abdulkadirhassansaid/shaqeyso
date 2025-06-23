@@ -40,12 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
-    const adminExists = users.some(u => u.email === 'admin@shaqohub.com');
+    const adminExists = users.some(u => u.email === 'abdikadirhassan2015@gmail.com');
     if (!adminExists) {
-      const adminUser = initialUsers.find(u => u.email === 'admin@shaqohub.com');
+      const adminUser = initialUsers.find(u => u.email === 'abdikadirhassan2015@gmail.com');
       if (adminUser) {
         setUsers(currentUsers => {
-          if (currentUsers.some(u => u.email === 'admin@shaqohub.com')) {
+          if (currentUsers.some(u => u.email === 'abdikadirhassan2015@gmail.com')) {
             return currentUsers;
           }
           return [...currentUsers, adminUser];
@@ -155,9 +155,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
   
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, ...userData } : u
-    ));
+    let updatedUser: User | undefined;
+    setUsers(currentUsers => currentUsers.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, ...userData };
+            return updatedUser;
+        }
+        return u;
+    }));
+
+    if (updatedUser && updatedUser.id === user?.id) {
+        setUser(updatedUser);
+    }
 
     if (profileData) {
         const targetUser = users.find(u => u.id === userId);
@@ -172,24 +181,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
     const newMethod = { ...method, id: `pm-${Date.now()}` };
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] } : u
-    ));
+    let updatedUser: User | undefined;
+    setUsers(currentUsers => currentUsers.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
+            return updatedUser;
+        }
+        return u
+    }));
+     if (updatedUser && updatedUser.id === user?.id) {
+        setUser(updatedUser);
+    }
     return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) } : u
-    ));
+     let updatedUser: User | undefined;
+    setUsers(currentUsers => currentUsers.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) };
+            return updatedUser;
+        }
+        return u;
+    }));
+     if (updatedUser && updatedUser.id === user?.id) {
+        setUser(updatedUser);
+    }
     return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
     const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, transactions: [...(u.transactions || []), newTransaction] } : u
-    ));
+    let updatedUser: User | undefined;
+    setUsers(currentUsers => currentUsers.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, transactions: [...(u.transactions || []), newTransaction] };
+            return updatedUser;
+        }
+        return u;
+    }));
+     if (updatedUser && updatedUser.id === user?.id) {
+        setUser(updatedUser);
+    }
     return true;
   };
   

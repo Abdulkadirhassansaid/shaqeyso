@@ -54,10 +54,10 @@ export const mockUsers: User[] = [
    {
     id: 'admin-1',
     name: 'Admin User',
-    email: 'admin@shaqohub.com',
+    email: 'abdikadirhassan2015@gmail.com',
     avatarUrl: 'https://placehold.co/100x100/1a1a1a/ffffff.png?text=A',
     role: 'admin',
-    password: 'adminpassword',
+    password: 'Mahir4422',
     transactions: [
       { id: 'txn-a1', date: '2024-07-20T10:00:00Z', description: 'Platform Fee for "E-commerce Website"', amount: 125, status: 'Completed' },
       { id: 'txn-a2', date: '2024-07-15T11:30:00Z', description: 'Platform Fee for "Mobile App Design"', amount: 90, status: 'Completed' },
