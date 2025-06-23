@@ -27,10 +27,16 @@ import { LoadingDots } from './loading-dots';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
+import type { Job } from '@/lib/types';
 
-export function JobPostForm() {
+interface JobPostFormProps {
+  jobToEdit?: Job | null;
+  onFinished?: () => void;
+}
+
+export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
   const { user } = useAuth();
-  const { addJob } = useJobs();
+  const { addJob, updateJob } = useJobs();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -43,6 +49,18 @@ export function JobPostForm() {
   const [deadline, setDeadline] = React.useState('');
   const [description, setDescription] = React.useState('');
   const promptRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const isEditMode = !!jobToEdit;
+
+  React.useEffect(() => {
+    if (isEditMode && jobToEdit) {
+      setTitle(jobToEdit.title);
+      setCategory(jobToEdit.category);
+      setBudget(String(jobToEdit.budget));
+      setDeadline(jobToEdit.deadline);
+      setDescription(jobToEdit.description);
+    }
+  }, [jobToEdit, isEditMode]);
 
 
   const handleGenerateDescription = async () => {
@@ -85,31 +103,42 @@ export function JobPostForm() {
     }
 
     setIsSubmitting(true);
-    const success = await addJob({
+
+    const jobData = {
         title,
         category,
         budget: Number(budget),
         deadline,
         description,
-        clientId: user.id
-    });
+    };
+
+    let success = false;
+    if(isEditMode && jobToEdit) {
+        success = await updateJob(jobToEdit.id, jobData);
+    } else {
+        success = await addJob({ ...jobData, clientId: user.id });
+    }
 
     if(success) {
         toast({
-            title: t.jobPostedTitle,
-            description: t.jobPostedDesc,
+            title: isEditMode ? t.jobUpdated : t.jobPostedTitle,
+            description: isEditMode ? t.jobUpdatedDesc : t.jobPostedDesc,
         });
-        // Reset form
-        setTitle('');
-        setCategory('');
-        setBudget('');
-        setDeadline('');
-        setDescription('');
-        if(promptRef.current) promptRef.current.value = '';
+        if (onFinished) {
+            onFinished();
+        } else {
+            // Reset form in create mode
+            setTitle('');
+            setCategory('');
+            setBudget('');
+            setDeadline('');
+            setDescription('');
+            if(promptRef.current) promptRef.current.value = '';
+        }
     } else {
         toast({
-            title: t.jobPostFailedTitle,
-            description: t.jobPostFailedDesc,
+            title: isEditMode ? t.updateFailed : t.jobPostFailedTitle,
+            description: isEditMode ? t.updateFailedDesc : t.jobPostFailedDesc,
             variant: "destructive",
         });
     }
@@ -120,9 +149,9 @@ export function JobPostForm() {
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
-            <CardTitle>{t.postNewJobTitle}</CardTitle>
+            <CardTitle>{isEditMode ? t.editJobTitle : t.postNewJobTitle}</CardTitle>
             <CardDescription>
-            {t.postNewJobDesc}
+            {isEditMode ? t.editJobDesc : t.postNewJobDesc}
             </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -138,10 +167,10 @@ export function JobPostForm() {
                             <SelectValue placeholder={t.selectCategory} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="web-dev">{t.webDev}</SelectItem>
-                            <SelectItem value="mobile-dev">{t.mobileDev}</SelectItem>
-                            <SelectItem value="design">{t.design}</SelectItem>
-                            <SelectItem value="writing">{t.writing}</SelectItem>
+                            <SelectItem value="Web Development">{t.webDev}</SelectItem>
+                            <SelectItem value="Mobile Development">{t.mobileDev}</SelectItem>
+                            <SelectItem value="Design">{t.design}</SelectItem>
+                            <SelectItem value="Writing">{t.writing}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -186,8 +215,9 @@ export function JobPostForm() {
                 )}
             </div>
         </CardContent>
-        <CardFooter>
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? t.posting : t.postJob}</Button>
+        <CardFooter className="flex gap-2">
+            <Button type="submit" disabled={isSubmitting || isGenerating}>{isSubmitting ? t.saving : (isEditMode ? t.saveChanges : t.postJob)}</Button>
+            {isEditMode && <Button type="button" variant="ghost" onClick={onFinished} disabled={isSubmitting || isGenerating}>{t.cancel}</Button>}
         </CardFooter>
       </form>
     </Card>

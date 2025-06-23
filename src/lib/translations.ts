@@ -193,6 +193,11 @@ export const translations = {
         jobPostFailedDesc: 'There was an error posting your job.',
         missingFieldsTitle: 'Missing Fields',
         missingFieldsDesc: 'Please fill out all fields before submitting.',
+        editJob: 'Edit Job',
+        jobUpdated: 'Job Updated',
+        jobUpdatedDesc: 'Your job posting has been successfully updated.',
+        editJobTitle: 'Edit Job Posting',
+        editJobDesc: 'Make changes to your job posting below.',
 
         // Freelancer Dashboard
         findWork: 'Find Work',
@@ -431,6 +436,11 @@ export const translations = {
         jobPostFailedDesc: 'Cilad ayaa dhacday markii shaqada la gelinayay.',
         missingFieldsTitle: 'Goobo Banan',
         missingFieldsDesc: 'Fadlan buuxi dhammaan goobaha ka hor intaadan gudbin.',
+        editJob: 'Wax ka Beddel Shaqada',
+        jobUpdated: 'Shaqada Waa La Cusboonaysiiyay',
+        jobUpdatedDesc: 'Qoristaada shaqo si guul leh ayaa loo cusboonaysiiyay.',
+        editJobTitle: 'Wax ka Beddel Qorista Shaqada',
+        editJobDesc: 'Hoos ka samee isbeddellada qoristaada shaqo.',
 
         // Freelancer Dashboard
         findWork: 'Shaqo Raadi',

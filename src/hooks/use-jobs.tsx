@@ -10,6 +10,7 @@ interface JobsContextType {
   addJob: (jobData: Omit<Job, 'id' | 'proposals' | 'status'>) => Promise<boolean>;
   deleteJob: (jobId: string) => Promise<boolean>;
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
+  updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -39,7 +40,14 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { jobs, addJob, deleteJob, updateJobStatus };
+  const updateJob = async (jobId: string, jobData: Partial<Omit<Job, 'id'>>): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.map(job => 
+        job.id === jobId ? { ...job, ...jobData } : job
+    ));
+    return true;
+  };
+
+  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob };
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

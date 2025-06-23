@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -14,7 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -35,6 +34,7 @@ interface ClientDashboardProps {
 export function ClientDashboard({ user }: ClientDashboardProps) {
   const { jobs, deleteJob, updateJobStatus } = useJobs();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
+  const [editingJob, setEditingJob] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
@@ -97,6 +97,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
           description: t.jobStatusUpdatedDesc,
       });
   };
+
+  if (editingJob) {
+      return (
+          <JobPostForm 
+              jobToEdit={editingJob} 
+              onFinished={() => setEditingJob(null)} 
+          />
+      );
+  }
   
   if (selectedJob) {
     return (
@@ -231,6 +240,10 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setEditingJob(job)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>{t.editJob}</span>
+                          </DropdownMenuItem>
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>{t.changeStatus}</DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
@@ -273,7 +286,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
         </Card>
       </TabsContent>
       <TabsContent value="post-job" className="mt-6">
-        <JobPostForm />
+        <JobPostForm onFinished={() => { /* Could switch tabs here if desired */ }} />
       </TabsContent>
     </Tabs>
   );
