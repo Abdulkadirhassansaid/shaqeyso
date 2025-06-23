@@ -67,6 +67,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
     if (!jobToHire) return;
 
+    if ((user.balance || 0) < jobToHire.budget) {
+        toast({
+            title: t.insufficientFundsTitle,
+            description: t.insufficientFundsDesc,
+            variant: "destructive",
+        });
+        return;
+    }
+
     // Move funds to escrow
     await addTransaction(user.id, {
         description: `${t.escrowFunding} "${jobToHire.title}"`,

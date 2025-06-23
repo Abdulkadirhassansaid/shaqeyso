@@ -9,6 +9,7 @@ export const mockUsers: User[] = [
     avatarUrl: 'https://placehold.co/100x100/E8F5FF/000000.png?text=FI',
     role: 'client',
     password: 'password123',
+    balance: 5000,
     paymentMethods: [
       { id: 'pm-1', type: 'Visa', last4: '4242', expiryMonth: 12, expiryYear: 2026, isPrimary: true },
       { id: 'pm-c1', type: 'EVC Plus', phoneNumber: '611234567', isPrimary: false },

@@ -93,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
       paymentMethods: [],
       transactions: [],
+      balance: role === 'client' ? 5000 : 0, // Give clients a starting balance
     };
     setUsers(prev => [...prev, newUser]); 
     
@@ -196,7 +197,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (u.id === userId) {
                 const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
                 const transactions = [...(u.transactions || []), newTransaction];
-                const updatedUser = { ...u, transactions };
+                let updatedUser = { ...u, transactions };
+
+                if (u.role === 'client') {
+                    const newBalance = (u.balance || 0) + newTransaction.amount;
+                    updatedUser = { ...updatedUser, balance: newBalance };
+                }
+
                 if (user?.id === userId) setUser(updatedUser);
                 return updatedUser;
             }
@@ -224,5 +231,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    

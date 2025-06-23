@@ -6,6 +6,7 @@ export type User = {
   avatarUrl: string;
   role: 'client' | 'freelancer';
   password?: string;
+  balance?: number;
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
 };

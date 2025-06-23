@@ -147,6 +147,10 @@ export const translations = {
         eDahab: 'E-Dahab',
         zaad: 'Zaad',
         creditCard: 'Credit/Debit Card',
+        yourBalance: 'Your Balance',
+        topUpBalance: 'Top Up Balance',
+        topUpDesc: 'Add funds to your account to pay for projects.',
+
 
         // Client Dashboard
         myJobPostings: 'My Job Postings',
@@ -192,7 +196,8 @@ export const translations = {
         escrow: 'Escrow',
         amountToBeReleased: 'Amount to be released',
         finalPaymentWarning: 'By clicking Approve & Pay, you confirm that you are satisfied with the work and are authorizing the release of funds. This action cannot be undone.',
-
+        insufficientFundsTitle: 'Insufficient Funds',
+        insufficientFundsDesc: 'You do not have enough funds in your account to hire for this job. Please top up your balance.',
 
         // Job Post Form
         postNewJobTitle: 'Post a New Job',
@@ -461,6 +466,9 @@ export const translations = {
         eDahab: 'E-Dahab',
         zaad: 'Zaad',
         creditCard: 'Kaarka Deynta/Debit-ka',
+        yourBalance: 'Hadhaagaaga',
+        topUpBalance: 'Ku shubo Hadhaaga',
+        topUpDesc: 'Akoonkaaga ku dar lacag si aad ugu bixiso mashaariicda.',
 
 
         // Client Dashboard
@@ -507,6 +515,8 @@ export const translations = {
         escrow: 'Escrow',
         amountToBeReleased: 'Lacagta la sii daynayo',
         finalPaymentWarning: 'Markaad gujiso Ansixi & Bixi, waxaad xaqiijinaysaa inaad ku qanacsan tahay shaqada oo aad oggolaanayso sii daynta lacagta. Tallaabadan lama laaban karo.',
+        insufficientFundsTitle: 'Dhaqaale Kugu Filan Majiro',
+        insufficientFundsDesc: 'Akoonkaaga kuma jiraan dhaqaale kugu filan oo aad ku shaqaaleysiin karto shaqadan. Fadlan ku shubo hadhaagaaga.',
 
 
         // Job Post Form

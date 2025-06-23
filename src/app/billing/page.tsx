@@ -53,7 +53,7 @@ export default function BillingPage() {
     );
   }
   
-  const currentBalance = user.role === 'freelancer' 
+  const freelancerBalance = user.role === 'freelancer' 
     ? (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0)
     : 0;
 
@@ -106,8 +106,8 @@ export default function BillingPage() {
   };
   
   const handleWithdraw = async () => {
-    if (currentBalance <= 0) return;
-    const withdrawalAmount = currentBalance;
+    if (freelancerBalance <= 0) return;
+    const withdrawalAmount = freelancerBalance;
     await addTransaction(user.id, {
         description: t.withdrawalToBank,
         amount: -withdrawalAmount,
@@ -155,11 +155,26 @@ export default function BillingPage() {
                 <CardTitle>{t.currentBalance}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold">${currentBalance.toFixed(2)}</p>
+                <p className="text-4xl font-bold">${freelancerBalance.toFixed(2)}</p>
                 <p className="text-sm text-muted-foreground mt-1">{t.availableForWithdrawal}</p>
               </CardContent>
               <CardFooter>
-                  <Button onClick={handleWithdraw} disabled={currentBalance <= 0}>{t.withdrawFunds}</Button>
+                  <Button onClick={handleWithdraw} disabled={freelancerBalance <= 0}>{t.withdrawFunds}</Button>
+              </CardFooter>
+            </Card>
+          )}
+
+          {user.role === 'client' && (
+             <Card>
+              <CardHeader>
+                <CardTitle>{t.yourBalance}</CardTitle>
+                <CardDescription>{t.topUpDesc}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-bold">${user.balance?.toFixed(2) || '0.00'}</p>
+              </CardContent>
+              <CardFooter>
+                  <Button disabled>{t.topUpBalance}</Button>
               </CardFooter>
             </Card>
           )}
