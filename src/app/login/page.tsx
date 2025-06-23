@@ -36,7 +36,12 @@ export default function LoginPage() {
     const result = await login(email, password);
     if (result.success) {
       const redirectUrl = searchParams.get('redirect');
-      router.push(redirectUrl || '/');
+      // Prevent redirecting to admin pages from the general login.
+      if (redirectUrl && redirectUrl.toLowerCase().startsWith('/admin')) {
+          router.push('/');
+      } else {
+          router.push(redirectUrl || '/');
+      }
     } else {
       if (result.message === 'blocked') {
         toast({
