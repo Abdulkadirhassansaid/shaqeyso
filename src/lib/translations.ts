@@ -1,3 +1,4 @@
+
 export const translations = {
     en: {
         // General
@@ -14,6 +15,12 @@ export const translations = {
         proposals: 'Proposals',
         skills: 'Skills',
         cancel: 'Cancel',
+        remove: 'Remove',
+        date: 'Date',
+        amount: 'Amount',
+        status: 'Status',
+        completed: 'Completed',
+        pending: 'Pending',
 
         // Header
         shaqoFinder: 'Shaqo Finder',
@@ -78,6 +85,19 @@ export const translations = {
         deleteAccountDesc: 'Permanently delete your account and all associated data.',
         deleteAccountConfirmTitle: 'Are you absolutely sure?',
         deleteAccountConfirmDesc: 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+
+        // Billing Page
+        billingTitle: 'Billing',
+        billingDescription: 'Manage your payment methods and view your transaction history.',
+        paymentMethods: 'Payment Methods',
+        paymentMethodsDesc: 'Add and manage your credit or debit cards.',
+        addPaymentMethod: 'Add Method',
+        transactionHistory: 'Transaction History',
+        transactionHistoryDesc: "A record of all your payments and withdrawals.",
+        currentBalance: 'Current Balance',
+        availableForWithdrawal: 'Available for withdrawal.',
+        withdrawFunds: 'Withdraw Funds',
+        expires: 'Expires',
 
         // Client Dashboard
         myJobPostings: 'My Job Postings',
@@ -182,6 +202,13 @@ export const translations = {
         proposals: 'Codsiyada',
         skills: 'Xirfadaha',
         cancel: 'Iska daa',
+        remove: 'Ka saar',
+        date: 'Taariikhda',
+        amount: 'Lacagta',
+        status: 'Xaaladda',
+        completed: 'Dhamaystiran',
+        pending: 'Sugaya',
+
 
         // Header
         shaqoFinder: 'Shaqo Helaha',
@@ -247,6 +274,18 @@ export const translations = {
         deleteAccountConfirmTitle: 'Ma si buuxda ayaad u hubtaa?',
         deleteAccountConfirmDesc: 'Tallaabadan lama laaban karo. Tani waxay si joogto ah u tirtiri doontaa akoonkaaga oo ka saari doontaa xogtaada seerfaradayada.',
 
+        // Billing Page
+        billingTitle: 'Biilasha',
+        billingDescription: 'Maamul hababkaaga lacag bixinta oo arag taariikhdaada macaamil ganacsi.',
+        paymentMethods: 'Hababka Lacag Bixinta',
+        paymentMethodsDesc: 'Ku dar oo maamul kaararkaaga deynta ama debit-ka.',
+        addPaymentMethod: 'Kudar Hab',
+        transactionHistory: 'Taariikhda Macaamilka',
+        transactionHistoryDesc: "Diiwaanka dhammaan lacag bixintaada iyo kala bixitaankaaga.",
+        currentBalance: 'Hadhaaga Hadda',
+        availableForWithdrawal: 'Diyaar u ah in lala baxo.',
+        withdrawFunds: 'Kala Bax Lacagta',
+        expires: 'Dhacaya',
 
         // Client Dashboard
         myJobPostings: 'Shaqooyinkayga La Soo Geliyey',

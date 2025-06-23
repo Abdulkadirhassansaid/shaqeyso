@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -61,7 +62,9 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href="/profile">{t.profile}</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>{t.billing}</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/billing">{t.billing}</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings">{t.settings}</Link>
           </DropdownMenuItem>
