@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface FreelancerProfilePageProps {
   user: User;
@@ -34,6 +35,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
   const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   React.useEffect(() => {
     const profile = freelancerProfiles.find(p => p.userId === user.id);
@@ -55,10 +57,17 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           setSkills(prevSkills => [...prevSkills, trimmedSkill]);
       }
       setSkillInput('');
+      setPopoverOpen(false);
   }
 
   const handleSkillInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSkillInput(e.target.value);
+    const value = e.target.value;
+    setSkillInput(value);
+    if (value.trim().length > 0 && !popoverOpen) {
+        setPopoverOpen(true);
+    } else if (value.trim().length === 0 && popoverOpen) {
+        setPopoverOpen(false);
+    }
   }
 
   const handleSkillInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -126,9 +135,10 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
             <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
             <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} disabled={isSaving} />
           </div>
-           <div className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="skill-input">Your Skills</Label>
+           <div className="space-y-2">
+            <Label htmlFor="skill-input">Your Skills</Label>
+             <Popover open={popoverOpen && availableSkills.length > 0} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild>
                 <div 
                     className="flex flex-wrap items-center w-full gap-2 p-1.5 border rounded-md bg-background focus-within:ring-2 focus-within:ring-ring"
                     onClick={() => document.getElementById('skill-input')?.focus()}
@@ -151,27 +161,30 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                         className="flex-grow h-8 p-1 bg-transparent border-0 shadow-none outline-none focus:ring-0 focus-visible:ring-0"
                     />
                 </div>
-            </div>
-            
-            {availableSkills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-[--radix-popover-trigger-width] p-1"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <div className="flex flex-col gap-1">
                     {availableSkills.map(skill => (
                         <Button
                             key={skill}
                             type="button"
-                            variant={"outline"}
+                            variant="ghost"
                             size="sm"
+                            className="justify-start"
                             onClick={() => handleAddSkill(skill)}
                             disabled={isSaving}
                         >
-                            + {skill}
+                            {skill}
                         </Button>
                     ))}
                 </div>
-            ) : null}
-
+              </PopoverContent>
+            </Popover>
             {skillInput && availableSkills.length === 0 && !commonSkills.some(s => s.toLowerCase() === skillInput.toLowerCase()) && (
-                <p className="text-sm text-muted-foreground italic">No matching skills. Press Enter to add "{skillInput}".</p>
+                <p className="text-sm text-muted-foreground italic">Press Enter to add "{skillInput}".</p>
             )}
           </div>
           <Button type="submit" disabled={isSaving}>
