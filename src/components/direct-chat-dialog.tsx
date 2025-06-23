@@ -72,7 +72,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
         </DialogHeader>
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-6">
             {conversationMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>{t.noMessagesYet}</p>
@@ -90,7 +90,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
                     <div
                         key={message.id}
                         className={cn(
-                        'flex items-end gap-2',
+                        'flex items-start gap-3',
                         isSender ? 'justify-end' : 'justify-start'
                         )}
                     >
@@ -100,19 +100,25 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         )}
-                        <div
-                        className={cn(
-                            'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
-                            messageBgClass
-                        )}
-                        >
-                            <p className="leading-relaxed">{message.text}</p>
-                            <p className={cn("text-xs mt-1 text-right", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-                                {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
-                            </p>
+                        <div className={cn(
+                          "flex flex-col gap-1",
+                          isSender ? 'items-end' : 'items-start'
+                        )}>
+                            <p className="text-sm font-semibold">{senderDetails?.name}</p>
+                            <div
+                              className={cn(
+                                  'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
+                                  messageBgClass
+                              )}
+                            >
+                                <p className="leading-relaxed">{message.text}</p>
+                                <p className={cn("text-xs mt-1 text-right", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                                    {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
+                                </p>
+                            </div>
                         </div>
                          {isSender && (
-                            <Avatar className="h-8 w-8">
+                            <Avatar className="h-8 w-8 self-start">
                                 <AvatarImage src={senderDetails?.avatarUrl} />
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>

@@ -103,7 +103,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
         </DialogHeader>
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-6">
             {jobMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>{t.noMessagesYet}</p>
@@ -120,13 +120,11 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         ? 'bg-secondary'
                         : 'bg-muted';
                     
-                    const showNameHeader = !isSender || isAdminMessage;
-                    
                     return (
                     <div
                         key={message.id}
                         className={cn(
-                        'flex items-end gap-2',
+                        'flex items-start gap-3',
                         isSender ? 'justify-end' : 'justify-start'
                         )}
                     >
@@ -136,45 +134,48 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         )}
-                        <div
-                        className={cn(
-                            'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
-                            messageBgClass
-                        )}
-                        >
-                            {showNameHeader && senderDetails && (
-                                <div className="flex items-center gap-2 mb-1">
-                                    <p className="font-bold text-sm">{senderDetails.name}</p>
-                                    {isAdminMessage && (
-                                        <Badge variant="outline" className="h-5 text-xs">Admin</Badge>
-                                    )}
-                                </div>
-                            )}
-                            {message.text && <p className="leading-relaxed">{message.text}</p>}
-                            {message.files && message.files.length > 0 && (
-                                <div className={cn("space-y-2", message.text && "mt-2")}>
-                                    {message.files.map((file, index) => (
-                                        <a
-                                            key={index}
-                                            href={file.url}
-                                            download={file.name}
-                                            className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-background/50 hover:bg-background")}
-                                        >
-                                            <FileText className="h-6 w-6 shrink-0" />
-                                            <div className="overflow-hidden">
-                                                <p className="font-medium truncate">{file.name}</p>
-                                                <p className={cn("text-xs", isSender ? "text-primary-foreground/80" : "text-muted-foreground")}>{(file.size / 1024).toFixed(2)} KB</p>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
-                            <p className={cn("text-xs mt-1 text-right", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-                                {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
-                            </p>
+                        <div className={cn(
+                            "flex flex-col gap-1",
+                            isSender ? 'items-end' : 'items-start'
+                        )}>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold">{senderDetails?.name}</p>
+                                {isAdminMessage && (
+                                    <Badge variant="outline" className="h-5 text-xs">Admin</Badge>
+                                )}
+                            </div>
+                            <div
+                                className={cn(
+                                    'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
+                                    messageBgClass
+                                )}
+                            >
+                                {message.text && <p className="leading-relaxed">{message.text}</p>}
+                                {message.files && message.files.length > 0 && (
+                                    <div className={cn("space-y-2", message.text && "mt-2")}>
+                                        {message.files.map((file, index) => (
+                                            <a
+                                                key={index}
+                                                href={file.url}
+                                                download={file.name}
+                                                className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-background/50 hover:bg-background")}
+                                            >
+                                                <FileText className="h-6 w-6 shrink-0" />
+                                                <div className="overflow-hidden">
+                                                    <p className="font-medium truncate">{file.name}</p>
+                                                    <p className={cn("text-xs", isSender ? "text-primary-foreground/80" : "text-muted-foreground")}>{(file.size / 1024).toFixed(2)} KB</p>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
+                                <p className={cn("text-xs mt-1 text-right", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                                    {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
+                                </p>
+                            </div>
                         </div>
                          {isSender && (
-                            <Avatar className="h-8 w-8">
+                            <Avatar className="h-8 w-8 self-start">
                                 <AvatarImage src={senderDetails?.avatarUrl} />
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
