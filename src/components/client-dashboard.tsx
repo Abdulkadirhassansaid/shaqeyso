@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -201,67 +202,70 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {clientJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{job.title}</CardTitle>
-                      <CardDescription>
-                        {t.budget}: ${job.budget}
-                      </CardDescription>
+            {clientJobs.map((job) => {
+              const status = job.status || 'Open';
+              return (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{job.title}</CardTitle>
+                        <CardDescription>
+                          {t.budget}: ${job.budget}
+                        </CardDescription>
+                      </div>
+                      <Badge variant={status === 'Open' ? 'default' : status === 'Closed' ? 'destructive' : 'secondary'}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                     </div>
-                     <Badge variant={job.status === 'Open' ? 'default' : job.status === 'Closed' ? 'destructive' : 'secondary'}>{t[job.status.toLowerCase() as keyof typeof t] || job.status}</Badge>
-                  </div>
-                </CardHeader>
-                <CardFooter className="flex justify-between items-center">
-                  <Button onClick={() => setSelectedJob(job)}>
-                    {t.viewDetailsAndProposals}
-                  </Button>
-                  <AlertDialog>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">{t.actions}</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>{t.changeStatus}</DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                              <DropdownMenuItem disabled={job.status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
-                              <DropdownMenuItem disabled={job.status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
-                              <DropdownMenuItem disabled={job.status === 'Closed'} onClick={() => handleUpdateStatus(job.id, 'Closed')}>{t.closed}</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                            {t.deleteJob}
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t.deleteJobConfirmDesc}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardFooter>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardFooter className="flex justify-between items-center">
+                    <Button onClick={() => setSelectedJob(job)}>
+                      {t.viewDetailsAndProposals}
+                    </Button>
+                    <AlertDialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">{t.actions}</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>{t.changeStatus}</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
+                                <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
+                                <DropdownMenuItem disabled={status === 'Closed'} onClick={() => handleUpdateStatus(job.id, 'Closed')}>{t.closed}</DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                              {t.deleteJob}
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t.deleteJobConfirmDesc}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardFooter>
+                </Card>
+              );
+            })}
             {clientJobs.length === 0 && (
               <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
             )}
