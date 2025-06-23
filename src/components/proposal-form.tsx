@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 interface ProposalFormProps {
     job: Job;
@@ -156,13 +157,16 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
             </CardHeader>
             <CardContent className="space-y-6">
                 {!isVerified && (
-                    <div className="p-4 rounded-md bg-destructive/10 text-destructive-foreground border border-destructive/20 text-sm">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-destructive"/>
-                            <p className="font-semibold">{t.verificationRequiredTitle}</p>
-                        </div>
-                        <p className="mt-1">{t.verificationRequiredFreelancerDesc} <Link href="/verify" className="underline font-bold">{t.verifyNow}</Link></p>
-                    </div>
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>{t.verificationRequiredTitle}</AlertTitle>
+                        <AlertDescription>
+                            {t.verificationRequiredFreelancerDesc}{' '}
+                            <Link href="/verify" className="font-bold underline">
+                                {t.verifyNow}
+                            </Link>
+                        </AlertDescription>
+                    </Alert>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
