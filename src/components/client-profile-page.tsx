@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import type { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ interface ClientProfilePageProps {
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const { updateUserProfile, clientProfiles } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   
   const clientProfile = clientProfiles.find(p => p.userId === user.id);
 
@@ -34,6 +36,7 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
         title: 'Profile Updated',
         description: 'Your company information has been saved.',
       });
+      router.back();
     } else {
       toast({
         title: 'Update Failed',

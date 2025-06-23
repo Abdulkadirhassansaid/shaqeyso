@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import type { User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,7 @@ const commonSkills = [
 export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const { updateUserProfile, freelancerProfiles } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   
   const freelancerProfile = freelancerProfiles.find(p => p.userId === user.id);
 
@@ -133,6 +135,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         title: 'Profile Updated',
         description: 'Your profile information has been saved.',
       });
+      router.back();
     } else {
       toast({
         title: 'Update Failed',
