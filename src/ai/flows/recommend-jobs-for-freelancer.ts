@@ -58,7 +58,7 @@ const FlowInputSchema = z.object({
 
 const recommendJobsPrompt = ai.definePrompt({
   name: 'recommendJobsPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: FlowInputSchema},
   output: {schema: RecommendJobsForFreelancerOutputSchema},
   prompt: `You are an expert career advisor for freelancers. Your task is to recommend the most suitable jobs for a freelancer based on their profile.

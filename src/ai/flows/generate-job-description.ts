@@ -32,7 +32,7 @@ export async function generateJobDescription(
 
 const prompt = ai.definePrompt({
   name: 'generateJobDescriptionPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
   prompt: `You are an expert job description writer. Given a short prompt, you will generate a detailed and appealing job description.

@@ -42,7 +42,7 @@ export async function assistProposalGeneration(
 
 const assistProposalGenerationPrompt = ai.definePrompt({
   name: 'assistProposalGenerationPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: AssistProposalGenerationInputSchema},
   output: {schema: AssistProposalGenerationOutputSchema},
   prompt: `You are an AI assistant helping freelancers write compelling proposals.

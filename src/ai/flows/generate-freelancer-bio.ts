@@ -33,7 +33,7 @@ export async function generateFreelancerBio(
 
 const prompt = ai.definePrompt({
   name: 'generateFreelancerBioPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateFreelancerBioInputSchema},
   output: {schema: GenerateFreelancerBioOutputSchema},
   prompt: `You are an expert career coach who helps freelancers write compelling bios.
