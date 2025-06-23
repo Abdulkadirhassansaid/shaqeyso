@@ -35,13 +35,19 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await signup(name, email, password, role);
-    if (success) {
+    const result = await signup(name, email, password, role);
+    if (result.success) {
       router.push('/onboarding');
     } else {
+      let description = t.signupFailedDesc;
+      if (result.message === 'email-in-use') {
+        description = t.signupFailedEmailInUseDesc;
+      } else if (result.message === 'weak-password') {
+        description = t.signupFailedWeakPasswordDesc;
+      }
       toast({
         title: t.signupFailed,
-        description: t.signupFailedDesc,
+        description: description,
         variant: 'destructive',
       });
       setIsLoading(false);

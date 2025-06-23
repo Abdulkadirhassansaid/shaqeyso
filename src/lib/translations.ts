@@ -81,7 +81,9 @@ export const translations = {
         creatingAccount: 'Creating Account...',
         alreadyHaveAccount: 'Already have an account?',
         signupFailed: 'Signup Failed',
-        signupFailedDesc: 'An account with this email already exists.',
+        signupFailedDesc: 'An unexpected error occurred. Please try again.',
+        signupFailedEmailInUseDesc: 'An account with this email already exists.',
+        signupFailedWeakPasswordDesc: 'The password is too weak. It must be at least 6 characters long.',
 
         // Onboarding & Verification
         welcomeToPlatform: 'Welcome to Shaqeyso Hub, {name}!',
@@ -550,7 +552,9 @@ export const translations = {
         creatingAccount: 'Akoon baa la samaynayaa...',
         alreadyHaveAccount: 'Akoon hore ma u leedahay?',
         signupFailed: 'Isdiiwaangelintu Waa Fashilantay',
-        signupFailedDesc: 'Akoon iimaylkan leh ayaa horay u jiray.',
+        signupFailedDesc: 'Cilad lama filaan ah ayaa dhacday. Fadlan isku day mar kale.',
+        signupFailedEmailInUseDesc: 'Akoon iimaylkan leh ayaa horay u jiray.',
+        signupFailedWeakPasswordDesc: 'Erayga sirta ahi aad buu u liitaa. Waa inuu ahaadaa ugu yaraan 6 xaraf.',
 
         // Onboarding & Verification
         welcomeToPlatform: 'Ku soo dhowow Shaqeyso Hub, {name}!',

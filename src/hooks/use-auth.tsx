@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -29,7 +28,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }>;
-  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<boolean>;
+  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<{ success: boolean; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
   users: User[];
@@ -122,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<boolean> => {
+  const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const authUser = userCredential.user;
@@ -169,11 +168,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       
-      return true;
+      return { success: true };
 
-    } catch (error) {
-      console.error("Signup error:", error);
-      return false;
+    } catch (error: any) {
+      console.error("Signup error:", error.code);
+      if (error.code === 'auth/email-already-in-use') {
+          return { success: false, message: 'email-in-use' };
+      }
+      if (error.code === 'auth/weak-password') {
+          return { success: false, message: 'weak-password' };
+      }
+      return { success: false, message: 'unknown' };
     }
   };
 
