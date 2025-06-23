@@ -114,7 +114,11 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
         </CardContent>
         <CardFooter className='flex-col items-start gap-6'>
-            <ProposalForm job={selectedJob} freelancerProfile={profileString} />
+            <ProposalForm 
+                job={selectedJob} 
+                freelancerProfile={profileString} 
+                onFinished={() => setSelectedJob(null)}
+            />
         </CardFooter>
       </Card>
     );

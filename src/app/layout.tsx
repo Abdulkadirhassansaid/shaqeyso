@@ -7,6 +7,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/hooks/use-language';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { JobsProvider } from '@/hooks/use-jobs';
+import { ProposalsProvider } from '@/hooks/use-proposals';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -48,8 +49,10 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <JobsProvider>
-                {children}
-                <Toaster />
+                <ProposalsProvider>
+                  {children}
+                  <Toaster />
+                </ProposalsProvider>
               </JobsProvider>
             </AuthProvider>
           </LanguageProvider>

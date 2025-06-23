@@ -231,8 +231,14 @@ export const translations = {
         writeWithAI: 'Write with AI',
         coverLetterPlaceholder: 'Write your proposal or use the AI assistant to generate one.',
         submitProposal: 'Submit Proposal',
+        submittingProposal: 'Submitting...',
+        proposalSubmitted: 'Proposal Submitted!',
+        proposalSubmittedDesc: 'Your proposal has been successfully sent to the client.',
+        submissionFailed: 'Submission Failed',
+        submissionFailedDesc: 'There was an error submitting your proposal. Please try again.',
         proposalGenFailed: 'Generation Failed',
         proposalGenFailedDesc: 'Could not generate proposal at this time.',
+        missingProposalFields: 'Please provide a cover letter and your hourly rate.',
 
         // Client Profile
         companyProfile: 'Company Profile',
@@ -491,8 +497,14 @@ export const translations = {
         writeWithAI: 'Ku Qor AI',
         coverLetterPlaceholder: 'Qor codsigaaga ama isticmaal caawiyaha AI si aad mid u sameysato.',
         submitProposal: 'Gudbi Codsiga',
+        submittingProposal: 'Waa la gudbinayaa...',
+        proposalSubmitted: 'Codsiga Waa La Gudbiyey!',
+        proposalSubmittedDesc: 'Codsigaaga si guul leh ayaa loogu diray macmiilka.',
+        submissionFailed: 'Gudbintu Waa Fashilantay',
+        submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay codsigaaga.',
         proposalGenFailed: 'Abuuritaanku Waa Fashilmay',
         proposalGenFailedDesc: 'Waqtigan xaadirka ah lama abuuri karin codsiga.',
+        missingProposalFields: 'Fadlan bixi warqad codsi iyo qiimahaaga saacaddii.',
 
         // Client Profile
         companyProfile: 'Bogga Shirkadda',

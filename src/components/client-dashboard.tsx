@@ -18,13 +18,13 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { mockProposals } from '@/lib/mock-data';
 import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
 import { useJobs } from '@/hooks/use-jobs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useProposals } from '@/hooks/use-proposals';
 
 
 interface ClientDashboardProps {
@@ -33,6 +33,7 @@ interface ClientDashboardProps {
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
   const { jobs, deleteJob, updateJobStatus } = useJobs();
+  const { proposals } = useProposals();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
@@ -43,12 +44,12 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const { t } = useLanguage();
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
-
+  
   const handleRankFreelancers = async (job: Job) => {
     setIsRanking(true);
     setRankedFreelancers([]);
     try {
-      const jobProposals = mockProposals.filter(p => p.jobId === job.id);
+      const jobProposals = proposals.filter(p => p.jobId === job.id);
       if (jobProposals.length === 0) {
         toast({
             variant: "destructive",
@@ -109,6 +110,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   }
   
   if (selectedJob) {
+    const jobProposals = proposals.filter(p => p.jobId === selectedJob.id);
     return (
       <Card className="w-full">
         <CardHeader>
@@ -159,9 +161,9 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     ))}
                 </div>
             ) : (
-                 mockProposals.filter(p => p.jobId === selectedJob.id).length > 0 ? (
+                 jobProposals.length > 0 ? (
                     <div className="space-y-4">
-                        {mockProposals.filter(p => p.jobId === selectedJob.id).map(proposal => {
+                        {jobProposals.map(proposal => {
                             const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
                             return (
                                 <Card key={proposal.id}>

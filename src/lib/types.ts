@@ -18,7 +18,6 @@ export type Job = {
   budget: number;
   deadline: string;
   clientId: string;
-  proposals?: Proposal[];
   status: 'Open' | 'Interviewing' | 'Closed';
 };
 
