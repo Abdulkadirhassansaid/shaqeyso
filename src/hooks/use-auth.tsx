@@ -40,19 +40,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
-    const adminExists = users.some(u => u.email === 'abdikadirhassan2015@gmail.com');
-    if (!adminExists) {
-      const adminUser = initialUsers.find(u => u.email === 'abdikadirhassan2015@gmail.com');
-      if (adminUser) {
-        setUsers(currentUsers => {
-          if (currentUsers.some(u => u.email === 'abdikadirhassan2015@gmail.com')) {
-            return currentUsers;
-          }
-          return [...currentUsers, adminUser];
-        });
-      }
-    }
-  }, [users, setUsers]);
+    const adminEmail = 'abdikadirhassan2015@gmail.com';
+    const adminUserFromInitial = initialUsers.find(u => u.email === adminEmail);
+    
+    if (!adminUserFromInitial) {
+        console.error("Default admin user not found in mock data. This is a problem.");
+        return;
+    };
+
+    setUsers(currentUsers => {
+        // Filter out any user that might be an old admin account.
+        // This removes any user with the admin role OR the admin email, just to be safe.
+        const usersWithoutAdmin = currentUsers.filter(u => u.role !== 'admin' && u.email !== adminEmail);
+        
+        // Add the definitive admin user from the mock data source.
+        // This ensures the admin user is always up-to-date with what's in `mock-data.ts`.
+        return [...usersWithoutAdmin, adminUserFromInitial];
+    });
+  }, []); // The empty dependency array is crucial. We only want to sync this once when the app loads.
 
   React.useEffect(() => {
     try {
@@ -155,18 +160,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
   
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    let updatedUser: User | undefined;
     setUsers(currentUsers => currentUsers.map(u => {
         if (u.id === userId) {
-            updatedUser = { ...u, ...userData };
-            return updatedUser;
+            return { ...u, ...userData };
         }
         return u;
     }));
-
-    if (updatedUser && updatedUser.id === user?.id) {
-        setUser(updatedUser);
-    }
 
     if (profileData) {
         const targetUser = users.find(u => u.id === userId);
@@ -181,48 +180,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
     const newMethod = { ...method, id: `pm-${Date.now()}` };
-    let updatedUser: User | undefined;
     setUsers(currentUsers => currentUsers.map(u => {
         if (u.id === userId) {
-            updatedUser = { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
-            return updatedUser;
+            return { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
         }
         return u
     }));
-     if (updatedUser && updatedUser.id === user?.id) {
-        setUser(updatedUser);
-    }
     return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-     let updatedUser: User | undefined;
     setUsers(currentUsers => currentUsers.map(u => {
         if (u.id === userId) {
-            updatedUser = { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) };
-            return updatedUser;
+            return { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) };
         }
         return u;
     }));
-     if (updatedUser && updatedUser.id === user?.id) {
-        setUser(updatedUser);
-    }
     return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
     const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-    let updatedUser: User | undefined;
     setUsers(currentUsers => currentUsers.map(u => {
         if (u.id === userId) {
-            updatedUser = { ...u, transactions: [...(u.transactions || []), newTransaction] };
-            return updatedUser;
+            return { ...u, transactions: [...(u.transactions || []), newTransaction] };
         }
         return u;
     }));
-     if (updatedUser && updatedUser.id === user?.id) {
-        setUser(updatedUser);
-    }
     return true;
   };
   
