@@ -48,7 +48,7 @@ import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus, deleteUser, addTransaction } from useAuth();
+  const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
   const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
   const { deleteMessagesByJobId } = useMessages();
@@ -99,7 +99,7 @@ export function AdminDashboard() {
     const method = adminUser.paymentMethods?.find(pm => pm.id === selectedWithdrawalMethodId);
     if (!method) return;
 
-    const description = `${t.withdrawalTo} ${method.type} ${method.last4 ? `****${method.last4}` : `(${method.phoneNumber})`}`;
+    const description = `${t.withdrawTo} ${method.type} ${method.last4 ? `****${method.last4}` : `(${method.phoneNumber})`}`;
 
     await addTransaction(adminUser.id, {
         description: description,
@@ -283,7 +283,7 @@ export function AdminDashboard() {
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button disabled={platformBalance <= 0}><Banknote />{t.withdrawToBank}</Button>
+                                    <Button disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
