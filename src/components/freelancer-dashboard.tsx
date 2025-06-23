@@ -127,6 +127,61 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     job.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const renderContent = () => {
+    if (openJobs.length === 0) {
+      return <p className="text-muted-foreground text-center py-8">{t.noOpenJobsAvailable}</p>;
+    }
+
+    if (filteredJobs.length === 0) {
+      return <p className="text-muted-foreground text-center py-8">{t.noJobsFound}</p>;
+    }
+
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredJobs.map((job) => {
+            const recommendation = recommendedJobs.find(rec => rec.id === job.id);
+            const isRecommended = !!recommendation;
+            
+            return (
+                <Card key={job.id} className={cn("flex flex-col transition-all", isRecommended && "border-primary/50 bg-primary/5")}>
+                    <CardHeader>
+                        <div className="flex justify-between items-start gap-2">
+                            <CardTitle className="text-lg font-headline">{job.title}</CardTitle>
+                            {isRecommended && (
+                                <Badge variant="default" className="shrink-0">
+                                    <Wand2 className="mr-1.5 h-3 w-3" />
+                                    {t.forYou}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                            <Tag className="h-4 w-4 text-muted-foreground" />
+                            <Badge variant={isRecommended ? "outline" : "secondary"}>{job.category}</Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow space-y-3">
+                        <p className="text-sm text-muted-foreground line-clamp-3">{job.description}</p>
+                         {isRecommended && (
+                            <div>
+                                <p className="text-sm font-semibold">{t.matchReason}:</p>
+                                <p className="text-sm text-muted-foreground italic">"{recommendation.reason}"</p>
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter className='flex-col items-start gap-4'>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                            <DollarSign className="h-5 w-5 text-green-500" />
+                            <span>${job.budget}</span>
+                        </div>
+                        <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
+                    </CardFooter>
+                </Card>
+            );
+        })}
+      </div>
+    );
+  };
+
   return (
     <Card>
         <CardHeader>
@@ -152,50 +207,8 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 />
             </div>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job) => {
-                const recommendation = recommendedJobs.find(rec => rec.id === job.id);
-                const isRecommended = !!recommendation;
-                
-                return (
-                    <Card key={job.id} className={cn("flex flex-col transition-all", isRecommended && "border-primary/50 bg-primary/5")}>
-                        <CardHeader>
-                            <div className="flex justify-between items-start gap-2">
-                                <CardTitle className="text-lg font-headline">{job.title}</CardTitle>
-                                {isRecommended && (
-                                    <Badge variant="default" className="shrink-0">
-                                        <Wand2 className="mr-1.5 h-3 w-3" />
-                                        {t.forYou}
-                                    </Badge>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-2 pt-1">
-                                <Tag className="h-4 w-4 text-muted-foreground" />
-                                <Badge variant={isRecommended ? "outline" : "secondary"}>{job.category}</Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-grow space-y-3">
-                            <p className="text-sm text-muted-foreground line-clamp-3">{job.description}</p>
-                             {isRecommended && (
-                                <div>
-                                    <p className="text-sm font-semibold">{t.matchReason}:</p>
-                                    <p className="text-sm text-muted-foreground italic">"{recommendation.reason}"</p>
-                                </div>
-                            )}
-                        </CardContent>
-                        <CardFooter className='flex-col items-start gap-4'>
-                            <div className="flex items-center gap-2 text-sm font-semibold">
-                                <DollarSign className="h-5 w-5 text-green-500" />
-                                <span>${job.budget}</span>
-                            </div>
-                            <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
-                        </CardFooter>
-                    </Card>
-                );
-            })}
-            {filteredJobs.length === 0 && (
-                <p className="text-muted-foreground text-center py-4 md:col-span-2 lg:col-span-3">{t.noJobsFound}</p>
-            )}
+        <CardContent>
+            {renderContent()}
         </CardContent>
     </Card>
   );
