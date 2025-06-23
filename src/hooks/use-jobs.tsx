@@ -51,7 +51,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
   
   const hireFreelancerForJob = async (jobId: string, freelancerId: string): Promise<boolean> => {
     setJobs(prevJobs => prevJobs.map(job => 
-      job.id === jobId ? { ...job, status: 'Closed', hiredFreelancerId: freelancerId } : job
+      job.id === jobId ? { ...job, status: 'InProgress', hiredFreelancerId: freelancerId } : job
     ));
     return true;
   }

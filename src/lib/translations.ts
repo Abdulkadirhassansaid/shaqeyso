@@ -39,6 +39,8 @@ export const translations = {
         accepted: 'Accepted',
         rejected: 'Rejected',
         hired: 'Hired',
+        inprogress: 'In Progress',
+        awaitingapproval: 'Awaiting Approval',
 
 
         // Header
@@ -172,6 +174,14 @@ export const translations = {
         hireDirectly: 'Hire Directly',
         interviewProcessStarted: 'Interview Started',
         interviewProcessStartedDesc: 'The job status has been updated to "Interviewing".',
+        approveAndPay: 'Approve & Pay',
+        paymentComplete: 'Payment Complete!',
+        paymentCompleteDesc: 'The funds have been released to the freelancer.',
+        confirmPaymentTitle: 'Approve and Release Payment?',
+        confirmPaymentDesc: (amount: number, name: string) => `Are you sure you want to approve this project and release $${amount.toFixed(2)} to ${name}? This action cannot be undone.`,
+        paymentFor: 'Payment for',
+        workInProgressWith: 'Work in progress with',
+        paidTo: 'Paid to',
 
 
         // Job Post Form
@@ -235,6 +245,14 @@ export const translations = {
         recommendationFailedTitle: 'Recommendation Failed',
         recommendationFailedDesc: 'Could not get AI recommendations at this time. Please try again later.',
         matchReason: 'Match Reason',
+        myProjects: 'My Projects',
+        myProjectsDesc: 'Track your active and completed projects.',
+        submitProject: 'Submit Project for Approval',
+        projectSubmitted: 'Project Submitted!',
+        projectSubmittedDesc: 'The client has been notified to review your work.',
+        awaitingClientApproval: 'Awaiting client approval.',
+        projectCompletedAndPaid: 'Project completed and paid',
+        noActiveProjects: "You don't have any active projects yet.",
         
         // Proposal Form
         yourHourlyRate: 'Your Hourly Rate ($)',
@@ -316,7 +334,8 @@ export const translations = {
         accepted: 'La Aqbalay',
         rejected: 'La Diiday',
         hired: 'La Shaqaaleeyay',
-
+        inprogress: 'Wuu Socdaa',
+        awaitingapproval: 'Sugaya Ansixin',
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -450,6 +469,14 @@ export const translations = {
         hireDirectly: 'Toos u Shaqaaleysii',
         interviewProcessStarted: 'Waraysiga Waa La Bilaabay',
         interviewProcessStartedDesc: 'Xaaladda shaqada waxaa lagu beddelay "Waraysi".',
+        approveAndPay: 'Ansixi & Bixi',
+        paymentComplete: 'Lacag-bixinta Waa Dhamaystiran tahay!',
+        paymentCompleteDesc: 'Lacagtii waxaa loo sii daayay shaqaalihii madaxa banaanaa.',
+        confirmPaymentTitle: 'Ansixi oo Lacagta sii daa?',
+        confirmPaymentDesc: (amount: number, name: string) => `Ma hubtaa inaad rabto inaad ansixiso mashruucan oo aad u sii deyso $${amount.toFixed(2)} ${name}? Tallaabadan lama laaban karo.`,
+        paymentFor: 'Lacag bixinta',
+        workInProgressWith: 'Shaqo ayaa la socota',
+        paidTo: 'Loo bixiyay',
 
 
         // Job Post Form
@@ -513,7 +540,15 @@ export const translations = {
         recommendationFailedTitle: 'Talo Heliddu waa Fashilantay',
         recommendationFailedDesc: 'Waqtigan xaadirka ah lama heli karo talooyinka AI. Fadlan mar dambe isku day.',
         matchReason: 'Sababta Isku-aadka',
-        
+        myProjects: 'Mashaariicdayda',
+        myProjectsDesc: 'La soco mashaariicdaada firfircoon iyo kuwa dhammaaday.',
+        submitProject: 'Gudbi Mashruuca si loo Ansixiyo',
+        projectSubmitted: 'Mashruuca Waa la Gudbiyay!',
+        projectSubmittedDesc: 'Macaamiilka waa la ogeysiiyay si uu u eego shaqadaada.',
+        awaitingClientApproval: 'Sugaya ansixinta macmiilka.',
+        projectCompletedAndPaid: 'Mashruuca waa la dhameeyay oo waa la bixiyay',
+        noActiveProjects: "Weli ma lihid mashaariic firfircoon.",
+
         // Proposal Form
         yourHourlyRate: 'Qiimahaaga Saacaddii ($)',
         ratePlaceholder: 'Tusaale, 50',

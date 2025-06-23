@@ -18,7 +18,7 @@ export type Job = {
   budget: number;
   deadline: string;
   clientId: string;
-  status: 'Open' | 'Interviewing' | 'Closed';
+  status: 'Open' | 'Interviewing' | 'InProgress' | 'AwaitingApproval' | 'Completed';
   hiredFreelancerId?: string;
 };
 
@@ -70,5 +70,3 @@ export type Transaction = {
   amount: number; // positive for income, negative for withdrawal/fee
   status: 'Completed' | 'Pending' | 'Failed';
 };
-
-    

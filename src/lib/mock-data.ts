@@ -79,7 +79,8 @@ export const mockJobs: Job[] = [
     budget: 500,
     deadline: '2024-08-25',
     clientId: 'client-1',
-    status: 'Interviewing',
+    status: 'InProgress',
+    hiredFreelancerId: 'freelancer-1',
   },
 ];
 
@@ -126,5 +127,3 @@ export const mockClientProfiles: ClientProfile[] = [
         projectsPosted: ['job-1', 'job-2', 'job-3'],
     }
 ];
-
-    
