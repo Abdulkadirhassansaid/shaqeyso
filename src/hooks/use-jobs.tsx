@@ -8,12 +8,13 @@ import type { Job } from '@/lib/types';
 
 interface JobsContextType {
   jobs: Job[];
-  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId'>) => Promise<boolean>;
+  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed'>) => Promise<boolean>;
   deleteJob: (jobId: string) => Promise<boolean>;
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
   releasePayment: (jobId: string) => Promise<boolean>;
+  markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -21,11 +22,13 @@ const JobsContext = React.createContext<JobsContextType | null>(null);
 export function JobsProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useLocalStorageState('shaqo-jobs', initialJobs);
 
-  const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId'>): Promise<boolean> => {
+  const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed'>): Promise<boolean> => {
     const newJob: Job = {
       ...jobData,
       id: `job-${Date.now()}`,
       status: 'Open',
+      clientReviewed: false,
+      freelancerReviewed: false,
     };
     setJobs(prevJobs => [newJob, ...prevJobs]);
     return true;
@@ -64,8 +67,18 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const markJobAsReviewed = async (jobId: string, role: 'client' | 'freelancer'): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.map(job => {
+        if (job.id === jobId) {
+            return role === 'client' ? { ...job, clientReviewed: true } : { ...job, freelancerReviewed: true };
+        }
+        return job;
+    }));
+    return true;
+  };
 
-  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment };
+
+  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed };
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

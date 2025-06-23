@@ -4,11 +4,12 @@ export type User = {
   name: string;
   email: string;
   avatarUrl: string;
-  role: 'client' | 'freelancer';
+  role: 'client' | 'freelancer' | 'admin';
   password?: string;
   balance?: number;
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
+  isBlocked?: boolean;
 };
 
 export type SubmittedFile = {
@@ -19,7 +20,7 @@ export type SubmittedFile = {
 };
 
 export type Job = {
-  id: string;
+  id:string;
   title: string;
   description: string;
   category: string;
@@ -28,6 +29,8 @@ export type Job = {
   clientId: string;
   status: 'Open' | 'Interviewing' | 'InProgress' | 'Completed';
   hiredFreelancerId?: string;
+  clientReviewed?: boolean;
+  freelancerReviewed?: boolean;
 };
 
 export type Proposal = {
@@ -86,4 +89,14 @@ export type Message = {
     text?: string;
     files?: SubmittedFile[];
     timestamp: string; // ISO date string
+};
+
+export type Review = {
+    id: string;
+    jobId: string;
+    reviewerId: string;
+    revieweeId: string;
+    rating: number; // 1-5
+    comment: string;
+    date: string; // ISO date string
 };

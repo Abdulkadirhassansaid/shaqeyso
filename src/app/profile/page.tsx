@@ -12,6 +12,7 @@ import { FreelancerProfilePage } from '@/components/freelancer-profile-page';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { ReviewsProvider } from '@/hooks/use-reviews';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
@@ -50,8 +51,10 @@ export default function ProfilePage() {
                 </Link>
             </Button>
         </div>
-        {user.role === 'client' && <ClientProfilePage user={user} />}
-        {user.role === 'freelancer' && <FreelancerProfilePage user={user} />}
+        <ReviewsProvider>
+          {user.role === 'client' && <ClientProfilePage user={user} />}
+          {user.role === 'freelancer' && <FreelancerProfilePage user={user} />}
+        </ReviewsProvider>
       </main>
     </div>
   );

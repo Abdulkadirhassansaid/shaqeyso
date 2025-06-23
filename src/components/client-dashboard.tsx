@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -28,6 +28,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useProposals } from '@/hooks/use-proposals';
 import { ChatDialog } from './chat-dialog';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
+import { ReviewFormDialog } from './review-form-dialog';
+import { useReviews } from '@/hooks/use-reviews';
 
 
 interface ClientDashboardProps {
@@ -35,11 +37,13 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
-  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, releasePayment } = useJobs();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, releasePayment, markJobAsReviewed } = useJobs();
   const { proposals, acceptProposal } = useProposals();
+  const { addReview } = useReviews();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
+  const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
@@ -112,13 +116,30 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     const jobToApprove = jobs.find(j => j.id === jobId);
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
 
+    const adminUser = allUsers.find(u => u.role === 'admin');
+    if (!adminUser) {
+        console.error("Admin user not found for fee collection.");
+        // In a real app, you'd handle this more gracefully.
+        toast({ title: "Error", description: "Admin user not found. Could not process payment.", variant: "destructive" });
+        return;
+    }
+
+    const platformFee = jobToApprove.budget * 0.05;
+    const freelancerPayout = jobToApprove.budget - platformFee;
+
     await releasePayment(jobToApprove.id);
     
-    // 2. Release funds from escrow to freelancer
-    const paymentDescription = `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`;
+    // Release funds from escrow to freelancer (minus fee)
     await addTransaction(jobToApprove.hiredFreelancerId, {
-        description: paymentDescription,
-        amount: jobToApprove.budget,
+        description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
+        amount: freelancerPayout,
+        status: 'Completed',
+    });
+
+    // Send fee to admin
+    await addTransaction(adminUser.id, {
+        description: `${t.platformFee} for "${jobToApprove.title}"`,
+        amount: platformFee,
         status: 'Completed',
     });
 
@@ -189,6 +210,20 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
           description: t.jobStatusUpdatedDesc,
       });
   };
+  
+  const handleReviewSubmit = async (jobId: string, revieweeId: string, rating: number, comment: string) => {
+      await addReview({
+          jobId,
+          reviewerId: user.id,
+          revieweeId,
+          rating,
+          comment
+      });
+      await markJobAsReviewed(jobId, 'client');
+      toast({ title: t.reviewSubmissionSuccess, description: t.reviewSubmissionSuccessDesc });
+      setJobToReview(null);
+  };
+
 
   const getStatusVariant = (status: Job['status']) => {
     switch (status) {
@@ -391,11 +426,22 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                               </div>
                           )}
                           {status === 'Completed' && hiredFreelancer && (
-                              <div className="flex items-center text-sm text-green-500 gap-2">
-                                  <CheckCircle className="h-5 w-5"/>
-                                  <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                              </div>
-                          )}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center text-sm text-green-500 gap-2">
+                                        <CheckCircle className="h-5 w-5"/>
+                                        <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                                    </div>
+                                    <Button 
+                                        variant="secondary" 
+                                        size="sm" 
+                                        onClick={() => setJobToReview(job)}
+                                        disabled={job.clientReviewed}
+                                    >
+                                        <Star className="mr-2 h-4 w-4" />
+                                        {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
+                                    </Button>
+                                </div>
+                            )}
                       </div>
 
                       <DropdownMenu>
@@ -461,6 +507,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
               onClose={() => setJobToChat(null)}
           />
       )}
+      {jobToReview && jobToReview.hiredFreelancerId && (
+            <ReviewFormDialog
+                isOpen={!!jobToReview}
+                onClose={() => setJobToReview(null)}
+                reviewee={allUsers.find(u => u.id === jobToReview.hiredFreelancerId)}
+                job={jobToReview}
+                onSubmit={handleReviewSubmit}
+            />
+        )}
     </>
   );
 }

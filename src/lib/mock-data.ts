@@ -1,5 +1,5 @@
 
-import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message } from './types';
+import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message, Review } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -49,6 +49,16 @@ export const mockUsers: User[] = [
     paymentMethods: [],
     transactions: [],
   },
+   {
+    id: 'admin-1',
+    name: 'Admin User',
+    email: 'admin@shaqohub.com',
+    avatarUrl: 'https://placehold.co/100x100/1a1a1a/ffffff.png?text=A',
+    role: 'admin',
+    password: 'adminpassword',
+    balance: 0,
+    transactions: [],
+  },
 ];
 
 export const mockJobs: Job[] = [
@@ -61,7 +71,8 @@ export const mockJobs: Job[] = [
     deadline: '2024-08-30',
     clientId: 'client-1',
     status: 'Open',
-    submittedFiles: [],
+    clientReviewed: false,
+    freelancerReviewed: false,
   },
   {
     id: 'job-2',
@@ -72,7 +83,8 @@ export const mockJobs: Job[] = [
     deadline: '2024-09-15',
     clientId: 'client-1',
     status: 'Open',
-    submittedFiles: [],
+    clientReviewed: false,
+    freelancerReviewed: false,
   },
   {
     id: 'job-3',
@@ -84,7 +96,8 @@ export const mockJobs: Job[] = [
     clientId: 'client-1',
     status: 'InProgress',
     hiredFreelancerId: 'freelancer-1',
-    submittedFiles: [],
+    clientReviewed: false,
+    freelancerReviewed: false,
   },
 ];
 
@@ -146,5 +159,17 @@ export const mockMessages: Message[] = [
         senderId: 'freelancer-1',
         text: "Hi! It's going well. I've completed the first draft of the blog posts. I'll be submitting them for your review shortly.",
         timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
+    },
+];
+
+export const mockReviews: Review[] = [
+    {
+        id: 'review-1',
+        jobId: 'job-2',
+        reviewerId: 'client-1',
+        revieweeId: 'freelancer-1',
+        rating: 5,
+        comment: 'Aisha was fantastic to work with. She delivered high-quality designs ahead of schedule and was very responsive to feedback.',
+        date: '2024-07-16T10:00:00Z',
     },
 ];

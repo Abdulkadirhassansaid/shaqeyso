@@ -42,7 +42,6 @@ export const translations = {
         inprogress: 'In Progress',
         inEscrow: 'in Escrow',
 
-
         // Header
         shaqoFinder: 'Shaqeyso Hub',
         
@@ -195,6 +194,7 @@ export const translations = {
         confirmPaymentDesc: (amount: number, name: string) => `Are you sure you want to approve this project and release $${amount.toFixed(2)} to ${name}? This action cannot be undone.`,
         escrowFunding: 'Funds moved to escrow for',
         paymentReceivedFromEscrow: 'Payment received for',
+        platformFee: 'Platform Fee (5%)',
         workInProgressWith: 'Work in progress with',
         paidTo: 'Paid to',
         chatWith: 'Chat with',
@@ -326,6 +326,23 @@ export const translations = {
         typeYourMessage: 'Type your message...',
         noMessagesYet: 'No messages yet. Start the conversation!',
         chatArchived: 'This chat is archived because the project is complete.',
+
+        // Reviews
+        leaveReview: "Leave a Review",
+        reviewSubmitted: "Review Submitted",
+        noReviewsYet: "No reviews yet.",
+        ratingsAndReviews: "Ratings & Reviews",
+        overallRating: "Overall Rating",
+        submitReview: "Submit Review",
+        submittingReview: "Submitting...",
+        yourRating: "Your Rating",
+        yourReview: "Your Review",
+        reviewPlaceholder: "Share your experience with this user...",
+        reviewSubmissionSuccess: "Review Submitted",
+        reviewSubmissionSuccessDesc: "Thank you for your feedback!",
+        reviewSubmissionFailed: "Submission Failed",
+        reviewSubmissionFailedDesc: "There was an error submitting your review.",
+        job: "Job",
     },
     so: {
         // General
@@ -521,6 +538,7 @@ export const translations = {
         confirmPaymentDesc: (amount: number, name: string) => `Ma hubtaa inaad rabto inaad ansixiso mashruucan oo aad u sii deyso $${amount.toFixed(2)} ${name}? Tallaabadan lama laaban karo.`,
         escrowFunding: 'Dhaqaale la geliyay escrow ee',
         paymentReceivedFromEscrow: 'Lacag bixin laga helay',
+        platformFee: 'Lacagta Goobta (5%)',
         workInProgressWith: 'Shaqo ayaa la socota',
         paidTo: 'Loo bixiyay',
         chatWith: 'La sheekeyso',
@@ -653,6 +671,23 @@ export const translations = {
         typeYourMessage: 'Qor fariintaada...',
         noMessagesYet: 'Wali fariimo ma jiraan. Bilaab wada hadalka!',
         chatArchived: 'Wadahadalkan waa la keydiyay maadaama mashruuca la dhameeyay.',
+
+        // Reviews
+        leaveReview: "Ka tag Qiimeyn",
+        reviewSubmitted: "Qiimeynta waa la gudbiyey",
+        noReviewsYet: "Wali qiimeyn ma jirto.",
+        ratingsAndReviews: "Qiimeynta & Faallooyinka",
+        overallRating: "Qiimeynta Guud",
+        submitReview: "Gudbi Qiimeynta",
+        submittingReview: "Waa la gudbinayaa...",
+        yourRating: "Qiimeyntaada",
+        yourReview: "Faalladaada",
+        reviewPlaceholder: "La wadaag khibradaada isticmaalehan...",
+        reviewSubmissionSuccess: "Qiimeynta Waa La Gudbiyey",
+        reviewSubmissionSuccessDesc: "Waad ku mahadsan tahay ra'yigaaga!",
+        reviewSubmissionFailed: "Gudbintu Waa Fashilantay",
+        reviewSubmissionFailedDesc: "Cillad ayaa dhacday markii la gudbinayay qiimeyntaada.",
+        job: "Shaqo",
     }
 };
 
