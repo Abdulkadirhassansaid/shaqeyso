@@ -41,10 +41,19 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
 
   const jobMessages = messages.filter((m) => m.jobId === job.id).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-  const otherUserId = user?.id === job.clientId ? job.hiredFreelancerId : job.clientId;
-  const otherUser = users.find(u => u.id === otherUserId);
-  const dialogTitle = otherUser ? `${t.chatWith} ${otherUser.name}` : 'Chat';
-  const canSendMessages = job.status === 'InProgress';
+  let dialogTitle: string;
+  if (user?.role === 'admin') {
+    const client = users.find(u => u.id === job.clientId);
+    const freelancer = users.find(u => u.id === job.hiredFreelancerId);
+    dialogTitle = `Chat: ${client?.name} & ${freelancer?.name}`;
+  } else {
+    const otherUserId = user?.id === job.clientId ? job.hiredFreelancerId : job.clientId;
+    const otherUser = users.find(u => u.id === otherUserId);
+    dialogTitle = otherUser ? `${t.chatWith} ${otherUser.name}` : 'Chat';
+  }
+  
+  const canSendMessages = job.status === 'InProgress' || (user?.role === 'admin' && job.hiredFreelancerId);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -101,8 +110,16 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                 </div>
             ) : (
                 jobMessages.map((message) => {
-                    const isSender = message.senderId === user?.id;
                     const senderDetails = users.find(u => u.id === message.senderId);
+                    const isSender = message.senderId === user?.id;
+                    const isAdminMessage = senderDetails?.role === 'admin';
+                    
+                    const messageBgClass = isSender
+                      ? 'bg-primary text-primary-foreground'
+                      : isAdminMessage
+                        ? 'bg-secondary'
+                        : 'bg-muted';
+                    
                     return (
                     <div
                         key={message.id}
@@ -112,7 +129,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         )}
                     >
                         {!isSender && (
-                            <Avatar className="h-8 w-8">
+                            <Avatar className="h-8 w-8 self-start">
                                 <AvatarImage src={senderDetails?.avatarUrl} />
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
@@ -120,11 +137,17 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         <div
                         className={cn(
                             'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
-                            isSender
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
+                            messageBgClass
                         )}
                         >
+                            {!isSender && senderDetails && (
+                                <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-bold text-sm">{senderDetails.name}</p>
+                                    {isAdminMessage && (
+                                        <Badge variant="outline" className="h-5 text-xs">Admin</Badge>
+                                    )}
+                                </div>
+                            )}
                             {message.text && <p className="leading-relaxed">{message.text}</p>}
                             {message.files && message.files.length > 0 && (
                                 <div className={cn("space-y-2", message.text && "mt-2")}>

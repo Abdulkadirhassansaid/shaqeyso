@@ -18,12 +18,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, CalendarDays, TrendingUp } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
+import { ChatDialog } from './chat-dialog';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus } = useAuth();
@@ -31,6 +32,8 @@ export function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [revenuePeriod, setRevenuePeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
+
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
     await toggleUserBlockStatus(userId);
@@ -370,6 +373,7 @@ export function AdminDashboard() {
                                     <TableHead>{t.freelancer}</TableHead>
                                     <TableHead>{t.budget}</TableHead>
                                     <TableHead>{t.status}</TableHead>
+                                    <TableHead className="text-right">Chat</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -386,6 +390,17 @@ export function AdminDashboard() {
                                             <TableCell>
                                                  <Badge variant={getStatusVariant(job.status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                             </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  onClick={() => setChattingJob(job)}
+                                                  disabled={!job.hiredFreelancerId}
+                                                  aria-label="View Chat"
+                                                >
+                                                    <MessageSquare className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     )
                                 })}
@@ -395,6 +410,14 @@ export function AdminDashboard() {
                 </Card>
             </TabsContent>
         </Tabs>
+
+        {chattingJob && (
+            <ChatDialog
+                job={chattingJob}
+                isOpen={!!chattingJob}
+                onClose={() => setChattingJob(null)}
+            />
+        )}
     </div>
   );
 }
