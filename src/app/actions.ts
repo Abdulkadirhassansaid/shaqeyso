@@ -15,6 +15,11 @@ import {
   type RankMatchingFreelancersInput,
   type RankMatchingFreelancersOutput,
 } from '@/ai/flows/rank-matching-freelancers';
+import {
+  generateFreelancerBio as genBio,
+  type GenerateFreelancerBioInput,
+  type GenerateFreelancerBioOutput,
+} from '@/ai/flows/generate-freelancer-bio';
 
 export async function generateJobDescription(
   input: GenerateJobDescriptionInput
@@ -32,4 +37,10 @@ export async function rankMatchingFreelancers(
   input: RankMatchingFreelancersInput
 ): Promise<RankMatchingFreelancersOutput> {
   return await rankFreelancers(input);
+}
+
+export async function generateFreelancerBio(
+  input: GenerateFreelancerBioInput
+): Promise<GenerateFreelancerBioOutput> {
+  return await genBio(input);
 }

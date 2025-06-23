@@ -10,8 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
-import { X } from 'lucide-react';
+import { Wand2, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { generateFreelancerBio } from '@/app/actions';
+import { LoadingDots } from './loading-dots';
 
 interface FreelancerProfilePageProps {
   user: User;
@@ -36,6 +38,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
 
   React.useEffect(() => {
     const profile = freelancerProfiles.find(p => p.userId === user.id);
@@ -84,6 +87,35 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
     );
   }, [skills, skillInput]);
 
+  const handleGenerateBio = async () => {
+    if (skills.length === 0) {
+      toast({
+        title: 'Add Skills First',
+        description: 'Please add some skills before generating a bio.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingBio(true);
+    try {
+      const result = await generateFreelancerBio({
+        name: name,
+        skills: skills,
+      });
+      setBio(result.bio);
+    } catch (error) {
+      console.error('Error generating freelancer bio:', error);
+      toast({
+        title: 'Generation Failed',
+        description: 'Could not generate your bio at this time.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingBio(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -121,19 +153,44 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={isSaving} />
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={isSaving || isGeneratingBio} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={user.email} disabled />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bio">Your Bio</Label>
-            <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={4} placeholder="Tell clients about yourself..." disabled={isSaving} />
+            <div className="flex justify-between items-center">
+                <Label htmlFor="bio">Your Bio</Label>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateBio}
+                    disabled={isSaving || isGeneratingBio}
+                >
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    {isGeneratingBio ? 'Generating...' : 'Generate with AI'}
+                </Button>
+            </div>
+            {isGeneratingBio ? (
+                <div className="flex items-center justify-center rounded-md border border-dashed min-h-[96px]">
+                    <LoadingDots />
+                </div>
+            ) : (
+                <Textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    rows={4}
+                    placeholder="Tell clients about yourself, or use the AI to generate a bio based on your skills."
+                    disabled={isSaving}
+                />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-            <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} disabled={isSaving} />
+            <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} disabled={isSaving || isGeneratingBio} />
           </div>
            <div className="space-y-2">
             <Label htmlFor="skill-input">Your Skills</Label>
@@ -157,7 +214,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                         value={skillInput}
                         onChange={handleSkillInputChange}
                         onKeyDown={handleSkillInputKeyDown}
-                        disabled={isSaving}
+                        disabled={isSaving || isGeneratingBio}
                         className="flex-grow h-8 p-1 bg-transparent border-0 shadow-none outline-none focus:ring-0 focus-visible:ring-0"
                     />
                 </div>
@@ -175,7 +232,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                             size="sm"
                             className="justify-start"
                             onClick={() => handleAddSkill(skill)}
-                            disabled={isSaving}
+                            disabled={isSaving || isGeneratingBio}
                         >
                             {skill}
                         </Button>
@@ -187,7 +244,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                 <p className="text-sm text-muted-foreground italic">Press Enter to add "{skillInput}".</p>
             )}
           </div>
-          <Button type="submit" disabled={isSaving}>
+          <Button type="submit" disabled={isSaving || isGeneratingBio}>
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </CardContent>
