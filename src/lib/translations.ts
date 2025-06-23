@@ -41,6 +41,7 @@ export const translations = {
         hired: 'Hired',
         inprogress: 'In Progress',
         awaitingapproval: 'Awaiting Approval',
+        inEscrow: 'in Escrow',
 
 
         // Header
@@ -355,6 +356,7 @@ export const translations = {
         hired: 'La Shaqaaleeyay',
         inprogress: 'Wuu Socdaa',
         awaitingapproval: 'Sugaya Ansixin',
+        inEscrow: 'Escrow ku jira',
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',

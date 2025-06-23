@@ -11,10 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, Download } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, Download, ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -396,7 +396,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 </CardHeader>
                 <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                       {(status === 'Open' || status === 'Interviewing' || status === 'InProgress' || status === 'AwaitingApproval') && (
+                       {(status === 'Open' || status === 'Interviewing') && (
                             <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
                         )}
                         {status === 'AwaitingApproval' && (
@@ -408,10 +408,16 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                 <Button>{t.approveAndPay}</Button>
                             </ApprovePaymentDialog>
                         )}
-                        {status === 'InProgress' && hiredFreelancer && (
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                <UserCheck className="h-5 w-5 text-primary" />
-                                <span>{t.workInProgressWith} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                         {status === 'InProgress' && hiredFreelancer && (
+                            <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <UserCheck className="h-5 w-5 text-primary" />
+                                    <span>{t.workInProgressWith} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                                </div>
+                                <div className="flex items-center gap-2 text-green-600">
+                                    <ShieldCheck className="h-5 w-5" />
+                                    <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
+                                </div>
                             </div>
                         )}
                         {status === 'Completed' && hiredFreelancer && (

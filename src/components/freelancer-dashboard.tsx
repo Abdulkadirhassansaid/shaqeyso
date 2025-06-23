@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -227,17 +227,25 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
-                            {client && <p className="text-sm font-medium mt-2">{t.client}: {client.name}</p>}
+                            <div className="mt-4 space-y-2 text-sm">
+                                {client && <p className="font-medium">{t.client}: {client.name}</p>}
+                                {job.status === 'InProgress' && (
+                                    <div className="flex items-center text-green-600 gap-2 font-medium">
+                                        <ShieldCheck className="h-4 w-4"/>
+                                        <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
-                        <CardFooter className="flex-col items-start gap-2">
+                        <CardFooter className="flex-col items-stretch gap-2">
                             {job.status === 'InProgress' && (
                                 <Button className="w-full" onClick={() => setJobToSubmit(job)}>{t.submitProject}</Button>
                             )}
                             {job.status === 'AwaitingApproval' && (
-                                <p className="text-sm text-muted-foreground italic w-full">{t.awaitingClientApproval}</p>
+                                <p className="text-sm text-muted-foreground italic w-full text-center py-2">{t.awaitingClientApproval}</p>
                             )}
                             {job.status === 'Completed' && (
-                                <div className="flex items-center text-sm text-green-500 gap-2 w-full">
+                                <div className="flex items-center text-sm text-green-500 gap-2 w-full p-2 bg-green-50 border border-green-200 rounded-md">
                                     <CheckCircle className="h-5 w-5"/>
                                     <span>{t.projectCompletedAndPaid} (+${job.budget.toFixed(2)})</span>
                                 </div>
