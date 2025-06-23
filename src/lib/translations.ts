@@ -51,6 +51,7 @@ export const translations = {
         profile: 'Profile',
         billing: 'Billing',
         logOut: 'Log out',
+        adminDashboard: 'Admin Dashboard',
 
         // Login Page
         welcomeBack: 'Welcome Back!',
@@ -62,6 +63,8 @@ export const translations = {
         noAccount: "Don't have an account?",
         loginFailed: 'Login Failed',
         loginFailedDesc: 'Invalid email or password. Please try again.',
+        accountBlocked: 'Account Blocked',
+        accountBlockedDesc: 'Your account has been blocked. Please contact support.',
         
         // Signup Page
         createAccount: 'Create an Account',
@@ -343,6 +346,23 @@ export const translations = {
         reviewSubmissionFailed: "Submission Failed",
         reviewSubmissionFailedDesc: "There was an error submitting your review.",
         job: "Job",
+        
+        // Admin Panel
+        adminDashboardDesc: "Manage users, jobs, and platform settings.",
+        users: "Users",
+        analytics: "Analytics",
+        manageUsers: "Manage Users",
+        manageUsersDesc: "View, block, or unblock users on the platform.",
+        user: "User",
+        role: "Role",
+        active: "Active",
+        blocked: "Blocked",
+        blockUser: "Block User",
+        unblockUser: "Unblock User",
+        userBlocked: "User Blocked",
+        userBlockedDesc: "The user has been successfully blocked.",
+        userUnblocked: "User Unblocked",
+        userUnblockedDesc: "The user has been successfully unblocked.",
     },
     so: {
         // General
@@ -395,6 +415,7 @@ export const translations = {
         profile: 'Boggaaga',
         billing: 'Biilasha',
         logOut: 'Ka Bax',
+        adminDashboard: 'Guddiga Maamulka',
 
         // Login Page
         welcomeBack: 'Soo Dhawaw!',
@@ -406,6 +427,8 @@ export const translations = {
         noAccount: "Akoon ma lihid?",
         loginFailed: 'Soo Gelidda Waa Fashilantay',
         loginFailedDesc: 'Iimayl ama eray sir ah oo khaldan. Fadlan isku day mar kale.',
+        accountBlocked: 'Akoonka Waa La Xannibay',
+        accountBlockedDesc: 'Akoonkaaga waa la xannibay. Fadlan la xiriir taageerada.',
 
         // Signup Page
         createAccount: 'Sameyso Akoon',
@@ -688,6 +711,23 @@ export const translations = {
         reviewSubmissionFailed: "Gudbintu Waa Fashilantay",
         reviewSubmissionFailedDesc: "Cillad ayaa dhacday markii la gudbinayay qiimeyntaada.",
         job: "Shaqo",
+        
+        // Admin Panel
+        adminDashboardDesc: "Maamul isticmaalayaasha, shaqooyinka, iyo dejinta barta.",
+        users: "Isticmaalayaasha",
+        analytics: "Falanqaynta",
+        manageUsers: "Maamul Isticmaalayaasha",
+        manageUsersDesc: "Eeg, xannib, ama ka qaad xannibaadda isticmaalayaasha barta.",
+        user: "Isticmaale",
+        role: "Doorka",
+        active: "Firfircoon",
+        blocked: "Xanniban",
+        blockUser: "Xannib Isticmaalaha",
+        unblockUser: "Ka qaad Xannibaadda",
+        userBlocked: "Isticmaalaha Waa La Xannibay",
+        userBlockedDesc: "Isticmaalaha si guul leh ayaa loo xannibay.",
+        userUnblocked: "Xannibaadda Waa Laga Qaaday",
+        userUnblockedDesc: "Isticmaalaha si guul leh ayaa xannibaadda looga qaaday.",
     }
 };
 

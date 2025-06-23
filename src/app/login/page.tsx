@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -31,15 +32,23 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       router.push('/');
     } else {
-      toast({
-        title: t.loginFailed,
-        description: t.loginFailedDesc,
-        variant: 'destructive',
-      });
+      if (result.message === 'blocked') {
+        toast({
+          title: t.accountBlocked,
+          description: t.accountBlockedDesc,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t.loginFailed,
+          description: t.loginFailedDesc,
+          variant: 'destructive',
+        });
+      }
       setIsLoading(false);
     }
   };

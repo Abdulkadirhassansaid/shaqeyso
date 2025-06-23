@@ -68,6 +68,11 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href="/settings">{t.settings}</Link>
           </DropdownMenuItem>
+          {user.role === 'admin' && (
+            <DropdownMenuItem asChild>
+              <Link href="/admin/dashboard">{t.adminDashboard}</Link>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>{t.logOut}</DropdownMenuItem>

@@ -14,7 +14,7 @@ import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, pass: string) => Promise<boolean>;
+  login: (email: string, pass: string) => Promise<{ success: boolean; message?: 'invalid' | 'blocked' }>;
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
@@ -24,6 +24,7 @@ interface AuthContextType {
   addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
   removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
+  toggleUserBlockStatus: (userId: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -56,16 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [users]);
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
+  const login = async (email: string, pass: string): Promise<{ success: boolean; message?: 'invalid' | 'blocked' }> => {
     const foundUser = users.find(
       (u) => u.email === email && u.password === pass
     );
     if (foundUser) {
+      if (foundUser.isBlocked) {
+        return { success: false, message: 'blocked' };
+      }
       setUser(foundUser);
       localStorage.setItem('userId', foundUser.id);
-      return true;
+      return { success: true };
     }
-    return false;
+    return { success: false, message: 'invalid' };
   };
 
   const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<boolean> => {
@@ -84,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       paymentMethods: [],
       transactions: [],
       balance: role === 'client' ? 5000 : 0, // Give clients a starting balance
+      isBlocked: false,
     };
     setUsers(prev => [...prev, newUser]); 
     
@@ -189,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const transactions = [...(u.transactions || []), newTransaction];
                 let updatedUser = { ...u, transactions };
 
-                if (u.role === 'client') {
+                if (u.role === 'client' || u.role === 'admin' || u.role === 'freelancer') {
                     const newBalance = (u.balance || 0) + newTransaction.amount;
                     updatedUser = { ...updatedUser, balance: newBalance };
                 }
@@ -209,7 +214,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction };
+  const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
+    setUsers(prevUsers => 
+        prevUsers.map(u => 
+            u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
+        )
+    );
+    return true;
+  };
+
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -19,6 +19,7 @@ export const mockUsers: User[] = [
       { id: 'txn-c2', date: '2024-07-15T11:30:00Z', description: 'Payment for "Mobile App Design"', amount: -1800, status: 'Completed' },
       { id: 'txn-c3', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: -500, status: 'Completed' },
     ],
+    isBlocked: false,
   },
   {
     id: 'freelancer-1',
@@ -38,6 +39,7 @@ export const mockUsers: User[] = [
       { id: 'txn-f4', date: '2024-07-10T12:00:00Z', description: 'Platform Service Fee', amount: -250, status: 'Completed' },
       { id: 'txn-f5', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: 500, status: 'Pending' },
     ],
+    isBlocked: false,
   },
   {
     id: 'freelancer-2',
@@ -48,6 +50,7 @@ export const mockUsers: User[] = [
     password: 'password123',
     paymentMethods: [],
     transactions: [],
+    isBlocked: true,
   },
    {
     id: 'admin-1',
@@ -58,6 +61,7 @@ export const mockUsers: User[] = [
     password: 'adminpassword',
     balance: 0,
     transactions: [],
+    isBlocked: false,
   },
 ];
 
