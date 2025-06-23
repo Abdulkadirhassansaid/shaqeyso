@@ -33,6 +33,7 @@ interface ClientDashboardProps {
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
   const { jobs, deleteJob, updateJobStatus } = useJobs();
+  const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
@@ -197,7 +198,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   }
 
   return (
-    <Tabs defaultValue="my-jobs" className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList>
         <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
         <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
@@ -286,7 +287,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
         </Card>
       </TabsContent>
       <TabsContent value="post-job" className="mt-6">
-        <JobPostForm onFinished={() => { /* Could switch tabs here if desired */ }} />
+        <JobPostForm onFinished={() => setActiveTab('my-jobs')} />
       </TabsContent>
     </Tabs>
   );
