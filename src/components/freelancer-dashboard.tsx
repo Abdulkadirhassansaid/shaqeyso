@@ -231,7 +231,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     }
 
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
         {filteredJobs.map((job) => {
             const recommendation = recommendedJobs.find(rec => rec.id === job.id);
             const isRecommended = !!recommendation;
