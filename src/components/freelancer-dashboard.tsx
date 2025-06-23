@@ -184,32 +184,30 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   return (
     <Card>
-        <CardHeader>
-            <div className="flex justify-between items-center">
-                 <div>
-                    <CardTitle>{t.findWork}</CardTitle>
-                    <CardDescription>{t.findWorkDesc}</CardDescription>
-                </div>
-                 {isRecommending && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-                        <Wand2 className="h-4 w-4" />
-                        <span>{t.gettingRecommendations}</span>
-                    </div>
-                )}
-            </div>
-            <div className="relative pt-4">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder={t.searchJobsPlaceholder} 
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-        </CardHeader>
-        <CardContent>
-            {renderContent()}
-        </CardContent>
+      <CardHeader>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle>{t.findWork}</CardTitle>
+            <CardDescription>{t.findWorkDesc}</CardDescription>
+          </div>
+          <div className="relative md:w-72">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t.searchJobsPlaceholder}
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+        {isRecommending && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+            <Wand2 className="h-4 w-4" />
+            <span>{t.gettingRecommendations}</span>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>{renderContent()}</CardContent>
     </Card>
   );
 }
