@@ -33,5 +33,31 @@ export function useLocalStorageState<T>(
     }
   }, [key, state]);
 
+  React.useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === key && event.storageArea === window.localStorage) {
+        if (event.newValue) {
+          try {
+            setState(JSON.parse(event.newValue) as T);
+          } catch (error) {
+            console.error(
+              `Error parsing localStorage key “${key}” on change:`,
+              error
+            );
+          }
+        } else {
+          // The key was removed from localStorage, so we reset to default
+          setState(defaultValue);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key, defaultValue]);
+
   return [state, setState];
 }
