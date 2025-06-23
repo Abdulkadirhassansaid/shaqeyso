@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function BillingPage() {
-  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } from useAuth();
+  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
