@@ -40,6 +40,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
+    // This effect ensures that the admin user always exists, even if the user
+    // has older data in their localStorage.
+    const adminExists = users.some(u => u.email === 'admin@shaqohub.com');
+    if (!adminExists) {
+      const adminUser = initialUsers.find(u => u.email === 'admin@shaqohub.com');
+      if (adminUser) {
+        setUsers(currentUsers => {
+          if (currentUsers.some(u => u.email === 'admin@shaqohub.com')) {
+            return currentUsers;
+          }
+          return [...currentUsers, adminUser];
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
     try {
       const storedUserId = localStorage.getItem('userId');
       if (storedUserId) {
