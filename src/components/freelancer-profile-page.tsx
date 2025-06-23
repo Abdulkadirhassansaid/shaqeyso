@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { mockFreelancerProfiles } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
 import { X } from 'lucide-react';
 
@@ -24,10 +23,10 @@ const commonSkills = [
 ];
 
 export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
-  const { updateUserProfile } = useAuth();
+  const { updateUserProfile, freelancerProfiles } = useAuth();
   const { toast } = useToast();
   
-  const freelancerProfile = mockFreelancerProfiles.find(p => p.userId === user.id);
+  const freelancerProfile = freelancerProfiles.find(p => p.userId === user.id);
 
   const [name, setName] = React.useState(user.name);
   const [bio, setBio] = React.useState(freelancerProfile?.bio || '');
@@ -35,6 +34,16 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
   const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    const profile = freelancerProfiles.find(p => p.userId === user.id);
+    if (profile) {
+        setName(user.name);
+        setBio(profile.bio);
+        setHourlyRate(profile.hourlyRate);
+        setSkills(profile.skills);
+    }
+  }, [user, freelancerProfiles]);
 
   const handleRemoveSkill = (skillToRemove: string) => {
     setSkills(prevSkills => prevSkills.filter(s => s !== skillToRemove));

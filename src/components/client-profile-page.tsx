@@ -8,17 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { mockClientProfiles } from '@/lib/mock-data';
 
 interface ClientProfilePageProps {
   user: User;
 }
 
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
-  const { updateUserProfile } = useAuth();
+  const { updateUserProfile, clientProfiles } = useAuth();
   const { toast } = useToast();
   
-  const clientProfile = mockClientProfiles.find(p => p.userId === user.id);
+  const clientProfile = clientProfiles.find(p => p.userId === user.id);
 
   const [companyName, setCompanyName] = React.useState(user.name);
   const [isSaving, setIsSaving] = React.useState(false);

@@ -13,13 +13,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Award, Users } from 'lucide-react';
+import { ArrowLeft, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { mockProposals, mockFreelancerProfiles, mockUsers } from '@/lib/mock-data';
+import { mockProposals } from '@/lib/mock-data';
 import { Skeleton } from './ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ClientDashboardProps {
   user: User;
@@ -31,6 +32,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
+  const { users: allUsers, freelancerProfiles } = useAuth();
 
   const clientJobs = initialJobs.filter((job) => job.clientId === user.id);
 
@@ -49,7 +51,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
       }
       
       const freelancerProfilesWithProposals = jobProposals.map(proposal => {
-        const profile = mockFreelancerProfiles.find(p => p.userId === proposal.freelancerId);
+        const profile = freelancerProfiles.find(p => p.userId === proposal.freelancerId);
         return {
             profile: `Skills: ${profile?.skills.join(', ')}. Bio: ${profile?.bio}`,
             proposal: proposal.coverLetter,
@@ -127,7 +129,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
                  mockProposals.filter(p => p.jobId === selectedJob.id).length > 0 ? (
                     <div className="space-y-4">
                         {mockProposals.filter(p => p.jobId === selectedJob.id).map(proposal => {
-                            const freelancer = mockUsers.find(u => u.id === proposal.freelancerId);
+                            const freelancer = allUsers.find(u => u.id === proposal.freelancerId);
                             return (
                                 <Card key={proposal.id}>
                                     <CardHeader className='flex-row items-center gap-4'>

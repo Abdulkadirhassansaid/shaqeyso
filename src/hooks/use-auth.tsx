@@ -2,8 +2,13 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers, mockFreelancerProfiles, mockClientProfiles } from '@/lib/mock-data';
+import { 
+    mockUsers as initialUsers, 
+    mockFreelancerProfiles as initialFreelancerProfiles, 
+    mockClientProfiles as initialClientProfiles
+} from '@/lib/mock-data';
 import type { User, FreelancerProfile, ClientProfile } from '@/lib/types';
+import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 
 interface AuthContextType {
   user: User | null;
@@ -12,11 +17,18 @@ interface AuthContextType {
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
+  users: User[];
+  freelancerProfiles: FreelancerProfile[];
+  clientProfiles: ClientProfile[];
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [users, setUsers] = useLocalStorageState('shaqo-users', initialUsers);
+  const [freelancerProfiles, setFreelancerProfiles] = useLocalStorageState('shaqo-freelancer-profiles', initialFreelancerProfiles);
+  const [clientProfiles, setClientProfiles] = useLocalStorageState('shaqo-client-profiles', initialClientProfiles);
+  
   const [user, setUser] = React.useState<User | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
@@ -25,9 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const storedUserId = localStorage.getItem('userId');
       if (storedUserId) {
-        const loggedInUser = mockUsers.find((u) => u.id === storedUserId);
+        const loggedInUser = users.find((u) => u.id === storedUserId);
         if (loggedInUser) {
           setUser(loggedInUser);
+        } else {
+            localStorage.removeItem('userId');
         }
       }
     } catch (error) {
@@ -35,10 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [users]);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
-    const foundUser = mockUsers.find(
+    const foundUser = users.find(
       (u) => u.email === email && u.password === pass
     );
     if (foundUser) {
@@ -50,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<boolean> => {
-    const existingUser = mockUsers.find((u) => u.email === email);
+    const existingUser = users.find((u) => u.email === email);
     if (existingUser) {
       return false; // User already exists
     }
@@ -63,22 +77,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
     };
-    mockUsers.push(newUser); 
+    setUsers(prev => [...prev, newUser]); 
     
     if (role === 'freelancer') {
-        mockFreelancerProfiles.push({
+        setFreelancerProfiles(prev => [...prev, {
             userId: newId,
-            skills: ['Please add your skills'],
-            bio: 'Please add your bio',
+            skills: [],
+            bio: '',
             hourlyRate: 0,
             portfolio: [],
-        });
+        }]);
     } else {
-        mockClientProfiles.push({
+        setClientProfiles(prev => [...prev, {
             userId: newId,
             companyName: name,
             projectsPosted: [],
-        });
+        }]);
     }
 
     setUser(newUser);
@@ -87,26 +101,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    const userIndex = mockUsers.findIndex(u => u.id === userId);
-    if (userIndex === -1) return false;
+    let updatedUser: User | null = null;
+    
+    setUsers(prevUsers => {
+        const userIndex = prevUsers.findIndex(u => u.id === userId);
+        if (userIndex === -1) return prevUsers;
+        
+        const newUsers = [...prevUsers];
+        updatedUser = { ...newUsers[userIndex], ...userData };
+        newUsers[userIndex] = updatedUser;
+        
+        setUser(updatedUser);
+        return newUsers;
+    });
 
-    // Update user object
-    const updatedUser = { ...mockUsers[userIndex], ...userData };
-    mockUsers[userIndex] = updatedUser;
-    setUser(updatedUser);
+    if (!updatedUser) return false;
 
-    // Update role-specific profile
     if (profileData) {
         if (updatedUser.role === 'freelancer') {
-            const profileIndex = mockFreelancerProfiles.findIndex(p => p.userId === userId);
-            if (profileIndex !== -1) {
-                mockFreelancerProfiles[profileIndex] = { ...mockFreelancerProfiles[profileIndex], ...(profileData as Partial<FreelancerProfile>) };
-            }
+            setFreelancerProfiles(prevProfiles => {
+                const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
+                const newProfiles = [...prevProfiles];
+                if (profileIndex !== -1) {
+                    newProfiles[profileIndex] = { ...newProfiles[profileIndex], ...(profileData as Partial<FreelancerProfile>) };
+                }
+                return newProfiles;
+            });
         } else {
-            const profileIndex = mockClientProfiles.findIndex(p => p.userId === userId);
-            if (profileIndex !== -1) {
-                mockClientProfiles[profileIndex] = { ...mockClientProfiles[profileIndex], ...(profileData as Partial<ClientProfile>) };
-            }
+            setClientProfiles(prevProfiles => {
+                const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
+                const newProfiles = [...prevProfiles];
+                if (profileIndex !== -1) {
+                    newProfiles[profileIndex] = { ...newProfiles[profileIndex], ...(profileData as Partial<ClientProfile>) };
+                }
+                return newProfiles;
+            });
         }
     }
     
@@ -119,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
