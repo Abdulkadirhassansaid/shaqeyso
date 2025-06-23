@@ -33,6 +33,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [bio, setBio] = React.useState(freelancerProfile?.bio || '');
   const [hourlyRate, setHourlyRate] = React.useState(freelancerProfile?.hourlyRate || 0);
   const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
+  const [customSkill, setCustomSkill] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
 
   const handleToggleSkill = (skillToToggle: string) => {
@@ -41,6 +42,17 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
             ? prevSkills.filter(s => s !== skillToToggle) 
             : [...prevSkills, skillToToggle]
     );
+  };
+
+  const handleAddCustomSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && customSkill.trim() !== '') {
+      e.preventDefault();
+      const newSkill = customSkill.trim();
+      if (!skills.includes(newSkill)) {
+        setSkills(prevSkills => [...prevSkills, newSkill]);
+      }
+      setCustomSkill('');
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -110,12 +122,23 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground italic">Select skills from the list below.</p>
+                        <p className="text-sm text-muted-foreground italic">Add your skills below.</p>
                     )}
                 </div>
             </div>
             <div className="space-y-2">
-                <Label>Choose from common skills</Label>
+              <Label htmlFor="custom-skill">Add a new skill</Label>
+              <Input
+                id="custom-skill"
+                placeholder="Type a skill and press Enter to add"
+                value={customSkill}
+                onChange={(e) => setCustomSkill(e.target.value)}
+                onKeyDown={handleAddCustomSkill}
+                disabled={isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+                <Label>Or choose from common skills</Label>
                 <div className="flex flex-wrap gap-2">
                     {commonSkills.map(skill => (
                         <Button
@@ -126,7 +149,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                             onClick={() => handleToggleSkill(skill)}
                             disabled={isSaving}
                         >
-                            {skills.includes(skill) && <X className="-ml-1 h-3 w-3" />}
+                            {skills.includes(skill) && <X className="-ml-1 mr-1 h-3 w-3" />}
                             {skill}
                         </Button>
                     ))}
