@@ -45,7 +45,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedUserId) {
         const loggedInUser = users.find((u) => u.id === storedUserId);
         if (loggedInUser) {
-          setUser(loggedInUser);
+          // If the logged in user was blocked, log them out
+          if (loggedInUser.isBlocked) {
+             localStorage.removeItem('userId');
+             setUser(null);
+          } else {
+             setUser(loggedInUser);
+          }
         } else {
             localStorage.removeItem('userId');
         }
@@ -114,24 +120,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    let updatedUser: User | null = null;
-    
     setUsers(prevUsers => {
-        const userIndex = prevUsers.findIndex(u => u.id === userId);
-        if (userIndex === -1) return prevUsers;
-        
-        const newUsers = [...prevUsers];
-        updatedUser = { ...newUsers[userIndex], ...userData };
-        newUsers[userIndex] = updatedUser;
-        
-        setUser(updatedUser);
-        return newUsers;
+        return prevUsers.map(u => 
+            u.id === userId ? { ...u, ...userData } : u
+        );
     });
 
-    if (!updatedUser) return false;
-
     if (profileData) {
-        if (updatedUser.role === 'freelancer') {
+        const targetUser = users.find(u => u.id === userId);
+        if (targetUser?.role === 'freelancer') {
             setFreelancerProfiles(prevProfiles => {
                 const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
                 const newProfiles = [...prevProfiles];
@@ -140,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
                 return newProfiles;
             });
-        } else {
+        } else if (targetUser?.role === 'client') {
             setClientProfiles(prevProfiles => {
                 const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
                 const newProfiles = [...prevProfiles];
@@ -161,9 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (u.id === userId) {
                 const newMethod = { ...method, id: `pm-${Date.now()}` };
                 const paymentMethods = [...(u.paymentMethods || []), newMethod];
-                const updatedUser = { ...u, paymentMethods };
-                if (user?.id === userId) setUser(updatedUser);
-                return updatedUser;
+                return { ...u, paymentMethods };
             }
             return u;
         });
@@ -176,9 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return prevUsers.map(u => {
             if (u.id === userId) {
                 const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-                const updatedUser = { ...u, paymentMethods };
-                 if (user?.id === userId) setUser(updatedUser);
-                return updatedUser;
+                return { ...u, paymentMethods };
             }
             return u;
         });
@@ -199,7 +192,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     updatedUser = { ...updatedUser, balance: newBalance };
                 }
 
-                if (user?.id === userId) setUser(updatedUser);
                 return updatedUser;
             }
             return u;
