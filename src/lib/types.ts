@@ -19,6 +19,7 @@ export type Job = {
   deadline: string;
   clientId: string;
   proposals?: Proposal[];
+  status: 'Open' | 'Interviewing' | 'Closed';
 };
 
 export type Proposal = {

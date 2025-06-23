@@ -23,6 +23,20 @@ export const translations = {
         completed: 'Completed',
         pending: 'Pending',
         failed: 'Failed',
+        open: 'Open',
+        interviewing: 'Interviewing',
+        closed: 'Closed',
+        actions: 'Actions',
+        changeStatus: 'Change Status',
+        deleteJob: 'Delete Job',
+        delete: 'Delete',
+        jobDeleted: 'Job Deleted',
+        jobDeletedDesc: 'The job posting has been successfully deleted.',
+        jobStatusUpdated: 'Status Updated',
+        jobStatusUpdatedDesc: 'The job status has been successfully updated.',
+        deleteJobConfirmTitle: 'Are you sure you want to delete this job?',
+        deleteJobConfirmDesc: 'This action cannot be undone and the job will be permanently removed.',
+
 
         // Header
         shaqoFinder: 'Shaqo Finder',
@@ -246,6 +260,19 @@ export const translations = {
         completed: 'Dhamaystiran',
         pending: 'Sugaya',
         failed: 'Fashilmay',
+        open: 'Furan',
+        interviewing: 'Waraysi',
+        closed: 'Xiran',
+        actions: 'Tallaabooyin',
+        changeStatus: 'Beddel Xaaladda',
+        deleteJob: 'Tirtir Shaqada',
+        delete: 'Tirtir',
+        jobDeleted: 'Shaqada Waa La Tirtiray',
+        jobDeletedDesc: 'Shaqo qoristii si guul leh ayaa loo tirtiray.',
+        jobStatusUpdated: 'Xaaladda Waa La Cusboonaysiiyey',
+        jobStatusUpdatedDesc: 'Xaaladda shaqada si guul leh ayaa loo cusboonaysiiyay.',
+        deleteJobConfirmTitle: 'Ma hubtaa inaad rabto inaad tirtirto shaqadan?',
+        deleteJobConfirmDesc: 'Tallaabadan lama laaban karo, shaqadana si joogto ah ayaa meesha looga saari doonaa.',
 
 
         // Header

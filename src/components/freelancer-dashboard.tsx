@@ -26,6 +26,8 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const { t } = useLanguage();
 
+  const openJobs = jobs.filter(job => job.status === 'Open');
+
   if (selectedJob) {
     return (
       <Card className="w-full">
@@ -68,7 +70,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
             <CardDescription>{t.findWorkDesc}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
+            {openJobs.map((job) => (
                 <Card key={job.id} className="flex flex-col">
                     <CardHeader>
                         <CardTitle className="text-lg font-headline">{job.title}</CardTitle>

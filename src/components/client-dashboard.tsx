@@ -13,7 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -23,13 +23,16 @@ import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
 import { useJobs } from '@/hooks/use-jobs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 interface ClientDashboardProps {
   user: User;
 }
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
-  const { jobs } = useJobs();
+  const { jobs, deleteJob, updateJobStatus } = useJobs();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
@@ -76,6 +79,22 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     } finally {
       setIsRanking(false);
     }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    await deleteJob(jobId);
+    toast({
+        title: t.jobDeleted,
+        description: t.jobDeletedDesc,
+    });
+  };
+
+  const handleUpdateStatus = async (jobId: string, status: Job['status']) => {
+      await updateJobStatus(jobId, status);
+      toast({
+          title: t.jobStatusUpdated,
+          description: t.jobStatusUpdatedDesc,
+      });
   };
   
   if (selectedJob) {
@@ -185,15 +204,61 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
             {clientJobs.map((job) => (
               <Card key={job.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg">{job.title}</CardTitle>
-                  <CardDescription>
-                    {t.budget}: ${job.budget}
-                  </CardDescription>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">{job.title}</CardTitle>
+                      <CardDescription>
+                        {t.budget}: ${job.budget}
+                      </CardDescription>
+                    </div>
+                     <Badge variant={job.status === 'Open' ? 'default' : job.status === 'Closed' ? 'destructive' : 'secondary'}>{t[job.status.toLowerCase() as keyof typeof t] || job.status}</Badge>
+                  </div>
                 </CardHeader>
-                <CardFooter>
+                <CardFooter className="flex justify-between items-center">
                   <Button onClick={() => setSelectedJob(job)}>
                     {t.viewDetailsAndProposals}
                   </Button>
+                  <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">{t.actions}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>{t.changeStatus}</DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                              <DropdownMenuItem disabled={job.status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
+                              <DropdownMenuItem disabled={job.status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
+                              <DropdownMenuItem disabled={job.status === 'Closed'} onClick={() => handleUpdateStatus(job.id, 'Closed')}>{t.closed}</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            {t.deleteJob}
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t.deleteJobConfirmDesc}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardFooter>
               </Card>
             ))}

@@ -59,6 +59,7 @@ export const mockJobs: Job[] = [
     budget: 2500,
     deadline: '2024-08-30',
     clientId: 'client-1',
+    status: 'Open',
   },
   {
     id: 'job-2',
@@ -68,6 +69,7 @@ export const mockJobs: Job[] = [
     budget: 1800,
     deadline: '2024-09-15',
     clientId: 'client-1',
+    status: 'Open',
   },
   {
     id: 'job-3',
@@ -77,6 +79,7 @@ export const mockJobs: Job[] = [
     budget: 500,
     deadline: '2024-08-25',
     clientId: 'client-1',
+    status: 'Interviewing',
   },
 ];
 
