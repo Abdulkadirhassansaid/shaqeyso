@@ -34,9 +34,18 @@ export default function LoginPage() {
     e.preventDefault();
     setIsSubmitting(true);
     const result = await login(email, password);
-    if (result.success) {
+
+    if (result.success && result.user) {
       const redirectUrl = searchParams.get('redirect');
-      // Prevent redirecting to admin pages from the general login.
+      
+      // If the user is an admin, always send them to the homepage from this form.
+      // The homepage will show them a card with a link to their admin dashboard.
+      if (result.user.role === 'admin') {
+          router.push('/');
+          return;
+      }
+      
+      // For regular users, prevent redirecting to admin pages from the general login.
       if (redirectUrl && redirectUrl.toLowerCase().startsWith('/admin')) {
           router.push('/');
       } else {
