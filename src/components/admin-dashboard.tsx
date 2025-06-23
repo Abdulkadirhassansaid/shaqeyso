@@ -18,13 +18,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
 import { ChatDialog } from './chat-dialog';
+import { DirectChatDialog } from './direct-chat-dialog';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus } = useAuth();
@@ -33,6 +34,7 @@ export function AdminDashboard() {
   const { toast } = useToast();
   const [revenuePeriod, setRevenuePeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
+  const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
 
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
@@ -328,28 +330,34 @@ export function AdminDashboard() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleToggleBlock(user.id, !!user.isBlocked)}>
-                                                        {user.isBlocked ? (
-                                                            <>
-                                                                <UserCheck className="mr-2 h-4 w-4" />
-                                                                <span>{t.unblockUser}</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Slash className="mr-2 h-4 w-4" />
-                                                                <span>{t.blockUser}</span>
-                                                            </>
-                                                        )}
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
+                                                    <MessageCircle className="h-4 w-4" />
+                                                    <span className="sr-only">Chat with {user.name}</span>
+                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleToggleBlock(user.id, !!user.isBlocked)}>
+                                                            {user.isBlocked ? (
+                                                                <>
+                                                                    <UserCheck className="mr-2 h-4 w-4" />
+                                                                    <span>{t.unblockUser}</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Slash className="mr-2 h-4 w-4" />
+                                                                    <span>{t.blockUser}</span>
+                                                                </>
+                                                            )}
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -416,6 +424,13 @@ export function AdminDashboard() {
                 job={chattingJob}
                 isOpen={!!chattingJob}
                 onClose={() => setChattingJob(null)}
+            />
+        )}
+        {chattingWithUser && (
+            <DirectChatDialog
+                otherUser={chattingWithUser}
+                isOpen={!!chattingWithUser}
+                onClose={() => setChattingWithUser(null)}
             />
         )}
     </div>

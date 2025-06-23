@@ -99,3 +99,11 @@ export type Review = {
     comment: string;
     date: string; // ISO date string
 };
+
+export type DirectMessage = {
+    id: string;
+    participantIds: string[]; // [adminId, userId]
+    senderId: string;
+    text: string;
+    timestamp: string; // ISO date string
+};

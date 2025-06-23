@@ -8,6 +8,7 @@ import { AdminDashboard } from '@/components/admin-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobsProvider } from '@/hooks/use-jobs';
 import { MessagesProvider } from '@/hooks/use-messages';
+import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -45,7 +46,9 @@ export default function AdminPage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <JobsProvider>
           <MessagesProvider>
-            <AdminDashboard />
+            <DirectMessagesProvider>
+              <AdminDashboard />
+            </DirectMessagesProvider>
           </MessagesProvider>
         </JobsProvider>
       </main>

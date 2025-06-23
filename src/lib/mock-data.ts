@@ -1,5 +1,5 @@
 
-import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message, Review, Transaction } from './types';
+import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message, Review, Transaction, DirectMessage } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -178,4 +178,21 @@ export const mockReviews: Review[] = [
         comment: 'Aisha was fantastic to work with. She delivered high-quality designs ahead of schedule and was very responsive to feedback.',
         date: '2024-07-16T10:00:00Z',
     },
+];
+
+export const mockDirectMessages: DirectMessage[] = [
+  {
+    id: 'dm-1',
+    participantIds: ['admin-1', 'freelancer-1'],
+    senderId: 'admin-1',
+    text: 'Hi Aisha, I just wanted to check in and see how you are finding the platform.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+  },
+  {
+    id: 'dm-2',
+    participantIds: ['admin-1', 'freelancer-1'],
+    senderId: 'freelancer-1',
+    text: "Hi Admin! Thanks for checking in. It's been great so far, I've already found a project.",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(), // 23 hours ago
+  }
 ];
