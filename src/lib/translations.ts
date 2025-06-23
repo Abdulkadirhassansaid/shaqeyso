@@ -5,6 +5,7 @@ export const translations = {
         save: 'Save',
         saving: 'Saving...',
         back: 'Back',
+        backToHome: 'Back to Home',
         submit: 'Submit',
         settings: 'Settings',
         description: 'Description',
@@ -220,6 +221,7 @@ export const translations = {
         save: 'Kaydi',
         saving: 'Waa la kaydinayaa...',
         back: 'Dib u noqo',
+        backToHome: 'Ku Laabo Bogga Hore',
         submit: 'Gudbi',
         settings: 'Dejinta',
         description: 'Faahfaahin',
@@ -437,5 +439,3 @@ export const translations = {
 export type Language = keyof typeof translations;
 
 export type Translations = typeof translations;
-
-    

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { CreditCard, PlusCircle, Wallet, Smartphone } from 'lucide-react';
+import { CreditCard, PlusCircle, Wallet, Smartphone, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
 
 export default function BillingPage() {
   const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser } = useAuth();
@@ -135,6 +136,14 @@ export default function BillingPage() {
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <div>
+            <Button asChild variant="outline" size="sm">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {t.backToHome}
+                </Link>
+            </Button>
+          </div>
           <header>
             <h1 className="text-3xl font-bold tracking-tight">{t.billingTitle}</h1>
             <p className="text-muted-foreground mt-1">{t.billingDescription}</p>
@@ -309,5 +318,3 @@ export default function BillingPage() {
     </div>
   );
 }
-
-    
