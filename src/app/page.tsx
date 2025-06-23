@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,12 +21,17 @@ export default function ShaqeysoHubApp() {
   const router = useRouter();
 
   React.useEffect(() => {
-    if (!isLoading && !user) {
+    if (isLoading) {
+      return;
+    }
+    if (!user) {
       router.replace('/login');
+    } else if (!user.isVerified && user.role !== 'admin') {
+      router.replace('/verify');
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user) {
+  if (isLoading || !user || (!user.isVerified && user.role !== 'admin')) {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
             <Header />

@@ -9,6 +9,9 @@ export type User = {
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
   isBlocked?: boolean;
+  isVerified?: boolean;
+  passportOrIdUrl?: string;
+  businessCertificateUrl?: string;
 };
 
 export type SubmittedFile = {

@@ -20,6 +20,9 @@ export const mockUsers: User[] = [
       { id: 'txn-c3', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: -500, status: 'Completed' },
     ],
     isBlocked: false,
+    isVerified: true,
+    passportOrIdUrl: 'https://placehold.co/600x400.png',
+    businessCertificateUrl: 'https://placehold.co/600x400.png',
   },
   {
     id: 'freelancer-1',
@@ -39,6 +42,8 @@ export const mockUsers: User[] = [
       { id: 'txn-f5', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: 475, status: 'Completed' },
     ],
     isBlocked: false,
+    isVerified: true,
+    passportOrIdUrl: 'https://placehold.co/600x400.png',
   },
    {
     id: 'admin-1',
@@ -56,6 +61,7 @@ export const mockUsers: User[] = [
       { id: 'txn-a3', date: '2024-07-05T14:00:00Z', description: 'Platform Fee for "Blog Content"', amount: 25, status: 'Completed' },
     ],
     isBlocked: false,
+    isVerified: true,
   },
 ];
 

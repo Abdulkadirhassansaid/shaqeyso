@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,7 +37,7 @@ export default function SignupPage() {
     setIsLoading(true);
     const success = await signup(name, email, password, role);
     if (success) {
-      router.push('/');
+      router.push('/onboarding');
     } else {
       toast({
         title: t.signupFailed,

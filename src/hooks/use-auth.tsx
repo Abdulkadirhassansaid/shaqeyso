@@ -26,6 +26,7 @@ interface AuthContextType {
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
+  submitVerification: (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -129,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       paymentMethods: [],
       transactions: initialTransactions,
       isBlocked: false,
+      isVerified: false,
     };
     
     setUsers(prev => [...prev, newUser]);
@@ -176,6 +178,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setClientProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
         }
     }
+    return true;
+  };
+
+  const submitVerification = async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
+    setUsers(currentUsers => currentUsers.map(u => {
+        if (u.id === userId) {
+            return { 
+                ...u, 
+                isVerified: true,
+                passportOrIdUrl: documents.passportOrIdUrl,
+                businessCertificateUrl: documents.businessCertificateUrl,
+            };
+        }
+        return u;
+    }));
     return true;
   };
 
@@ -233,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -36,6 +36,11 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (result.success && result.user) {
+      if (!result.user.isVerified && result.user.role !== 'admin') {
+        router.push('/verify');
+        return;
+      }
+      
       const redirectUrl = searchParams.get('redirect');
       
       // If the user is an admin, always send them to the homepage from this form.
