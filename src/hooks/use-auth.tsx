@@ -70,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('userId');
             setUser(null);
         }
+      } else {
+        setUser(null);
       }
     } catch (error) {
         console.error("Could not access local storage", error);
@@ -153,108 +155,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
   
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    let updatedUser: User | undefined;
-    const newUsers = users.map(u => {
-        if (u.id === userId) {
-            updatedUser = { ...u, ...userData };
-            return updatedUser;
-        }
-        return u;
-    });
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, ...userData } : u
+    ));
 
-    if (updatedUser) {
-        setUsers(newUsers);
-        if (user && user.id === userId) {
-            setUser(updatedUser);
+    if (profileData) {
+        const targetUser = users.find(u => u.id === userId);
+        if (targetUser?.role === 'freelancer') {
+            setFreelancerProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
+        } else if (targetUser?.role === 'client') {
+            setClientProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
         }
-
-        if (profileData) {
-            if (updatedUser.role === 'freelancer') {
-                setFreelancerProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
-            } else if (updatedUser.role === 'client') {
-                setClientProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
-            }
-        }
-        return true;
     }
-    return false;
+    return true;
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
     const newMethod = { ...method, id: `pm-${Date.now()}` };
-    let updatedUser: User | undefined;
-    
-    const newUsers = users.map(u => {
-        if (u.id === userId) {
-            updatedUser = { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
-            return updatedUser;
-        }
-        return u;
-    });
-
-    if (updatedUser) {
-        setUsers(newUsers);
-        if (user?.id === userId) setUser(updatedUser);
-        return true;
-    }
-    return false;
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] } : u
+    ));
+    return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    let updatedUser: User | undefined;
-    const newUsers = users.map(u => {
-        if (u.id === userId) {
-            const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-            updatedUser = { ...u, paymentMethods };
-            return updatedUser;
-        }
-        return u;
-    });
-    
-    if (updatedUser) {
-        setUsers(newUsers);
-        if (user?.id === userId) setUser(updatedUser);
-        return true;
-    }
-    return false;
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) } : u
+    ));
+    return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
     const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-    let updatedUser: User | undefined;
-    
-    const newUsers = users.map(u => {
-        if (u.id === userId) {
-            updatedUser = { ...u, transactions: [...(u.transactions || []), newTransaction] };
-            return updatedUser;
-        }
-        return u;
-    });
-    
-    if (updatedUser) {
-        setUsers(newUsers);
-        if (user?.id === userId) setUser(updatedUser);
-        return true;
-    }
-    return false;
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, transactions: [...(u.transactions || []), newTransaction] } : u
+    ));
+    return true;
   };
   
   const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
-    let updatedUser: User | undefined;
-    const newUsers = users.map(u => {
-        if (u.id === userId) {
-            updatedUser = { ...u, isBlocked: !u.isBlocked };
-            return updatedUser;
-        }
-        return u;
-    });
-
-    if (updatedUser) {
-        setUsers(newUsers);
-        // The useEffect hook will handle logging out the user if they are the one being blocked.
-        return true;
-    }
-    return false;
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
+    ));
+    return true;
   };
 
   const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus };
