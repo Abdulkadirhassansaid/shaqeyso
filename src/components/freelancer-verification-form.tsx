@@ -12,6 +12,7 @@ import { FileUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import Link from 'next/link';
 
 interface FreelancerVerificationFormProps {
   user: User;
@@ -137,7 +138,10 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
                 />
             </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-between">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/">{t.backToHome}</Link>
+          </Button>
           <Button type="submit" disabled={isSubmitting || !idDoc}>
             {isSubmitting ? t.submitting : t.submitForVerification}
           </Button>
