@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -769,28 +769,63 @@ export function AdminDashboard() {
             />
         )}
         {reviewingUser && (
-            <Dialog open={!!reviewingUser} onOpenChange={(isOpen) => !isOpen && setReviewingUser(null)}>
+            <Dialog open={!!reviewingUser} onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setReviewingUser(null);
+                setIsRejecting(false);
+                setRejectionReason('');
+              }
+            }}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>{t.reviewVerificationTitle.replace('{name}', reviewingUser.name)}</DialogTitle>
                         <DialogDescription>{reviewingUser.email}</DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
+                    <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
                         <h3 className="font-semibold">{t.submittedDocs}</h3>
-                        <div className="space-y-2">
-                            <Label>{t.idUploadTitle}</Label>
-                            <div className="flex items-center gap-2">
-                                <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{reviewingUser.passportOrIdUrl}</a>
-                                <ExternalLink className="h-4 w-4 text-muted-foreground"/>
+                        {reviewingUser.passportOrIdUrl && (
+                             <div className="space-y-2">
+                                <Label>{t.idUploadTitle}</Label>
+                                {reviewingUser.passportOrIdUrl.startsWith('data:image') ? (
+                                    <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer" className="block border rounded-md overflow-hidden">
+                                        <Image 
+                                            src={reviewingUser.passportOrIdUrl} 
+                                            alt="ID Document" 
+                                            width={500} 
+                                            height={300} 
+                                            className="object-contain w-full h-auto"
+                                        />
+                                    </a>
+                                ) : (
+                                    <a href={reviewingUser.passportOrIdUrl} download="id_document.pdf" className="p-4 border rounded-md bg-muted hover:bg-muted/80 flex items-center gap-2 text-foreground">
+                                        <FileText className="h-6 w-6 text-muted-foreground" />
+                                        <span className="font-medium">View Document (PDF)</span>
+                                        <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
+                                    </a>
+                                )}
                             </div>
-                        </div>
+                        )}
+                       
                         {reviewingUser.role === 'client' && reviewingUser.businessCertificateUrl && (
                              <div className="space-y-2">
                                 <Label>{t.certUploadTitle}</Label>
-                                <div className="flex items-center gap-2">
-                                    <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{reviewingUser.businessCertificateUrl}</a>
-                                    <ExternalLink className="h-4 w-4 text-muted-foreground"/>
-                                </div>
+                                {reviewingUser.businessCertificateUrl.startsWith('data:image') ? (
+                                     <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="block border rounded-md overflow-hidden">
+                                        <Image 
+                                            src={reviewingUser.businessCertificateUrl} 
+                                            alt="Business Certificate" 
+                                            width={500} 
+                                            height={300} 
+                                            className="object-contain w-full h-auto"
+                                        />
+                                    </a>
+                                ) : (
+                                    <a href={reviewingUser.businessCertificateUrl} download="business_certificate.pdf" className="p-4 border rounded-md bg-muted hover:bg-muted/80 flex items-center gap-2 text-foreground">
+                                        <FileText className="h-6 w-6 text-muted-foreground" />
+                                        <span className="font-medium">View Certificate (PDF)</span>
+                                        <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
+                                    </a>
+                                )}
                             </div>
                         )}
                     </div>
