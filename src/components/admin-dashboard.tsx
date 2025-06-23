@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, CalendarDays } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, CalendarDays, TrendingUp } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -36,7 +36,7 @@ export function AdminDashboard() {
     await toggleUserBlockStatus(userId);
     toast({
         title: isBlocked ? t.userUnblocked : t.userBlocked,
-        description: isBlocked ? t.userUnblockedDesc : t.userBlockedDesc,
+        description: isBlocked ? t.userUnblockedDesc : t.userUnblockedDesc,
     });
   }
   
@@ -145,11 +145,13 @@ export function AdminDashboard() {
                 <TabsTrigger value="jobs">{t.jobs}</TabsTrigger>
             </TabsList>
             <TabsContent value="analytics" className="mt-6 space-y-6">
-                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            <div className="p-2 rounded-md bg-success/20">
+                                <DollarSign className="h-4 w-4 text-success" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
@@ -159,7 +161,9 @@ export function AdminDashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
-                            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                             <div className="p-2 rounded-md bg-primary/20">
+                                <TrendingUp className="h-4 w-4 text-primary" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${thisMonthRevenue.toFixed(2)}</div>
@@ -169,7 +173,9 @@ export function AdminDashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalUsers}</CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <div className="p-2 rounded-md bg-info/20">
+                                <Users className="h-4 w-4 text-info" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{users.filter(u => u.role !== 'admin').length}</div>
@@ -179,7 +185,9 @@ export function AdminDashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalJobs}</CardTitle>
-                            <Briefcase className="h-4 w-4 text-muted-foreground" />
+                            <div className="p-2 rounded-md bg-accent/20">
+                                <Briefcase className="h-4 w-4 text-accent" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{jobs.length}</div>
@@ -187,7 +195,7 @@ export function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
-                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
                     <Card className="lg:col-span-4">
                         <CardHeader>
                             <CardTitle>Revenue Overview</CardTitle>
@@ -204,6 +212,20 @@ export function AdminDashboard() {
                             </Tabs>
                             <ChartContainer config={chartConfig} className="h-[300px] w-full pl-2">
                                 <BarChart data={revenueChartData}>
+                                    <defs>
+                                        <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop
+                                                offset="5%"
+                                                stopColor="var(--color-revenue)"
+                                                stopOpacity={0.8}
+                                            />
+                                            <stop
+                                                offset="95%"
+                                                stopColor="var(--color-revenue)"
+                                                stopOpacity={0.1}
+                                            />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid vertical={false} />
                                     <XAxis
                                         dataKey="date"
@@ -224,9 +246,14 @@ export function AdminDashboard() {
                                         tickFormatter={(value) => `$${value}`}
                                     />
                                     <Tooltip
+                                        cursor={false}
                                         content={<ChartTooltipContent formatter={(value) => `$${Number(value).toFixed(2)}`} />}
                                     />
-                                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                    <Bar
+                                        dataKey="revenue"
+                                        fill="url(#fillRevenue)"
+                                        radius={[4, 4, 0, 0]}
+                                    />
                                 </BarChart>
                             </ChartContainer>
                         </CardContent>
@@ -242,7 +269,7 @@ export function AdminDashboard() {
                              <div className="space-y-6">
                                 {recentTransactionsWithUsers.map(tx => (
                                     <div key={tx.id} className="flex items-center">
-                                        <Avatar className="h-9 w-9">
+                                        <Avatar className="h-9 w-9 border-2 border-transparent hover:border-primary transition-colors">
                                             <AvatarImage src={tx.user?.avatarUrl} alt="Avatar" />
                                             <AvatarFallback>{tx.user?.name.charAt(0) ?? 'U'}</AvatarFallback>
                                         </Avatar>
@@ -250,7 +277,7 @@ export function AdminDashboard() {
                                             <p className="text-sm font-medium leading-none">{tx.user?.name ?? 'Unknown User'}</p>
                                             <p className="text-sm text-muted-foreground">{tx.description}</p>
                                         </div>
-                                        <div className="ml-auto font-medium text-green-500">+${tx.amount.toFixed(2)}</div>
+                                        <div className="ml-auto font-medium text-success">+${tx.amount.toFixed(2)}</div>
                                     </div>
                                 ))}
                             </div>
@@ -290,7 +317,7 @@ export function AdminDashboard() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{t[user.role as keyof typeof t] || user.role}</Badge>
+                                            <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={user.isBlocked ? 'destructive' : 'default'}>
