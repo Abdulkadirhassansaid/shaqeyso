@@ -40,8 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   React.useEffect(() => {
-    // This effect ensures that the admin user always exists, even if the user
-    // has older data in their localStorage.
     const adminExists = users.some(u => u.email === 'admin@shaqohub.com');
     if (!adminExists) {
       const adminUser = initialUsers.find(u => u.email === 'admin@shaqohub.com');
@@ -58,12 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   React.useEffect(() => {
+    // This effect runs on mount to get the initial user from storage,
+    // and also syncs state if it's changed in another browser tab.
     try {
       const storedUserId = localStorage.getItem('userId');
       if (storedUserId) {
         const loggedInUser = users.find((u) => u.id === storedUserId);
         if (loggedInUser) {
-          // If the logged in user was blocked, log them out
           if (loggedInUser.isBlocked) {
              localStorage.removeItem('userId');
              setUser(null);
@@ -72,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
             localStorage.removeItem('userId');
+            setUser(null);
         }
       }
     } catch (error) {
@@ -149,33 +149,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('userId');
+    router.push('/login');
+  };
+
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    setUsers(prevUsers => prevUsers.map(u => {
+    let updatedUser: User | undefined;
+    const newUsers = users.map(u => {
         if (u.id === userId) {
-            return { ...u, ...userData };
+            updatedUser = { ...u, ...userData };
+            return updatedUser;
         }
         return u;
-    }));
+    });
+    setUsers(newUsers);
+
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
 
     if (profileData) {
         const targetUser = users.find(u => u.id === userId);
         if (targetUser?.role === 'freelancer') {
             setFreelancerProfiles(prevProfiles => {
-                const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
-                const newProfiles = [...prevProfiles];
-                if (profileIndex !== -1) {
-                    newProfiles[profileIndex] = { ...newProfiles[profileIndex], ...(profileData as Partial<FreelancerProfile>) };
-                }
-                return newProfiles;
+                return prevProfiles.map(p => p.userId === userId ? { ...p, ...profileData } : p);
             });
         } else if (targetUser?.role === 'client') {
             setClientProfiles(prevProfiles => {
-                const profileIndex = prevProfiles.findIndex(p => p.userId === userId);
-                const newProfiles = [...prevProfiles];
-                if (profileIndex !== -1) {
-                    newProfiles[profileIndex] = { ...newProfiles[profileIndex], ...(profileData as Partial<ClientProfile>) };
-                }
-                return newProfiles;
+                return prevProfiles.map(p => p.userId === userId ? { ...p, ...profileData } : p);
             });
         }
     }
@@ -184,52 +187,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
-    setUsers(prevUsers => prevUsers.map(u => {
+    let updatedUser: User | undefined;
+    const newUsers = users.map(u => {
         if (u.id === userId) {
             const newMethod = { ...method, id: `pm-${Date.now()}` };
-            const paymentMethods = [...(u.paymentMethods || []), newMethod];
-            return { ...u, paymentMethods };
+            updatedUser = { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
+            return updatedUser;
         }
         return u;
-    }));
+    });
+    setUsers(newUsers);
+
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
     return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    setUsers(prevUsers => prevUsers.map(u => {
+    let updatedUser: User | undefined;
+    const newUsers = users.map(u => {
         if (u.id === userId) {
             const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-            return { ...u, paymentMethods };
+            updatedUser = { ...u, paymentMethods };
+            return updatedUser;
         }
         return u;
-    }));
+    });
+    setUsers(newUsers);
+    
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
     return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
-     setUsers(prevUsers => prevUsers.map(u => {
+     let updatedUser: User | undefined;
+     const newUsers = users.map(u => {
         if (u.id === userId) {
             const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-            const transactions = [...(u.transactions || []), newTransaction];
-            return { ...u, transactions };
+            updatedUser = { ...u, transactions: [...(u.transactions || []), newTransaction] };
+            return updatedUser;
         }
         return u;
-    }));
+    });
+    setUsers(newUsers);
+
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
     return true;
   };
   
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('userId');
-    router.push('/login');
-  };
-
   const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
-    setUsers(prevUsers => 
-        prevUsers.map(u => 
-            u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
-        )
+    const newUsers = users.map(u => 
+        u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
     );
+    setUsers(newUsers);
+
+    if (user?.id === userId && newUsers.find(u => u.id === userId)?.isBlocked) {
+        logout();
+    }
     return true;
   };
 
