@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,7 +29,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }>;
-  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<{ success: boolean; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
+  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
   users: User[];
@@ -69,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(userProfile);
           }
         } else {
+          // This case can happen in a race condition during signup.
+          // We will let it be null for now, the signup flow will handle the redirect.
           setUser(null);
         }
       } else {
@@ -121,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
+  const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const authUser = userCredential.user;
@@ -168,7 +171,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       
-      return { success: true };
+      const userForState: User = { id: authUser.uid, ...newUser };
+      return { success: true, user: userForState };
 
     } catch (error: any) {
       console.error("Signup error:", error.code);

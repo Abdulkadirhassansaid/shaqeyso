@@ -36,7 +36,7 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
     const result = await signup(name, email, password, role);
-    if (result.success) {
+    if (result.success && result.user) {
       router.push('/onboarding');
     } else {
       let description = t.signupFailedDesc;
