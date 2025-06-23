@@ -283,7 +283,10 @@ export function AdminDashboard() {
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
+                                    <Button disabled={platformBalance <= 0}>
+                                      <Banknote className="mr-2 h-4 w-4" />
+                                      {t.withdrawToBank}
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
