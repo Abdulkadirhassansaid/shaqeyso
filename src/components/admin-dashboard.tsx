@@ -48,7 +48,7 @@ import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
+  const { users, toggleUserBlockStatus, deleteUser, addTransaction } from useAuth();
   const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
   const { deleteMessagesByJobId } = useMessages();
@@ -283,7 +283,7 @@ export function AdminDashboard() {
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" disabled={platformBalance <= 0}><Banknote />{t.withdrawToBank}</Button>
+                                    <Button disabled={platformBalance <= 0}><Banknote />{t.withdrawToBank}</Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
