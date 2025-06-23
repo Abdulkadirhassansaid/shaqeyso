@@ -150,6 +150,16 @@ export const translations = {
         yourBalance: 'Your Balance',
         topUpBalance: 'Top Up Balance',
         topUpDesc: 'Add funds to your account to pay for projects.',
+        topUpDialogTitle: "Top Up Your Balance",
+        topUpDialogDesc: "Enter the amount and select a payment method to add funds to your account.",
+        topUpAmount: "Amount to Top Up",
+        topUpAmountPlaceholder: "e.g., 100",
+        confirmTopUp: "Confirm Top Up",
+        topUpSuccessTitle: "Top Up Successful",
+        topUpSuccessDesc: (amount: number) => `Successfully added $${amount.toFixed(2)} to your balance.`,
+        invalidAmount: "Invalid Amount",
+        mustSelectPaymentMethod: "You must select a payment method.",
+        topUpFrom: "Top up from",
 
 
         // Client Dashboard
@@ -469,6 +479,16 @@ export const translations = {
         yourBalance: 'Hadhaagaaga',
         topUpBalance: 'Ku shubo Hadhaaga',
         topUpDesc: 'Akoonkaaga ku dar lacag si aad ugu bixiso mashaariicda.',
+        topUpDialogTitle: "Hadhaagaaga ku shubo",
+        topUpDialogDesc: "Geli lacagta oo dooro habka lacag bixinta si aad lacag ugu darto akoonkaaga.",
+        topUpAmount: "Lacagta lagu shubayo",
+        topUpAmountPlaceholder: "Tusaale, 100",
+        confirmTopUp: "Xaqiiji ku shubidda",
+        topUpSuccessTitle: "Ku shubidda Waa Guulaysatay",
+        topUpSuccessDesc: (amount: number) => `Si guul leh ayaa loogu daray $${amount.toFixed(2)} hadhaagaaga.`,
+        invalidAmount: "Lacag Khaldan",
+        mustSelectPaymentMethod: "Waa inaad doorataa habka lacag bixinta.",
+        topUpFrom: "Ka shubo",
 
 
         // Client Dashboard

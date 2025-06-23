@@ -21,6 +21,7 @@ import type { PaymentMethod } from '@/lib/types';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function BillingPage() {
   const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser } = useAuth();
@@ -32,6 +33,12 @@ export default function BillingPage() {
   const [methodType, setMethodType] = React.useState<PaymentMethod['type'] | ''>('');
   const [newCard, setNewCard] = React.useState({ last4: '', expiry: '' });
   const [newPhone, setNewPhone] = React.useState('');
+
+  // State for Top Up Dialog
+  const [isTopUpOpen, setTopUpOpen] = React.useState(false);
+  const [topUpAmount, setTopUpAmount] = React.useState('');
+  const [selectedMethodId, setSelectedMethodId] = React.useState<string | undefined>(undefined);
+
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -131,6 +138,40 @@ export default function BillingPage() {
     }
   }
 
+  const handleTopUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(topUpAmount);
+
+    if (isNaN(amount) || amount <= 0) {
+        toast({ title: t.invalidAmount, variant: 'destructive' });
+        return;
+    }
+    if (!selectedMethodId) {
+        toast({ title: t.mustSelectPaymentMethod, variant: 'destructive' });
+        return;
+    }
+    
+    const method = user.paymentMethods?.find(pm => pm.id === selectedMethodId);
+    if (!method) return;
+
+    const description = method.last4 
+        ? `${t.topUpFrom} ${method.type} ****${method.last4}`
+        : `${t.topUpFrom} ${method.type} (${method.phoneNumber})`;
+
+    await addTransaction(user.id, {
+        description: description,
+        amount: amount,
+        status: 'Completed',
+    });
+
+    toast({ title: t.topUpSuccessTitle, description: t.topUpSuccessDesc(amount) });
+    setTopUpAmount('');
+    setSelectedMethodId(undefined);
+    setTopUpOpen(false);
+    refreshUser();
+  };
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
@@ -174,7 +215,52 @@ export default function BillingPage() {
                 <p className="text-4xl font-bold">${user.balance?.toFixed(2) || '0.00'}</p>
               </CardContent>
               <CardFooter>
-                  <Button disabled>{t.topUpBalance}</Button>
+                  <Dialog open={isTopUpOpen} onOpenChange={setTopUpOpen}>
+                    <DialogTrigger asChild>
+                        <Button>{t.topUpBalance}</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{t.topUpDialogTitle}</DialogTitle>
+                            <DialogDescription>{t.topUpDialogDesc}</DialogDescription>
+                        </DialogHeader>
+                         <form onSubmit={handleTopUp}>
+                            <div className="grid gap-4 py-4">
+                               <div className="space-y-2">
+                                    <Label htmlFor="top-up-amount">{t.topUpAmount}</Label>
+                                    <Input id="top-up-amount" type="number" placeholder={t.topUpAmountPlaceholder} value={topUpAmount} onChange={e => setTopUpAmount(e.target.value)} required />
+                               </div>
+                               <div className="space-y-2">
+                                   <Label>{t.selectPaymentMethod}</Label>
+                                    <RadioGroup value={selectedMethodId} onValueChange={setSelectedMethodId}>
+                                        {(user.paymentMethods || []).map(method => (
+                                            <div key={method.id} className="flex items-center space-x-2 border rounded-md p-3">
+                                                <RadioGroupItem value={method.id} id={method.id} />
+                                                <Label htmlFor={method.id} className="flex items-center gap-2 font-normal w-full cursor-pointer">
+                                                    {getPaymentMethodIcon(method.type)}
+                                                     {method.last4 ? (
+                                                        <span>{method.type} {t.endingIn} {method.last4}</span>
+                                                     ) : (
+                                                        <span>{method.type} ({method.phoneNumber})</span>
+                                                     )}
+                                                </Label>
+                                            </div>
+                                        ))}
+                                    </RadioGroup>
+                                    {(user.paymentMethods || []).length === 0 && (
+                                        <p className="text-sm text-muted-foreground text-center">{t.noPaymentMethods}</p>
+                                    )}
+                               </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="ghost">{t.cancel}</Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={(user.paymentMethods || []).length === 0}>{t.confirmTopUp}</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                  </Dialog>
               </CardFooter>
             </Card>
           )}
