@@ -38,6 +38,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert job description writer. Given a short prompt, you will generate a detailed and appealing job description.
 Do not use markdown formatting like ** for bold text. Instead of bolding, use plain text for headings.
 For any lists, use a hyphen (-) as a bullet point.
+Do not include a "How to Apply" section, contact information, or any generic company boilerplate about equal opportunity employment. The application process is handled by the platform.
 
 Prompt: {{{prompt}}}`,
 });
