@@ -25,6 +25,7 @@ interface AuthContextType {
   removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
+  deleteUser: (userId: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -217,7 +218,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus };
+  const deleteUser = async (userId: string): Promise<boolean> => {
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) return false;
+
+    setUsers(currentUsers => currentUsers.filter(u => u.id !== userId));
+
+    if (userToDelete.role === 'freelancer') {
+        setFreelancerProfiles(prev => prev.filter(p => p.userId !== userId));
+    } else if (userToDelete.role === 'client') {
+        setClientProfiles(prev => prev.filter(p => p.userId !== userId));
+    }
+
+    return true;
+  };
+
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

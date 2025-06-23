@@ -9,6 +9,7 @@ import { mockMessages as initialMessages } from '@/lib/mock-data';
 interface MessagesContextType {
   messages: Message[];
   addMessage: (messageData: Omit<Message, 'id' | 'timestamp'>) => Promise<boolean>;
+  deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
 }
 
 const MessagesContext = React.createContext<MessagesContextType | null>(null);
@@ -29,7 +30,12 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { messages, addMessage };
+  const deleteMessagesByJobId = async (jobId: string): Promise<boolean> => {
+    setMessages(prev => prev.filter(m => m.jobId !== jobId));
+    return true;
+  };
+
+  const value = { messages, addMessage, deleteMessagesByJobId };
 
   return <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>;
 }

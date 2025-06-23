@@ -18,18 +18,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
 import { ChatDialog } from './chat-dialog';
 import { DirectChatDialog } from './direct-chat-dialog';
+import { useProposals } from '@/hooks/use-proposals';
+import { useReviews } from '@/hooks/use-reviews';
+import { useDirectMessages } from '@/hooks/use-direct-messages';
+import { useMessages } from '@/hooks/use-messages';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus } = useAuth();
-  const { jobs } = useJobs();
+  const { users, toggleUserBlockStatus, deleteUser } = useAuth();
+  const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
+  const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
+  const { deleteMessagesByJobId } = useMessages();
+  const { deleteReviewsByJobId, deleteReviewsForUser } = useReviews();
+  const { deleteDirectMessagesForUser } = useDirectMessages();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [revenuePeriod, setRevenuePeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
@@ -45,6 +64,51 @@ export function AdminDashboard() {
     });
   }
   
+  const handleDeleteJob = async (jobId: string) => {
+    await Promise.all([
+        deleteMessagesByJobId(jobId),
+        deleteProposalsByJobId(jobId),
+        deleteReviewsByJobId(jobId),
+    ]);
+    await deleteJob(jobId);
+    toast({
+        title: t.jobDeleted,
+        description: t.jobDeletedAndData,
+    });
+  };
+
+  const handleDeleteUser = async (userToDelete: User) => {
+    if (userToDelete.role === 'client') {
+        const clientJobs = jobs.filter(j => j.clientId === userToDelete.id);
+        await Promise.all(clientJobs.map(job => 
+            Promise.all([
+                deleteMessagesByJobId(job.id),
+                deleteProposalsByJobId(job.id),
+                deleteReviewsByJobId(job.id),
+            ])
+        ));
+        await deleteJobsByClientId(userToDelete.id);
+    }
+    
+    if (userToDelete.role === 'freelancer') {
+        await deleteProposalsByFreelancerId(userToDelete.id);
+    }
+    
+    await Promise.all([
+        deleteReviewsForUser(userToDelete.id),
+        deleteDirectMessagesForUser(userToDelete.id),
+    ]);
+    
+    await deleteUser(userToDelete.id);
+    
+    toast({
+        title: t.userDeleted,
+        description: t.userDeletedDesc(userToDelete.name),
+        variant: 'destructive',
+    });
+  };
+
+
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
 
@@ -355,6 +419,35 @@ export function AdminDashboard() {
                                                                 </>
                                                             )}
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                    onSelect={(e) => e.preventDefault()}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    <span>{t.deleteUser}</span>
+                                                                </DropdownMenuItem>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>{t.deleteUserConfirmTitle}</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        {t.deleteUserConfirmDesc(user.name)}
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => handleDeleteUser(user)}
+                                                                        className="bg-destructive hover:bg-destructive/90"
+                                                                    >
+                                                                        {t.deleteUser}
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </div>
@@ -381,7 +474,7 @@ export function AdminDashboard() {
                                     <TableHead>{t.freelancer}</TableHead>
                                     <TableHead>{t.budget}</TableHead>
                                     <TableHead>{t.status}</TableHead>
-                                    <TableHead className="text-right">Chat</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -399,15 +492,54 @@ export function AdminDashboard() {
                                                  <Badge variant={getStatusVariant(job.status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  onClick={() => setChattingJob(job)}
-                                                  disabled={!job.hiredFreelancerId}
-                                                  aria-label="View Chat"
-                                                >
-                                                    <MessageSquare className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                      variant="outline"
+                                                      size="icon"
+                                                      onClick={() => setChattingJob(job)}
+                                                      disabled={!job.hiredFreelancerId}
+                                                      aria-label="View Chat"
+                                                    >
+                                                        <MessageSquare className="h-4 w-4" />
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <DropdownMenuItem
+                                                                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                        onSelect={(e) => e.preventDefault()}
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        <span>{t.deleteJob}</span>
+                                                                    </DropdownMenuItem>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            {t.deleteJobConfirmDesc}
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleDeleteJob(job.id)}
+                                                                            className="bg-destructive hover:bg-destructive/90"
+                                                                        >
+                                                                            {t.deleteJob}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     )

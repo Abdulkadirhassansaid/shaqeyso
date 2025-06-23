@@ -9,6 +9,8 @@ import type { Review } from '@/lib/types';
 interface ReviewsContextType {
   reviews: Review[];
   addReview: (reviewData: Omit<Review, 'id' | 'date'>) => Promise<boolean>;
+  deleteReviewsByJobId: (jobId: string) => Promise<boolean>;
+  deleteReviewsForUser: (userId: string) => Promise<boolean>;
 }
 
 const ReviewsContext = React.createContext<ReviewsContextType | null>(null);
@@ -26,7 +28,17 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { reviews, addReview };
+  const deleteReviewsByJobId = async (jobId: string): Promise<boolean> => {
+    setReviews(prev => prev.filter(r => r.jobId !== jobId));
+    return true;
+  }
+
+  const deleteReviewsForUser = async (userId: string): Promise<boolean> => {
+    setReviews(prev => prev.filter(r => r.reviewerId !== userId && r.revieweeId !== userId));
+    return true;
+  }
+
+  const value = { reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser };
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>;
 }

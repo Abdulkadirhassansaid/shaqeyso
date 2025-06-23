@@ -389,6 +389,12 @@ export const translations = {
         fromCompletedJobs: "from completed jobs",
         clients: "clients",
         freelancers: "freelancers",
+        deleteUser: "Delete User",
+        deleteUserConfirmTitle: 'Are you absolutely sure?',
+        deleteUserConfirmDesc: (name: string) => `This will permanently delete the user '${name}' and all of their associated data, including jobs, proposals, and messages. This action cannot be undone.`,
+        userDeleted: 'User Deleted',
+        userDeletedDesc: (name: string) => `User ${name} and all their data have been permanently removed.`,
+        jobDeletedAndData: "The job and all its related data have been permanently removed.",
     },
     so: {
         // General
@@ -780,6 +786,12 @@ export const translations = {
         fromCompletedJobs: "laga helay shaqooyinka la dhameeyay",
         clients: "macaamiil",
         freelancers: "shaqaale madaxbanaan",
+        deleteUser: "Tirtir Isticmaalaha",
+        deleteUserConfirmTitle: 'Ma si buuxda ayaad u hubtaa?',
+        deleteUserConfirmDesc: (name: string) => `Tani waxay si joogto ah u tirtiri doontaa isticmaalaha '${name}' iyo dhammaan xogtiisa la xidhiidha, oo ay ku jiraan shaqooyinka, soo jeedinta, iyo farriimaha. Tallaabadan lama laaban karo.`,
+        userDeleted: 'Isticmaalaha Waa La Tirtiray',
+        userDeletedDesc: (name: string) => `Isticmaale ${name} iyo dhammaan xogtiisa si joogto ah ayaa meesha looga saaray.`,
+        jobDeletedAndData: "Shaqada iyo dhammaan xogteeda la xiriirta si joogto ah ayaa meesha looga saaray.",
     }
 };
 

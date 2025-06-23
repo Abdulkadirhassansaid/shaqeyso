@@ -15,6 +15,7 @@ interface JobsContextType {
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
   releasePayment: (jobId: string) => Promise<boolean>;
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
+  deleteJobsByClientId: (clientId: string) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -78,8 +79,13 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const deleteJobsByClientId = async (clientId: string): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.filter(job => job.clientId !== clientId));
+    return true;
+  };
 
-  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed };
+
+  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId };
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

@@ -9,6 +9,7 @@ import { mockDirectMessages as initialDirectMessages } from '@/lib/mock-data';
 interface DirectMessagesContextType {
   directMessages: DirectMessage[];
   addDirectMessage: (messageData: Omit<DirectMessage, 'id' | 'timestamp'>) => Promise<boolean>;
+  deleteDirectMessagesForUser: (userId: string) => Promise<boolean>;
 }
 
 const DirectMessagesContext = React.createContext<DirectMessagesContextType | null>(null);
@@ -29,7 +30,12 @@ export function DirectMessagesProvider({ children }: { children: React.ReactNode
     return true;
   };
 
-  const value = { directMessages, addDirectMessage };
+  const deleteDirectMessagesForUser = async (userId: string): Promise<boolean> => {
+    setDirectMessages(prev => prev.filter(dm => !dm.participantIds.includes(userId)));
+    return true;
+  }
+
+  const value = { directMessages, addDirectMessage, deleteDirectMessagesForUser };
 
   return <DirectMessagesContext.Provider value={value}>{children}</DirectMessagesContext.Provider>;
 }
