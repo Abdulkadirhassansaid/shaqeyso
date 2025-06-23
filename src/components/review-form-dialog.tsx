@@ -56,15 +56,17 @@ export function ReviewFormDialog({ job, reviewee, isOpen, onClose, onSubmit }: R
         <form onSubmit={handleSubmit}>
             <DialogHeader>
             <DialogTitle>{t.leaveReview}</DialogTitle>
-            <DialogDescription>
-                <div className="flex items-center gap-4 mt-4">
-                    <Avatar>
-                        <AvatarImage src={reviewee.avatarUrl} />
-                        <AvatarFallback>{reviewee.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <div className="font-semibold text-card-foreground">{reviewee.name}</div>
-                        <div className="text-sm text-muted-foreground">{t.job}: {job.title}</div>
+            <DialogDescription asChild>
+                <div className="pt-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar>
+                            <AvatarImage src={reviewee.avatarUrl} />
+                            <AvatarFallback>{reviewee.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <div className="font-semibold text-card-foreground">{reviewee.name}</div>
+                            <div className="text-sm text-muted-foreground">{t.job}: {job.title}</div>
+                        </div>
                     </div>
                 </div>
             </DialogDescription>
