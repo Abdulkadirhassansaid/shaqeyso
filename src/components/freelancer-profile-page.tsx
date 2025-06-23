@@ -33,27 +33,37 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [bio, setBio] = React.useState(freelancerProfile?.bio || '');
   const [hourlyRate, setHourlyRate] = React.useState(freelancerProfile?.hourlyRate || 0);
   const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
-  const [customSkill, setCustomSkill] = React.useState('');
+  const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
 
-  const handleToggleSkill = (skillToToggle: string) => {
-    setSkills(prevSkills => 
-        prevSkills.includes(skillToToggle) 
-            ? prevSkills.filter(s => s !== skillToToggle) 
-            : [...prevSkills, skillToToggle]
-    );
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(prevSkills => prevSkills.filter(s => s !== skillToRemove));
   };
-
-  const handleAddCustomSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && customSkill.trim() !== '') {
-      e.preventDefault();
-      const newSkill = customSkill.trim();
-      if (!skills.includes(newSkill)) {
-        setSkills(prevSkills => [...prevSkills, newSkill]);
+  
+  const handleAddSkill = (skillToAdd: string) => {
+      const trimmedSkill = skillToAdd.trim();
+      if(trimmedSkill && !skills.includes(trimmedSkill)) {
+          setSkills(prevSkills => [...prevSkills, trimmedSkill]);
       }
-      setCustomSkill('');
+      setSkillInput('');
+  }
+
+  const handleSkillInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSkillInput(e.target.value);
+  }
+
+  const handleSkillInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSkill(skillInput);
     }
   };
+
+  const availableSkills = React.useMemo(() => {
+    return commonSkills.filter(s => 
+        !skills.includes(s) && s.toLowerCase().includes(skillInput.toLowerCase())
+    );
+  }, [skills, skillInput]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +125,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                             {skills.map(skill => (
                                 <Badge key={skill} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
                                     {skill}
-                                    <button type="button" onClick={() => handleToggleSkill(skill)} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
+                                    <button type="button" onClick={() => handleRemoveSkill(skill)} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
                                        <X className="h-3 w-3" />
                                     </button>
                                 </Badge>
@@ -127,33 +137,32 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                 </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="custom-skill">Add a new skill</Label>
+              <Label htmlFor="skill-input">Add or find skills</Label>
               <Input
-                id="custom-skill"
-                placeholder="Type a skill and press Enter to add"
-                value={customSkill}
-                onChange={(e) => setCustomSkill(e.target.value)}
-                onKeyDown={handleAddCustomSkill}
+                id="skill-input"
+                placeholder="Type a skill and press Enter, or select from the list below"
+                value={skillInput}
+                onChange={handleSkillInputChange}
+                onKeyDown={handleSkillInputKeyDown}
                 disabled={isSaving}
               />
             </div>
-            <div className="space-y-2">
-                <Label>Or choose from common skills</Label>
-                <div className="flex flex-wrap gap-2">
-                    {commonSkills.map(skill => (
-                        <Button
-                            key={skill}
-                            type="button"
-                            variant={skills.includes(skill) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleToggleSkill(skill)}
-                            disabled={isSaving}
-                        >
-                            {skills.includes(skill) && <X className="-ml-1 mr-1 h-3 w-3" />}
-                            {skill}
-                        </Button>
-                    ))}
-                </div>
+            <div className="flex flex-wrap gap-2">
+                {availableSkills.map(skill => (
+                    <Button
+                        key={skill}
+                        type="button"
+                        variant={"outline"}
+                        size="sm"
+                        onClick={() => handleAddSkill(skill)}
+                        disabled={isSaving}
+                    >
+                        {skill}
+                    </Button>
+                ))}
+                 {availableSkills.length === 0 && skillInput && !commonSkills.includes(skillInput) && (
+                    <p className="text-sm text-muted-foreground italic">No matching common skills. Press Enter to add "{skillInput}".</p>
+                )}
             </div>
           </div>
           <Button type="submit" disabled={isSaving}>
