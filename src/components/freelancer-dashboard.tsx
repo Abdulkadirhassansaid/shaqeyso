@@ -15,13 +15,14 @@ import { ArrowLeft, DollarSign, Tag, Clock } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
+import { useJobs } from '@/hooks/use-jobs';
 
 interface FreelancerDashboardProps {
   user: User;
-  jobs: Job[];
 }
 
-export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
+export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
+  const { jobs } = useJobs();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const { t } = useLanguage();
 

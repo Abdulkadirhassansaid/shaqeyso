@@ -22,13 +22,14 @@ import { mockProposals } from '@/lib/mock-data';
 import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
+import { useJobs } from '@/hooks/use-jobs';
 
 interface ClientDashboardProps {
   user: User;
-  jobs: Job[];
 }
 
-export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProps) {
+export function ClientDashboard({ user }: ClientDashboardProps) {
+  const { jobs } = useJobs();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
@@ -36,7 +37,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
   const { users: allUsers, freelancerProfiles } = useAuth();
   const { t } = useLanguage();
 
-  const clientJobs = initialJobs.filter((job) => job.clientId === user.id);
+  const clientJobs = jobs.filter((job) => job.clientId === user.id);
 
   const handleRankFreelancers = async (job: Job) => {
     setIsRanking(true);

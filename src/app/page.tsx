@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { ClientDashboard } from '@/components/client-dashboard';
 import { FreelancerDashboard } from '@/components/freelancer-dashboard';
-import { mockJobs } from '@/lib/mock-data';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ShaqoFinderApp() {
@@ -38,8 +37,8 @@ export default function ShaqoFinderApp() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {user.role === 'client' && <ClientDashboard user={user} jobs={mockJobs} />}
-        {user.role === 'freelancer' && <FreelancerDashboard user={user} jobs={mockJobs} />}
+        {user.role === 'client' && <ClientDashboard user={user} />}
+        {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
       </main>
     </div>
   );
