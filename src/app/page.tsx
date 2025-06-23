@@ -26,12 +26,12 @@ export default function ShaqeysoHubApp() {
     }
     if (!user) {
       router.replace('/login');
-    } else if (!user.isVerified && user.role !== 'admin') {
-      router.replace('/verify');
     }
+    // Redirect logic for verification is now handled at the point of action (e.g., posting a job)
+    // or on the /onboarding and /verify pages themselves.
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || (!user.isVerified && user.role !== 'admin')) {
+  if (isLoading || !user) {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
             <Header />

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Camera, Star } from 'lucide-react';
+import { Camera, Star, BadgeCheck } from 'lucide-react';
 import { useReviews } from '@/hooks/use-reviews';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
@@ -82,7 +82,12 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
       <div className="md:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t.companyProfile}</CardTitle>
+             <div className="flex items-center gap-2">
+                <CardTitle>{t.companyProfile}</CardTitle>
+                {user.verificationStatus === 'verified' && (
+                    <BadgeCheck className="h-6 w-6 text-primary" />
+                )}
+            </div>
             <CardDescription>{t.companyProfileDesc}</CardDescription>
           </CardHeader>
           <form onSubmit={handleSave}>

@@ -9,7 +9,8 @@ export type User = {
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
   isBlocked?: boolean;
-  isVerified?: boolean;
+  verificationStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationRejectionReason?: string;
   passportOrIdUrl?: string;
   businessCertificateUrl?: string;
 };

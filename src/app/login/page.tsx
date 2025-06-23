@@ -36,8 +36,8 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (result.success && result.user) {
-      if (!result.user.isVerified && result.user.role !== 'admin') {
-        router.push('/verify');
+      if (result.user.verificationStatus === 'unverified' && result.user.role !== 'admin') {
+        router.push('/onboarding');
         return;
       }
       

@@ -9,6 +9,8 @@ import { ClientVerificationForm } from '@/components/client-verification-form';
 import { FreelancerVerificationForm } from '@/components/freelancer-verification-form';
 import Header from '@/components/header';
 import { useLanguage } from '@/hooks/use-language';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock } from 'lucide-react';
 
 export default function VerifyPage() {
   const { user, isLoading } = useAuth();
@@ -16,7 +18,7 @@ export default function VerifyPage() {
   const { t } = useLanguage();
 
   React.useEffect(() => {
-    if (!isLoading && user?.isVerified) {
+    if (!isLoading && user?.verificationStatus === 'verified') {
       router.replace('/');
     }
     if (!isLoading && !user) {
@@ -24,7 +26,7 @@ export default function VerifyPage() {
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || user.isVerified) {
+  if (isLoading || !user) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
         <Header />
@@ -37,6 +39,43 @@ export default function VerifyPage() {
         </main>
       </div>
     );
+  }
+
+  if (user.verificationStatus === 'verified') {
+     return (
+      <div className="flex min-h-screen w-full flex-col bg-background">
+        <Header />
+        <main className="flex flex-1 items-center justify-center p-4">
+          <div className="w-full max-w-2xl space-y-4">
+            <Skeleton className="h-12 w-1/3" />
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
+  if (user.verificationStatus === 'pending') {
+    return (
+      <div className="flex min-h-screen w-full flex-col bg-background">
+        <Header />
+        <main className="flex flex-1 items-center justify-center p-4">
+           <Card className="w-full max-w-lg text-center">
+              <CardHeader>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent/20 text-accent">
+                    <Clock className="h-8 w-8" />
+                </div>
+                <CardTitle>{t.verificationPendingTitle}</CardTitle>
+                <CardDescription>{t.verificationPendingDesc}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{t.youCanBrowse}</p>
+              </CardContent>
+            </Card>
+        </main>
+      </div>
+    )
   }
 
   return (

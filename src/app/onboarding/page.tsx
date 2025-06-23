@@ -20,12 +20,12 @@ export default function OnboardingPage() {
     if (!isLoading && !user) {
       router.replace('/signup');
     }
-    if (!isLoading && user?.isVerified) {
+    if (!isLoading && user?.verificationStatus === 'verified') {
       router.replace('/');
     }
   }, [isLoading, user, router]);
 
-  if (isLoading || !user || user.isVerified) {
+  if (isLoading || !user || user.verificationStatus === 'verified') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         {/* You can add a skeleton loader here */}
@@ -40,7 +40,7 @@ export default function OnboardingPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Icons.logo className="h-8 w-8" />
           </div>
-          <CardTitle className="text-3xl">{t.welcomeToPlatform?.replace('{name}', user.name)}</CardTitle>
+          <CardTitle className="text-3xl">{t.welcomeToPlatform.replace('{name}', user.name)}</CardTitle>
           <CardDescription className="text-lg">
             {t.onboardingDesc}
           </CardDescription>

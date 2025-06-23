@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
-import { Wand2, X, Camera, Star } from 'lucide-react';
+import { Wand2, X, Camera, Star, BadgeCheck } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateFreelancerBio } from '@/app/actions';
 import { LoadingDots } from './loading-dots';
@@ -181,7 +181,12 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         <div className="md:col-span-2">
             <Card>
             <CardHeader>
-                <CardTitle>{t.freelancerProfileTitle}</CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle>{t.freelancerProfileTitle}</CardTitle>
+                    {user.verificationStatus === 'verified' && (
+                        <BadgeCheck className="h-6 w-6 text-primary" />
+                    )}
+                </div>
                 <CardDescription>{t.freelancerProfileDesc}</CardDescription>
             </CardHeader>
             <form onSubmit={handleSave}>
@@ -296,7 +301,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     </PopoverContent>
                     </Popover>
                     {skillInput && availableSkills.length === 0 && !commonSkills.some(s => s.toLowerCase() === skillInput.toLowerCase()) && (
-                        <p className="text-sm text-muted-foreground italic">{t.addSkillPrompt} "{skillInput}".</p>
+                        <p className="text-sm text-muted-foreground italic">{t.addSkillPrompt.replace('{skill}', skillInput)}</p>
                     )}
                 </div>
                 </CardContent>

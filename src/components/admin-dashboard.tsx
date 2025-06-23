@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -47,9 +47,11 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useLocalStorageState } from '@/hooks/use-local-storage-state';
+import Image from 'next/image';
+import { Textarea } from './ui/textarea';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
+  const { users, toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
   const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
   const { deleteMessagesByJobId } = useMessages();
@@ -61,6 +63,9 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'analytics');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
+  const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
+  const [isRejecting, setIsRejecting] = React.useState(false);
+  const [rejectionReason, setRejectionReason] = React.useState('');
 
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
@@ -70,6 +75,8 @@ export function AdminDashboard() {
   const adminTransactions = adminUser?.transactions || [];
 
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
+
+  const pendingVerifications = users.filter(u => u.verificationStatus === 'pending');
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
     await toggleUserBlockStatus(userId);
@@ -159,6 +166,24 @@ export function AdminDashboard() {
     });
   };
 
+  const handleApprove = async (userId: string) => {
+    await approveVerification(userId);
+    toast({ title: t.verificationApproved, description: t.verificationApprovedDesc });
+    setReviewingUser(null);
+  };
+
+  const handleReject = async () => {
+    if (!reviewingUser || !rejectionReason.trim()) {
+        toast({ title: "Reason Required", description: "Please provide a reason for rejection.", variant: "destructive" });
+        return;
+    }
+    await rejectVerification(reviewingUser.id, rejectionReason);
+    toast({ title: t.verificationRejected, description: t.verificationRejectedDesc, variant: "destructive" });
+    setReviewingUser(null);
+    setIsRejecting(false);
+    setRejectionReason('');
+  };
+
   const thisMonthRevenue = adminTransactions
     .filter(tx => isThisMonth(parseISO(tx.date)))
     .reduce((acc, tx) => acc + tx.amount, 0);
@@ -245,6 +270,16 @@ export function AdminDashboard() {
         default: return 'secondary';
     }
   };
+  
+  const getVerificationStatusVariant = (status: User['verificationStatus']) => {
+    switch (status) {
+      case 'verified': return 'default';
+      case 'pending': return 'secondary';
+      case 'rejected': return 'destructive';
+      case 'unverified': return 'outline';
+      default: return 'outline';
+    }
+  };
 
   const getPaymentMethodIcon = (type: PaymentMethod['type']) => {
     switch (type) {
@@ -267,10 +302,16 @@ export function AdminDashboard() {
             <p className="text-muted-foreground mt-1">{t.adminDashboardDesc}</p>
         </header>
         <Tabs value={activeTab} onValueChange={setActiveTab as (value: string) => void} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="analytics">{t.analytics}</TabsTrigger>
                 <TabsTrigger value="users">{t.users}</TabsTrigger>
                 <TabsTrigger value="jobs">{t.jobs}</TabsTrigger>
+                <TabsTrigger value="verifications" className="relative">
+                    {t.verifications}
+                    {pendingVerifications.length > 0 && (
+                        <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">{pendingVerifications.length}</Badge>
+                    )}
+                </TabsTrigger>
             </TabsList>
             <TabsContent value="analytics" className="mt-6 space-y-6">
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -473,6 +514,7 @@ export function AdminDashboard() {
                                 <TableRow>
                                     <TableHead>{t.user}</TableHead>
                                     <TableHead>{t.role}</TableHead>
+                                    <TableHead>Verification</TableHead>
                                     <TableHead>{t.status}</TableHead>
                                     <TableHead className="text-right">{t.actions}</TableHead>
                                 </TableRow>
@@ -494,6 +536,11 @@ export function AdminDashboard() {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getVerificationStatusVariant(user.verificationStatus)}>
+                                                {t[user.verificationStatus] || user.verificationStatus}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={user.isBlocked ? 'destructive' : 'default'}>
@@ -656,6 +703,55 @@ export function AdminDashboard() {
                     </CardContent>
                 </Card>
             </TabsContent>
+            <TabsContent value="verifications" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t.verifications}</CardTitle>
+                        <CardDescription>{t.verificationsDesc}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                             <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t.user}</TableHead>
+                                    <TableHead>{t.role}</TableHead>
+                                    <TableHead className="text-right">{t.actions}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {pendingVerifications.length > 0 ? pendingVerifications.map((user) => (
+                                    <TableRow key={user.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    <AvatarImage src={user.avatarUrl} alt={user.name} />
+                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-medium">{user.name}</p>
+                                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                         <TableCell>
+                                            <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button onClick={() => setReviewingUser(user)}>{t.review}</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="h-24 text-center">
+                                            {t.noPendingVerifications}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </TabsContent>
         </Tabs>
 
         {chattingJob && (
@@ -671,6 +767,61 @@ export function AdminDashboard() {
                 isOpen={!!chattingWithUser}
                 onClose={() => setChattingWithUser(null)}
             />
+        )}
+        {reviewingUser && (
+            <Dialog open={!!reviewingUser} onOpenChange={(isOpen) => !isOpen && setReviewingUser(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>{t.reviewVerificationTitle.replace('{name}', reviewingUser.name)}</DialogTitle>
+                        <DialogDescription>{reviewingUser.email}</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <h3 className="font-semibold">{t.submittedDocs}</h3>
+                        <div className="space-y-2">
+                            <Label>{t.idUploadTitle}</Label>
+                            <div className="flex items-center gap-2">
+                                <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{reviewingUser.passportOrIdUrl}</a>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground"/>
+                            </div>
+                        </div>
+                        {reviewingUser.role === 'client' && reviewingUser.businessCertificateUrl && (
+                             <div className="space-y-2">
+                                <Label>{t.certUploadTitle}</Label>
+                                <div className="flex items-center gap-2">
+                                    <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate">{reviewingUser.businessCertificateUrl}</a>
+                                    <ExternalLink className="h-4 w-4 text-muted-foreground"/>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setReviewingUser(null)}>{t.cancel}</Button>
+                        <AlertDialog open={isRejecting} onOpenChange={setIsRejecting}>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive">{t.reject}</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>{t.rejectVerificationTitle}</AlertDialogTitle>
+                                    <AlertDialogDescription>{t.rejectVerificationDesc}</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="py-2">
+                                    <Textarea
+                                        placeholder={t.rejectionReasonPlaceholder}
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                    />
+                                </div>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleReject}>{t.confirmRejection}</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        <Button onClick={() => handleApprove(reviewingUser.id)}>{t.approve}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         )}
     </div>
   );

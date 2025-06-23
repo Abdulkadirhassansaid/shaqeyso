@@ -20,7 +20,7 @@ export const mockUsers: User[] = [
       { id: 'txn-c3', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: -500, status: 'Completed' },
     ],
     isBlocked: false,
-    isVerified: true,
+    verificationStatus: 'verified',
     passportOrIdUrl: 'https://placehold.co/600x400.png',
     businessCertificateUrl: 'https://placehold.co/600x400.png',
   },
@@ -42,7 +42,7 @@ export const mockUsers: User[] = [
       { id: 'txn-f5', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: 475, status: 'Completed' },
     ],
     isBlocked: false,
-    isVerified: true,
+    verificationStatus: 'verified',
     passportOrIdUrl: 'https://placehold.co/600x400.png',
   },
    {
@@ -61,7 +61,31 @@ export const mockUsers: User[] = [
       { id: 'txn-a3', date: '2024-07-05T14:00:00Z', description: 'Platform Fee for "Blog Content"', amount: 25, status: 'Completed' },
     ],
     isBlocked: false,
-    isVerified: true,
+    verificationStatus: 'verified',
+  },
+   {
+    id: 'freelancer-pending',
+    name: 'Faysal Pending',
+    email: 'pending@example.com',
+    avatarUrl: 'https://placehold.co/100x100.png?text=FP',
+    role: 'freelancer',
+    password: 'password123',
+    isBlocked: false,
+    verificationStatus: 'pending',
+    passportOrIdUrl: 'https://placehold.co/600x400.png',
+  },
+  {
+    id: 'client-rejected',
+    name: 'Reject Corp',
+    email: 'rejected@example.com',
+    avatarUrl: 'https://placehold.co/100x100.png?text=RC',
+    role: 'client',
+    password: 'password123',
+    isBlocked: false,
+    verificationStatus: 'rejected',
+    verificationRejectionReason: 'Business certificate is blurry and unreadable. Please upload a clearer document.',
+    passportOrIdUrl: 'https://placehold.co/600x400.png',
+    businessCertificateUrl: 'https://placehold.co/600x400.png',
   },
 ];
 
@@ -128,6 +152,13 @@ export const mockFreelancerProfiles: FreelancerProfile[] = [
         bio: 'Senior full-stack developer specializing in building fast, beautiful e-commerce websites and mobile applications. I have a keen eye for design and a passion for creating intuitive user experiences.',
         portfolio: [],
     },
+     {
+        userId: 'freelancer-pending',
+        skills: ['Graphic Design', 'Illustration'],
+        hourlyRate: 35,
+        bio: 'Creative graphic designer with a passion for branding and illustration.',
+        portfolio: [],
+    },
 ];
 
 export const mockClientProfiles: ClientProfile[] = [
@@ -135,6 +166,11 @@ export const mockClientProfiles: ClientProfile[] = [
         userId: 'client-1',
         companyName: 'Farmaajo Inc.',
         projectsPosted: ['job-1', 'job-2', 'job-3'],
+    },
+    {
+        userId: 'client-rejected',
+        companyName: 'Reject Corp',
+        projectsPosted: [],
     }
 ];
 

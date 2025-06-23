@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
-import { FileUp, CheckCircle2 } from 'lucide-react';
+import { FileUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 interface FreelancerVerificationFormProps {
   user: User;
@@ -69,7 +70,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
                 title: t.verificationSubmitted,
                 description: t.verificationSubmittedDesc,
             });
-            router.push('/');
+            router.push('/verify'); // Go to pending page
         } else {
             throw new Error("Verification submission failed");
         }
@@ -90,7 +91,17 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
           <CardTitle>{t.freelancerVerificationTitle}</CardTitle>
           <CardDescription>{t.freelancerVerificationDesc}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+            {user.verificationStatus === 'rejected' && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>{t.verificationRejectedTitle}</AlertTitle>
+                    <AlertDescription>
+                        <p>{t.verificationRejectedDesc}</p>
+                        <p className="font-semibold mt-2">{user.verificationRejectionReason}</p>
+                    </AlertDescription>
+                </Alert>
+            )}
             <div className="space-y-2">
                 <h3 className="font-medium">{t.idUploadTitle}</h3>
                 <div className="flex items-center gap-4 rounded-lg border p-4">

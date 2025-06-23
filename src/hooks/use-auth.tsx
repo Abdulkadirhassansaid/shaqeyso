@@ -27,6 +27,8 @@ interface AuthContextType {
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   submitVerification: (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }) => Promise<boolean>;
+  approveVerification: (userId: string) => Promise<boolean>;
+  rejectVerification: (userId: string, reason: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -51,13 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     setUsers(currentUsers => {
-        // Filter out any user that might be an old admin account.
-        // This removes any user with the admin role OR the admin email, just to be safe.
+        // This logic ensures that the admin user is always present and correct,
+        // and prevents duplicates if the local storage already has an admin.
         const usersWithoutAdmin = currentUsers.filter(u => u.role !== 'admin' && u.email !== adminEmail);
+        const adminExists = currentUsers.some(u => u.id === adminUserFromInitial.id);
         
-        // Add the definitive admin user from the mock data source.
-        // This ensures the admin user is always up-to-date with what's in `mock-data.ts`.
-        return [...usersWithoutAdmin, adminUserFromInitial];
+        return adminExists ? currentUsers : [...usersWithoutAdmin, adminUserFromInitial];
     });
   }, []); // The empty dependency array is crucial. We only want to sync this once when the app loads.
 
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       paymentMethods: [],
       transactions: initialTransactions,
       isBlocked: false,
-      isVerified: false,
+      verificationStatus: 'unverified',
     };
     
     setUsers(prev => [...prev, newUser]);
@@ -186,13 +187,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (u.id === userId) {
             return { 
                 ...u, 
-                isVerified: true,
+                verificationStatus: 'pending',
                 passportOrIdUrl: documents.passportOrIdUrl,
                 businessCertificateUrl: documents.businessCertificateUrl,
+                verificationRejectionReason: undefined, // Clear previous rejection reason
             };
         }
         return u;
     }));
+    return true;
+  };
+
+  const approveVerification = async (userId: string): Promise<boolean> => {
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, verificationStatus: 'verified', verificationRejectionReason: undefined } : u
+    ));
+    return true;
+  };
+
+  const rejectVerification = async (userId: string, reason: string): Promise<boolean> => {
+    setUsers(currentUsers => currentUsers.map(u => 
+        u.id === userId ? { ...u, verificationStatus: 'rejected', verificationRejectionReason: reason } : u
+    ));
     return true;
   };
 
@@ -250,7 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
