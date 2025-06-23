@@ -175,7 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true, user: userForState };
 
     } catch (error: any) {
-      console.error("Signup error:", error.code);
       if (error.code === 'auth/email-already-in-use') {
           return { success: false, message: 'email-in-use' };
       }
