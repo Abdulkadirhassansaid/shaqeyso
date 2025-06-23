@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { mockProposals, mockFreelancerProfiles } from '@/lib/mock-data';
+import { mockProposals, mockFreelancerProfiles, mockUsers } from '@/lib/mock-data';
 import { Skeleton } from './ui/skeleton';
 
 interface ClientDashboardProps {
