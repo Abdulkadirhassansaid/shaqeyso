@@ -23,13 +23,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth } from 'date-fns';
+import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus } = useAuth();
   const { jobs } = useJobs();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [revenuePeriod, setRevenuePeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
     await toggleUserBlockStatus(userId);
@@ -48,27 +49,59 @@ export function AdminDashboard() {
     .filter(tx => isThisMonth(parseISO(tx.date)))
     .reduce((acc, tx) => acc + tx.amount, 0);
 
-  const weeklyChartData = React.useMemo(() => {
-    const weeks = new Map<string, number>();
-    const last12Weeks = eachWeekOfInterval({
-        start: subDays(new Date(), 12 * 7),
-        end: new Date()
-    }, { weekStartsOn: 1 });
+  const revenueChartData = React.useMemo(() => {
+    const dataMap = new Map<string, { total: number; date: Date }>();
+    let interval: Date[];
+    let dateFormat: string;
+    let groupingFn: (date: Date) => Date;
+    let intervalOptions: any = {};
 
-    last12Weeks.forEach(week => {
-        weeks.set(format(week, 'MMM d'), 0);
-    });
+    switch (revenuePeriod) {
+      case 'daily':
+        interval = eachDayOfInterval({ start: subDays(new Date(), 29), end: new Date() });
+        dateFormat = 'MMM d';
+        groupingFn = (date: Date) => new Date(date.setHours(0, 0, 0, 0)); // Start of day
+        interval.forEach(day => dataMap.set(format(day, dateFormat), { total: 0, date: day }));
+        break;
+      case 'monthly':
+        interval = eachMonthOfInterval({ start: subMonths(new Date(), 11), end: new Date() });
+        dateFormat = 'MMM yyyy';
+        groupingFn = startOfMonth;
+        interval.forEach(month => dataMap.set(format(month, dateFormat), { total: 0, date: month }));
+        break;
+      case 'yearly':
+        interval = eachYearOfInterval({ start: subYears(new Date(), 4), end: new Date() });
+        dateFormat = 'yyyy';
+        groupingFn = startOfYear;
+        interval.forEach(year => dataMap.set(format(year, dateFormat), { total: 0, date: year }));
+        break;
+      case 'weekly':
+      default:
+        intervalOptions = { weekStartsOn: 1 };
+        interval = eachWeekOfInterval({ start: subDays(new Date(), 12 * 7), end: new Date() }, intervalOptions);
+        dateFormat = 'MMM d';
+        groupingFn = (date: Date) => startOfWeek(date, intervalOptions);
+        interval.forEach(week => dataMap.set(format(week, dateFormat), { total: 0, date: week }));
+        break;
+    }
 
     adminTransactions.forEach(tx => {
-        const weekStart = startOfWeek(parseISO(tx.date), { weekStartsOn: 1 });
-        const weekKey = format(weekStart, 'MMM d');
-        if (weeks.has(weekKey)) {
-            weeks.set(weekKey, (weeks.get(weekKey) || 0) + tx.amount);
-        }
+      const transactionDate = parseISO(tx.date);
+      const keyDate = groupingFn(transactionDate);
+      const key = format(keyDate, dateFormat);
+      
+      if (dataMap.has(key)) {
+        const existing = dataMap.get(key)!;
+        dataMap.set(key, { ...existing, total: existing.total + tx.amount });
+      }
     });
 
-    return Array.from(weeks.entries()).map(([date, revenue]) => ({ date, revenue }));
-  }, [adminTransactions]);
+    return Array.from(dataMap.values())
+      .sort((a,b) => a.date.getTime() - b.date.getTime())
+      .map(item => ({ date: format(item.date, dateFormat), revenue: item.total }));
+
+  }, [adminTransactions, revenuePeriod]);
+
 
   const chartConfig = {
       revenue: {
@@ -157,12 +190,20 @@ export function AdminDashboard() {
                  <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
                     <Card className="lg:col-span-4">
                         <CardHeader>
-                            <CardTitle>Weekly Revenue</CardTitle>
-                             <CardDescription>Platform fees over the last 12 weeks.</CardDescription>
+                            <CardTitle>Revenue Overview</CardTitle>
+                             <CardDescription>View platform fee revenue by day, week, month, or year.</CardDescription>
                         </CardHeader>
-                        <CardContent className="pl-2">
-                            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                                <BarChart data={weeklyChartData}>
+                        <CardContent className="space-y-4">
+                            <Tabs value={revenuePeriod} onValueChange={(value) => setRevenuePeriod(value as any)}>
+                                <TabsList className="grid w-full grid-cols-4">
+                                    <TabsTrigger value="daily">Daily</TabsTrigger>
+                                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                                    <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                            <ChartContainer config={chartConfig} className="h-[300px] w-full pl-2">
+                                <BarChart data={revenueChartData}>
                                     <CartesianGrid vertical={false} />
                                     <XAxis
                                         dataKey="date"
@@ -171,6 +212,9 @@ export function AdminDashboard() {
                                         axisLine={false}
                                         stroke="#888888"
                                         fontSize={12}
+                                        angle={revenuePeriod === 'daily' || revenuePeriod === 'weekly' ? -45 : 0}
+                                        textAnchor={revenuePeriod === 'daily' || revenuePeriod === 'weekly' ? 'end' : 'middle'}
+                                        height={revenuePeriod === 'daily' || revenuePeriod === 'weekly' ? 50 : 30}
                                     />
                                     <YAxis
                                         stroke="#888888"
@@ -327,3 +371,6 @@ export function AdminDashboard() {
     </div>
   );
 }
+
+
+    
