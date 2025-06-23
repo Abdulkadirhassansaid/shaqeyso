@@ -61,9 +61,7 @@ export default function BillingPage() {
     );
   }
   
-  const freelancerBalance = user.role === 'freelancer' 
-    ? (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0)
-    : 0;
+  const freelancerBalance = user.balance || 0;
 
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
