@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/hooks/use-language';
 import { ThemeProvider } from '@/hooks/use-theme';
+import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -46,8 +47,10 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {children}
-              <Toaster />
+              <DirectMessagesProvider>
+                {children}
+                <Toaster />
+              </DirectMessagesProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
