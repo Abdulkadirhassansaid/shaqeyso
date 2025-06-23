@@ -38,7 +38,7 @@ type RecommendedJob = Job & {
 };
 
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
-  const { jobs, submitProject } = useJobs();
+  const { jobs } = useJobs();
   const { freelancerProfiles, users: allUsers } = useAuth();
   const { toast } = useToast();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
@@ -137,7 +137,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     job.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'AwaitingApproval', 'Completed'].includes(job.status));
+  const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
 
 
   const renderFindWorkContent = () => {
@@ -225,9 +225,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </div>
                         </CardContent>
                         <CardFooter className="flex-col items-stretch gap-2">
-                            {job.status === 'AwaitingApproval' && (
-                                <p className="text-sm text-muted-foreground italic w-full text-center py-2">{t.awaitingClientApproval}</p>
-                            )}
                             {job.status === 'Completed' && (
                                 <div className="flex items-center text-sm text-green-500 gap-2 w-full p-2 bg-green-50 border border-green-200 rounded-md">
                                     <CheckCircle className="h-5 w-5"/>
@@ -297,7 +294,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 job={jobToChat}
                 isOpen={!!jobToChat}
                 onClose={() => setJobToChat(null)}
-                onSubmitProject={submitProject}
             />
         )}
     </>

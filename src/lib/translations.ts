@@ -40,7 +40,6 @@ export const translations = {
         rejected: 'Rejected',
         hired: 'Hired',
         inprogress: 'In Progress',
-        awaitingapproval: 'Awaiting Approval',
         inEscrow: 'in Escrow',
 
 
@@ -198,8 +197,6 @@ export const translations = {
         paymentReceivedFromEscrow: 'Payment received for',
         workInProgressWith: 'Work in progress with',
         paidTo: 'Paid to',
-        submittedWork: 'Submitted Work',
-        downloadFile: 'Download File',
         chatWith: 'Chat with',
         releaseEscrowPayment: 'Release Escrow Payment',
         releaseEscrowDesc: 'You are about to release the payment for this project. Please review the details below.',
@@ -272,10 +269,6 @@ export const translations = {
         matchReason: 'Match Reason',
         myProjects: 'My Projects',
         myProjectsDesc: 'Track your active and completed projects.',
-        submitProject: 'Submit Project',
-        projectSubmitted: 'Project Submitted!',
-        projectSubmittedDesc: 'The client has been notified to review your work.',
-        awaitingClientApproval: 'Awaiting client approval.',
         projectCompletedAndPaid: 'Project completed and paid',
         noActiveProjects: "You don't have any active projects yet.",
         chatWithClient: 'Chat with Client',
@@ -322,17 +315,13 @@ export const translations = {
         freelancerProfileUpdatedDesc: 'Your profile information has been saved.',
 
         // Chat & Submission
-        submitForApproval: 'Submit for Final Approval',
-        submitForApprovalConfirmTitle: 'Submit Final Work?',
-        submitForApprovalConfirmDesc: "This will notify the client that the project is ready for review. You won't be able to send more messages or files after submitting.",
         confirm: 'Confirm',
-        submissionSuccessTitle: 'Work Submitted',
-        submissionSuccessDesc: 'The client has been notified to review your submission.',
         attachFile: 'Attach File',
         filesToSend: 'Files to be sent',
         sendMessage: 'Send Message',
         typeYourMessage: 'Type your message...',
         noMessagesYet: 'No messages yet. Start the conversation!',
+        chatArchived: 'This chat is archived because the project is complete.',
     },
     so: {
         // General
@@ -374,7 +363,6 @@ export const translations = {
         rejected: 'La Diiday',
         hired: 'La Shaqaaleeyay',
         inprogress: 'Wuu Socdaa',
-        awaitingapproval: 'Sugaya Ansixin',
         inEscrow: 'Escrow ku jira',
 
         // Header
@@ -531,8 +519,6 @@ export const translations = {
         paymentReceivedFromEscrow: 'Lacag bixin laga helay',
         workInProgressWith: 'Shaqo ayaa la socota',
         paidTo: 'Loo bixiyay',
-        submittedWork: 'Shaqada la Gudbiyey',
-        downloadFile: 'Soo Degso',
         chatWith: 'La sheekeyso',
         releaseEscrowPayment: 'Sii-dayn Lacagta Escrow',
         releaseEscrowDesc: 'Waxaad ku dhowdahay inaad sii deyso lacagta mashruucan. Fadlan hoos ka eeg faahfaahinta.',
@@ -606,10 +592,6 @@ export const translations = {
         matchReason: 'Sababta Isku-aadka',
         myProjects: 'Mashaariicdayda',
         myProjectsDesc: 'La soco mashaariicdaada firfircoon iyo kuwa dhammaaday.',
-        submitProject: 'Gudbi Mashruuca',
-        projectSubmitted: 'Mashruuca Waa la Gudbiyay!',
-        projectSubmittedDesc: 'Macaamiilka waa la ogeysiiyay si uu u eego shaqadaada.',
-        awaitingClientApproval: 'Sugaya ansixinta macmiilka.',
         projectCompletedAndPaid: 'Mashruuca waa la dhameeyay oo waa la bixiyay',
         noActiveProjects: "Weli ma lihid mashaariic firfircoon.",
         chatWithClient: 'La sheekeyso Macmiilka',
@@ -656,17 +638,13 @@ export const translations = {
         freelancerProfileUpdatedDesc: 'Macluumaadka boggaaga waa la kaydiyay.',
 
         // Chat & Submission
-        submitForApproval: 'U Gudbi Ansixinta Kama Dambaysta ah',
-        submitForApprovalConfirmTitle: 'Gudbi Shaqada Kama Dambaysta ah?',
-        submitForApprovalConfirmDesc: "Tani waxay ogeysiin doontaa macmiilka in mashruuca uu diyaar u yahay dib u eegis. Fariimo ama faylal dambe ma diri kartid kaddib gudbintan.",
         confirm: 'Xaqiiji',
-        submissionSuccessTitle: 'Shaqada Waa la Gudbiyay',
-        submissionSuccessDesc: 'Macaamiilka waa la ogeysiiyey inuu dib u eego gudbintaada.',
         attachFile: 'Ku lifaaq Fayl',
         filesToSend: 'Faylasha la dirayo',
         sendMessage: 'Dir Fariin',
         typeYourMessage: 'Qor fariintaada...',
         noMessagesYet: 'Wali fariimo ma jiraan. Bilaab wada hadalka!',
+        chatArchived: 'Wadahadalkan waa la keydiyay maadaama mashruuca la dhameeyay.',
     }
 };
 

@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, Download, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -27,7 +27,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { ChatDialog } from './chat-dialog';
-import { Separator } from './ui/separator';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
 
 
@@ -194,7 +193,6 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const getStatusVariant = (status: Job['status']) => {
     switch (status) {
         case 'Open': return 'default';
-        case 'AwaitingApproval': return 'secondary';
         case 'Completed': return 'default';
         default: return 'secondary';
     }
@@ -276,29 +274,6 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 <CardContent>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
                 
-                {selectedJob.status === 'AwaitingApproval' && selectedJob.submittedFiles && (
-                    <div className="mt-6">
-                        <Separator />
-                        <div className="py-4">
-                             <h3 className="text-lg font-semibold mb-4">{t.submittedWork}</h3>
-                             <div className="space-y-2">
-                                 {selectedJob.submittedFiles.map(file => (
-                                     <a 
-                                        href={file.url} 
-                                        download={file.name}
-                                        key={file.name}
-                                        className="flex items-center gap-2 p-2 border rounded-md hover:bg-muted"
-                                     >
-                                        <Download className="h-4 w-4" />
-                                        <span>{file.name}</span>
-                                     </a>
-                                 ))}
-                             </div>
-                        </div>
-                        <Separator />
-                    </div>
-                )}
-                
                 <div className="mt-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
@@ -343,6 +318,17 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     )}
                 </div>
                 </CardContent>
+                {selectedJob.status === 'InProgress' && hiredFreelancer && (
+                    <CardFooter>
+                        <ApprovePaymentDialog
+                            job={selectedJob}
+                            freelancer={hiredFreelancer}
+                            onConfirm={() => handleApproveAndPay(selectedJob.id)}
+                        >
+                            <Button>{t.approveAndPay}</Button>
+                        </ApprovePaymentDialog>
+                    </CardFooter>
+                )}
             </Card>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -405,28 +391,12 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 </CardHeader>
                 <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                       {(status === 'Open' || status === 'Interviewing') && (
-                            <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
-                        )}
-                        {status === 'AwaitingApproval' && (
-                            <ApprovePaymentDialog 
-                                job={job}
-                                freelancer={hiredFreelancer}
-                                onConfirm={() => handleApproveAndPay(job.id)}
-                            >
-                                <Button>{t.approveAndPay}</Button>
-                            </ApprovePaymentDialog>
-                        )}
+                       <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
+
                          {status === 'InProgress' && hiredFreelancer && (
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <UserCheck className="h-5 w-5 text-primary" />
-                                    <span>{t.workInProgressWith} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                                </div>
-                                <div className="flex items-center gap-2 text-green-600">
-                                    <ShieldCheck className="h-5 w-5" />
-                                    <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
-                                </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <ShieldCheck className="h-5 w-5 text-green-600" />
+                                <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
                             </div>
                         )}
                         {status === 'Completed' && hiredFreelancer && (

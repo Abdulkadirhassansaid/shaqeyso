@@ -26,9 +26,8 @@ export type Job = {
   budget: number;
   deadline: string;
   clientId: string;
-  status: 'Open' | 'Interviewing' | 'InProgress' | 'AwaitingApproval' | 'Completed';
+  status: 'Open' | 'Interviewing' | 'InProgress' | 'Completed';
   hiredFreelancerId?: string;
-  submittedFiles?: SubmittedFile[];
 };
 
 export type Proposal = {

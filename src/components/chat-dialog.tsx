@@ -21,27 +21,21 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send, Paperclip, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
 
 interface ChatDialogProps {
   job: Job;
   isOpen: boolean;
   onClose: () => void;
-  onSubmitProject?: (jobId: string, files: SubmittedFile[]) => Promise<boolean>;
 }
 
-export function ChatDialog({ job, isOpen, onClose, onSubmitProject }: ChatDialogProps) {
+export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
   const { user } = useAuth();
   const { messages, addMessage } = useMessages();
   const { users } = useAuth();
   const { t } = useLanguage();
-  const { toast } = useToast();
 
   const [newMessage, setNewMessage] = React.useState('');
   const [files, setFiles] = React.useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -50,7 +44,7 @@ export function ChatDialog({ job, isOpen, onClose, onSubmitProject }: ChatDialog
   const otherUserId = user?.id === job.clientId ? job.hiredFreelancerId : job.clientId;
   const otherUser = users.find(u => u.id === otherUserId);
   const dialogTitle = otherUser ? `${t.chatWith} ${otherUser.name}` : 'Chat';
-  const canSendMessages = !(user?.role === 'freelancer' && job.status === 'AwaitingApproval');
+  const canSendMessages = job.status === 'InProgress';
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -83,26 +77,6 @@ export function ChatDialog({ job, isOpen, onClose, onSubmitProject }: ChatDialog
     setFiles([]);
   };
 
-  const handleFinalSubmission = async () => {
-    if (!onSubmitProject || !user) return;
-    setIsSubmitting(true);
-    
-    const allFilesFromChat = jobMessages
-      .flatMap(m => (m.senderId === user.id ? m.files : []))
-      .filter((file): file is SubmittedFile => !!file);
-      
-    const success = await onSubmitProject(job.id, allFilesFromChat);
-    setIsSubmitting(false);
-
-    if (success) {
-        toast({
-            title: t.submissionSuccessTitle,
-            description: t.submissionSuccessDesc,
-        });
-        onClose();
-    }
-  };
-  
   React.useEffect(() => {
     if (scrollAreaRef.current) {
         const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
@@ -222,30 +196,10 @@ export function ChatDialog({ job, isOpen, onClose, onSubmitProject }: ChatDialog
                             </div>
                         </div>
                     )}
-                    {user?.role === 'freelancer' && job.status === 'InProgress' && onSubmitProject && (
-                        <>
-                            <Separator className="my-2" />
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button disabled={isSubmitting}>{t.submitForApproval}</Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>{t.submitForApprovalConfirmTitle}</AlertDialogTitle>
-                                    <AlertDialogDescription>{t.submitForApprovalConfirmDesc}</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleFinalSubmission}>{t.confirm}</AlertDialogAction>
-                                </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </>
-                    )}
                  </>
             ) : (
                 <div className="text-center text-sm text-muted-foreground p-4 italic">
-                    {t.awaitingClientApproval}
+                    {t.chatArchived}
                 </div>
             )}
         </DialogFooter>
