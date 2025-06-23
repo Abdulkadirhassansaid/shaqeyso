@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,8 +10,16 @@ import { ClientVerificationForm } from '@/components/client-verification-form';
 import { FreelancerVerificationForm } from '@/components/freelancer-verification-form';
 import Header from '@/components/header';
 import { useLanguage } from '@/hooks/use-language';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function VerifyPage() {
   const { user, isLoading } = useAuth();
@@ -72,6 +81,11 @@ export default function VerifyPage() {
               <CardContent>
                 <p className="text-sm text-muted-foreground">{t.youCanBrowse}</p>
               </CardContent>
+              <CardFooter className="flex justify-center">
+                <Button asChild>
+                    <Link href="/">{t.backToHome}</Link>
+                </Button>
+              </CardFooter>
             </Card>
         </main>
       </div>
