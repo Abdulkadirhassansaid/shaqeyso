@@ -39,8 +39,8 @@ export default function ShaqeysoHubApp() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <JobsProvider>
-          <ProposalsProvider>
+        <JobsProvider key={`jobs-${user.id}`}>
+          <ProposalsProvider key={`proposals-${user.id}`}>
             {user.role === 'client' && <ClientDashboard user={user} />}
             {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
           </ProposalsProvider>
