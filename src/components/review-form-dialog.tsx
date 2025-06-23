@@ -63,8 +63,8 @@ export function ReviewFormDialog({ job, reviewee, isOpen, onClose, onSubmit }: R
                         <AvatarFallback>{reviewee.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <p className="font-semibold">{reviewee.name}</p>
-                        <p className="text-sm text-muted-foreground">{t.job}: {job.title}</p>
+                        <div className="font-semibold text-card-foreground">{reviewee.name}</div>
+                        <div className="text-sm text-muted-foreground">{t.job}: {job.title}</div>
                     </div>
                 </div>
             </DialogDescription>
