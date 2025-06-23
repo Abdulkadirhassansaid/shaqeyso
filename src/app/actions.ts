@@ -20,6 +20,11 @@ import {
   type GenerateFreelancerBioInput,
   type GenerateFreelancerBioOutput,
 } from '@/ai/flows/generate-freelancer-bio';
+import {
+  recommendJobsForFreelancer as recommendJobs,
+  type RecommendJobsForFreelancerInput,
+  type RecommendJobsForFreelancerOutput,
+} from '@/ai/flows/recommend-jobs-for-freelancer';
 
 export async function generateJobDescription(
   input: GenerateJobDescriptionInput
@@ -43,4 +48,10 @@ export async function generateFreelancerBio(
   input: GenerateFreelancerBioInput
 ): Promise<GenerateFreelancerBioOutput> {
   return await genBio(input);
+}
+
+export async function recommendJobsForFreelancer(
+  input: RecommendJobsForFreelancerInput
+): Promise<RecommendJobsForFreelancerOutput> {
+  return await recommendJobs(input);
 }
