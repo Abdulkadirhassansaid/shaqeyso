@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -43,7 +44,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus, deleteUser } = useAuth();
+  const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
   const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
   const { deleteMessagesByJobId } = useMessages();
@@ -55,6 +56,10 @@ export function AdminDashboard() {
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
 
+  const adminUser = users.find(u => u.role === 'admin');
+  const adminTransactions = adminUser?.transactions || [];
+
+  const platformBalance = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
     await toggleUserBlockStatus(userId);
@@ -63,6 +68,17 @@ export function AdminDashboard() {
         description: isBlocked ? t.userUnblockedDesc : t.userUnblockedDesc,
     });
   }
+  
+  const handleWithdraw = async () => {
+    if (!adminUser || platformBalance <= 0) return;
+    const withdrawalAmount = platformBalance;
+    await addTransaction(adminUser.id, {
+        description: t.withdrawalToBank,
+        amount: -withdrawalAmount,
+        status: 'Pending',
+    });
+    toast({ title: t.withdrawalInitiated, description: `${t.withdrawalInitiatedDesc} $${withdrawalAmount.toFixed(2)}.` });
+  };
   
   const handleDeleteJob = async (jobId: string) => {
     await Promise.all([
@@ -107,12 +123,6 @@ export function AdminDashboard() {
         variant: 'destructive',
     });
   };
-
-
-  const adminUser = users.find(u => u.role === 'admin');
-  const adminTransactions = adminUser?.transactions || [];
-
-  const totalRevenue = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
 
   const thisMonthRevenue = adminTransactions
     .filter(tx => isThisMonth(parseISO(tx.date)))
@@ -216,27 +226,27 @@ export function AdminDashboard() {
             <TabsContent value="analytics" className="mt-6 space-y-6">
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
-                            <div className="p-2 rounded-md bg-success/20">
-                                <DollarSign className="h-4 w-4 text-success" />
-                            </div>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-medium">{t.platformBalance}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+                            <div className="text-2xl font-bold">${platformBalance.toFixed(2)}</div>
                             <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
                         </CardContent>
+                        <CardFooter>
+                           <Button size="sm" onClick={handleWithdraw} disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
+                        </CardFooter>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t.revenueThisMonth}</CardTitle>
                              <div className="p-2 rounded-md bg-primary/20">
                                 <TrendingUp className="h-4 w-4 text-primary" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${thisMonthRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Platform fees from this month.</p>
+                            <p className="text-xs text-muted-foreground">{t.platformFeesThisMonth}</p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -329,9 +339,9 @@ export function AdminDashboard() {
                     </Card>
                     <Card className="lg:col-span-3">
                         <CardHeader>
-                            <CardTitle>Recent Transactions</CardTitle>
+                            <CardTitle>{t.recentTransactions}</CardTitle>
                             <CardDescription>
-                                {`You've received ${adminTransactions.length} platform fees in total.`}
+                                {t.totalPlatformFees(adminTransactions.length)}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

@@ -395,6 +395,12 @@ export const translations = {
         userDeleted: 'User Deleted',
         userDeletedDesc: (name: string) => `User ${name} and all their data have been permanently removed.`,
         jobDeletedAndData: "The job and all its related data have been permanently removed.",
+        platformBalance: 'Platform Balance',
+        withdrawToBank: 'Withdraw to Bank',
+        revenueThisMonth: 'Revenue This Month',
+        platformFeesThisMonth: 'Platform fees from this month.',
+        recentTransactions: 'Recent Transactions',
+        totalPlatformFees: (count: number) => `You've received ${count} platform fees in total.`,
     },
     so: {
         // General
@@ -675,7 +681,7 @@ export const translations = {
         noActiveProjects: "Weli ma lihid mashaariic firfircoon.",
         chatWithClient: 'La sheekeyso Macmiilka',
         myProposals: "Codsiyadayda",
-        myProposalsDesc: "Eeg oo maamul dhammaan codsiyadaada shaqo ee aad gudbisay.",
+        myProposalsDesc: "View and manage all your submitted job proposals.",
         noProposalsSubmitted: "Weli wax codsiyo ah ma aadan gudbin.",
         yourProposal: "Codsigaaga",
         editProposal: "Wax ka Beddel Codsiga",
@@ -792,6 +798,12 @@ export const translations = {
         userDeleted: 'Isticmaalaha Waa La Tirtiray',
         userDeletedDesc: (name: string) => `Isticmaale ${name} iyo dhammaan xogtiisa si joogto ah ayaa meesha looga saaray.`,
         jobDeletedAndData: "Shaqada iyo dhammaan xogteeda la xiriirta si joogto ah ayaa meesha looga saaray.",
+        platformBalance: 'Hadhaaga Goobta',
+        withdrawToBank: 'Kula Bax Bangiga',
+        revenueThisMonth: 'Dakhliga Bisha',
+        platformFeesThisMonth: 'Lacagaha goobta ee bishan.',
+        recentTransactions: 'Macaamilladii Ugu Dambeeyay',
+        totalPlatformFees: (count: number) => `Waxaad heshay ${count} lacagood oo goobta ah.`,
     }
 };
 
