@@ -21,6 +21,7 @@ export const translations = {
         status: 'Status',
         completed: 'Completed',
         pending: 'Pending',
+        failed: 'Failed',
 
         // Header
         shaqoFinder: 'Shaqo Finder',
@@ -98,6 +99,26 @@ export const translations = {
         availableForWithdrawal: 'Available for withdrawal.',
         withdrawFunds: 'Withdraw Funds',
         expires: 'Expires',
+        endingIn: 'ending in',
+        noPaymentMethods: 'You have no payment methods saved.',
+        noTransactions: "You have no transactions yet.",
+        addCardTitle: 'Add a new card',
+        addCardDesc: 'Enter your card details below.',
+        cardLast4Label: 'Last 4 Digits',
+        cardExpiryLabel: 'Expiry Date (MM/YY)',
+        addCardAction: 'Add Card',
+        invalidCardDetails: 'Invalid Card Details',
+        invalidCardDetailsDesc: 'Please check your card number and expiry date.',
+        cardAddedSuccess: 'Card Added',
+        cardAddedSuccessDesc: 'Your new payment method has been saved.',
+        cardRemovedSuccess: 'Card Removed',
+        cardRemovedSuccessDesc: 'The payment method has been deleted.',
+        removeCardConfirmTitle: 'Remove this card?',
+        removeCardConfirmDesc: 'This action cannot be undone. Are you sure you want to remove this payment method?',
+        withdrawalToBank: 'Withdrawal to Bank Account',
+        withdrawalInitiated: 'Withdrawal Initiated',
+        withdrawalInitiatedDesc: 'Your withdrawal has been initiated and is now pending.',
+
 
         // Client Dashboard
         myJobPostings: 'My Job Postings',
@@ -208,6 +229,7 @@ export const translations = {
         status: 'Xaaladda',
         completed: 'Dhamaystiran',
         pending: 'Sugaya',
+        failed: 'Fashilmay',
 
 
         // Header
@@ -286,6 +308,25 @@ export const translations = {
         availableForWithdrawal: 'Diyaar u ah in lala baxo.',
         withdrawFunds: 'Kala Bax Lacagta',
         expires: 'Dhacaya',
+        endingIn: 'ku eg',
+        noPaymentMethods: 'Wax habab lacag-bixineed ah oo kaydsan ma lihid.',
+        noTransactions: "Weli wax macaamil ganacsi ah ma lihid.",
+        addCardTitle: 'Kudar kaar cusub',
+        addCardDesc: 'Geli faahfaahinta kaarkaaga hoos.',
+        cardLast4Label: '4-ta Nambar ee u Dambeeya',
+        cardExpiryLabel: 'Taariikhda Dhicitaanka (BB/SS)',
+        addCardAction: 'Kudar Kaarka',
+        invalidCardDetails: 'Faahfaahinta Kaarka oo Khaldan',
+        invalidCardDetailsDesc: 'Fadlan hubi nambarka kaarkaaga iyo taariikhda dhicitaanka.',
+        cardAddedSuccess: 'Kaarka Waa Lagu Daray',
+        cardAddedSuccessDesc: 'Habkaaga cusub ee lacag bixinta waa la kaydiyay.',
+        cardRemovedSuccess: 'Kaarka Waa Laga Saaray',
+        cardRemovedSuccessDesc: 'Habka lacag bixinta waa la tirtiray.',
+        removeCardConfirmTitle: 'Ka saar kaarkan?',
+        removeCardConfirmDesc: 'Tallaabadan lama laaban karo. Ma hubtaa inaad rabto inaad ka saarto habkan lacag bixinta?',
+        withdrawalToBank: 'Kula Bixid Xisaab Bangi',
+        withdrawalInitiated: 'Kula Bixidda Waa La Bilaabay',
+        withdrawalInitiatedDesc: 'Kula bixidaada waa la bilaabay oo hadda way sugaysaa.',
 
         // Client Dashboard
         myJobPostings: 'Shaqooyinkayga La Soo Geliyey',

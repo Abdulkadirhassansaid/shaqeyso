@@ -1,3 +1,4 @@
+
 export type User = {
   id: string;
   name: string;
@@ -5,6 +6,8 @@ export type User = {
   avatarUrl: string;
   role: 'client' | 'freelancer';
   password?: string;
+  paymentMethods?: PaymentMethod[];
+  transactions?: Transaction[];
 };
 
 export type Job = {
@@ -45,4 +48,21 @@ export type RankedFreelancer = {
   proposal: string;
   rank: number;
   reason: string;
+};
+
+export type PaymentMethod = {
+  id: string;
+  type: 'Visa' | 'Mastercard';
+  last4: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isPrimary: boolean;
+};
+
+export type Transaction = {
+  id: string;
+  date: string; // ISO date string
+  description: string;
+  amount: number; // positive for income, negative for withdrawal/fee
+  status: 'Completed' | 'Pending' | 'Failed';
 };

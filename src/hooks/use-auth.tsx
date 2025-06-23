@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import {
     mockFreelancerProfiles as initialFreelancerProfiles, 
     mockClientProfiles as initialClientProfiles
 } from '@/lib/mock-data';
-import type { User, FreelancerProfile, ClientProfile } from '@/lib/types';
+import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
 import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 
 interface AuthContextType {
@@ -20,6 +21,10 @@ interface AuthContextType {
   users: User[];
   freelancerProfiles: FreelancerProfile[];
   clientProfiles: ClientProfile[];
+  addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
+  removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
+  addTransaction: (userId: string, transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
+  refreshUser: () => void;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -32,6 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
+
+  const refreshUser = React.useCallback(() => {
+    const currentUserId = user?.id;
+    if (currentUserId) {
+        const refreshedUser = users.find(u => u.id === currentUserId);
+        if (refreshedUser) {
+            setUser(refreshedUser);
+        }
+    }
+  }, [user, users]);
 
   React.useEffect(() => {
     try {
@@ -76,6 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: pass,
       role,
       avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
+      paymentMethods: [],
+      transactions: [],
     };
     setUsers(prev => [...prev, newUser]); 
     
@@ -141,6 +158,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return true;
   };
+
+  const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
+    setUsers(prevUsers => {
+        return prevUsers.map(u => {
+            if (u.id === userId) {
+                const newMethod = { ...method, id: `pm-${Date.now()}` };
+                const paymentMethods = [...(u.paymentMethods || []), newMethod];
+                const updatedUser = { ...u, paymentMethods };
+                if (user?.id === userId) setUser(updatedUser);
+                return updatedUser;
+            }
+            return u;
+        });
+    });
+    return true;
+  };
+
+  const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
+    setUsers(prevUsers => {
+        return prevUsers.map(u => {
+            if (u.id === userId) {
+                const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
+                const updatedUser = { ...u, paymentMethods };
+                 if (user?.id === userId) setUser(updatedUser);
+                return updatedUser;
+            }
+            return u;
+        });
+    });
+    return true;
+  };
+
+  const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
+    setUsers(prevUsers => {
+        return prevUsers.map(u => {
+            if (u.id === userId) {
+                const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
+                const transactions = [...(u.transactions || []), newTransaction];
+                const updatedUser = { ...u, transactions };
+                if (user?.id === userId) setUser(updatedUser);
+                return updatedUser;
+            }
+            return u;
+        });
+    });
+    return true;
+  };
   
   const logout = () => {
     setUser(null);
@@ -148,7 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
