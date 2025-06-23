@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -30,6 +30,8 @@ import { ChatDialog } from './chat-dialog';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
+import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 
 interface ClientDashboardProps {
@@ -499,7 +501,28 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
           </Card>
       </TabsContent>
       <TabsContent value="post-job" className="mt-6">
+        {user.verificationStatus === 'verified' ? (
           <JobPostForm onFinished={() => setActiveTab('my-jobs')} />
+        ) : (
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.postNewJobTitle}</CardTitle>
+                    <CardDescription>{t.postNewJobDesc}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Alert variant="default" className="w-full flex flex-col items-center text-center p-6">
+                      <AlertCircle className="h-6 w-6 mb-2" />
+                      <AlertTitle className="text-lg font-semibold">{t.verificationRequiredTitle}</AlertTitle>
+                      <AlertDescription className="mt-1">
+                        {t.verificationRequiredClientDesc}
+                      </AlertDescription>
+                      <Button asChild className="mt-4">
+                        <Link href="/verify">{t.verifyNow}</Link>
+                      </Button>
+                    </Alert>
+                </CardContent>
+            </Card>
+        )}
       </TabsContent>
       </Tabs>
       {jobToChat && (

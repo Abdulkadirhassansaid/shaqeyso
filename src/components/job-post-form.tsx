@@ -23,19 +23,13 @@ import {
 } from '@/components/ui/select';
 import { generateJobDescription } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Wand2, AlertCircle } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 import { LoadingDots } from './loading-dots';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import type { Job } from '@/lib/types';
-import Link from 'next/link';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+
 
 interface JobPostFormProps {
   jobToEdit?: Job | null;
@@ -59,7 +53,6 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
   const promptRef = React.useRef<HTMLTextAreaElement>(null);
 
   const isEditMode = !!jobToEdit;
-  const isVerified = user?.verificationStatus === 'verified';
 
   React.useEffect(() => {
     if (isEditMode && jobToEdit) {
@@ -102,15 +95,6 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isVerified) {
-        toast({
-            title: t.verificationRequiredTitle,
-            description: t.verificationRequiredClientDesc,
-            variant: "destructive"
-        });
-        return;
-    }
-
     if (!title || !category || !budget || !deadline || !description || !user) {
         toast({
             title: t.missingFieldsTitle,
@@ -163,27 +147,6 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
     setIsSubmitting(false);
   }
 
-  const PostButton = () => {
-    const button = <Button type="submit" disabled={isSubmitting || isGenerating || !isVerified}>{isSubmitting ? t.saving : (isEditMode ? t.saveChanges : t.postJob)}</Button>;
-
-    if (isVerified) {
-        return button;
-    }
-
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span tabIndex={0}>{button}</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{t.mustBeVerifiedToPost}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
-  }
-
   return (
     <Card>
       <form onSubmit={handleSubmit}>
@@ -194,15 +157,6 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
             </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            {!isVerified && (
-                <div className="p-4 rounded-md bg-destructive/10 text-destructive-foreground border border-destructive/20 text-sm">
-                    <div className="flex items-center gap-2">
-                         <AlertCircle className="h-5 w-5 text-destructive"/>
-                         <p className="font-semibold">{t.verificationRequiredTitle}</p>
-                    </div>
-                    <p className="mt-1">{t.verificationRequiredClientDesc} <Link href="/verify" className="underline font-bold">{t.verifyNow}</Link></p>
-                </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="job-title">{t.jobTitle}</Label>
@@ -264,7 +218,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
             </div>
         </CardContent>
         <CardFooter className="flex gap-2">
-            <PostButton />
+            <Button type="submit" disabled={isSubmitting || isGenerating}>{isSubmitting ? t.saving : (isEditMode ? t.saveChanges : t.postJob)}</Button>
             {isEditMode && <Button type="button" variant="ghost" onClick={onFinished} disabled={isSubmitting || isGenerating}>{t.cancel}</Button>}
         </CardFooter>
       </form>
