@@ -251,7 +251,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                         </div>
                         {client && (
                           <div className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
-                            <span>{t.client}: {client.name}</span>
+                            <span>{client.name}</span>
                             {client.verificationStatus === 'verified' && (
                               <BadgeCheck className="h-4 w-4 text-primary" />
                             )}
