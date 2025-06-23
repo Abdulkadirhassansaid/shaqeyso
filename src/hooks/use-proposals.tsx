@@ -10,6 +10,8 @@ interface ProposalsContextType {
   proposals: Proposal[];
   addProposal: (proposalData: Omit<Proposal, 'id' | 'status'>) => Promise<boolean>;
   acceptProposal: (proposalId: string, jobId: string) => Promise<boolean>;
+  updateProposal: (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>) => Promise<boolean>;
+  deleteProposal: (proposalId: string) => Promise<boolean>;
 }
 
 const ProposalsContext = React.createContext<ProposalsContextType | null>(null);
@@ -38,7 +40,17 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const value = { proposals, addProposal, acceptProposal };
+  const updateProposal = async (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>): Promise<boolean> => {
+    setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, ...data } : p));
+    return true;
+  }
+
+  const deleteProposal = async (proposalId: string): Promise<boolean> => {
+    setProposals(prev => prev.filter(p => p.id !== proposalId));
+    return true;
+  }
+
+  const value = { proposals, addProposal, acceptProposal, updateProposal, deleteProposal };
 
   return <ProposalsContext.Provider value={value}>{children}</ProposalsContext.Provider>;
 }

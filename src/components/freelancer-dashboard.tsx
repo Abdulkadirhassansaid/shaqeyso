@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Job, User } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star } from 'lucide-react';
+import type { Job, User, Proposal } from '@/lib/types';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2 } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -28,6 +28,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ChatDialog } from './chat-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
+import { useProposals } from '@/hooks/use-proposals';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 
 interface FreelancerDashboardProps {
@@ -41,10 +43,15 @@ type RecommendedJob = Job & {
 
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const { jobs, markJobAsReviewed } = useJobs();
+  const { proposals, updateProposal, deleteProposal } = useProposals();
   const { freelancerProfiles, users: allUsers } = useAuth();
   const { toast } = useToast();
   const { addReview } = useReviews();
+  
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
+  const [editingProposal, setEditingProposal] = React.useState<Proposal | null>(null);
+  const [deletingProposal, setDeletingProposal] = React.useState<Proposal | null>(null);
+
   const [searchQuery, setSearchQuery] = React.useState('');
   const [recommendedJobs, setRecommendedJobs] = React.useState<RecommendedJob[]>([]);
   const [isRecommending, setIsRecommending] = React.useState(false);
@@ -107,6 +114,16 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
       toast({ title: t.reviewSubmissionSuccess, description: t.reviewSubmissionSuccessDesc });
       setJobToReview(null);
   };
+  
+  const handleDeleteProposal = async () => {
+    if (!deletingProposal) return;
+    const success = await deleteProposal(deletingProposal.id);
+    if (success) {
+      toast({ title: t.proposalDeleted, description: t.proposalDeletedDesc });
+    }
+    setDeletingProposal(null);
+  };
+
 
   if (selectedJob) {
     return (
@@ -147,6 +164,19 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     );
   }
 
+  if (editingProposal) {
+    const jobForProposal = jobs.find(j => j.id === editingProposal.jobId);
+    if (!jobForProposal) return null; // Or show an error state
+    return (
+        <ProposalForm 
+            job={jobForProposal}
+            freelancerProfile={profileString}
+            onFinished={() => setEditingProposal(null)}
+            proposalToEdit={editingProposal}
+        />
+    )
+  }
+
   const openJobs = jobs.filter(job => job.status === 'Open');
   const filteredJobs = openJobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -154,6 +184,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     job.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+  const myProposals = proposals.filter(p => p.freelancerId === user.id);
   const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
 
 
@@ -271,12 +302,64 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
         </div>
     );
   }
+  
+  const renderMyProposalsContent = () => {
+    if (myProposals.length === 0) {
+      return <p className="text-muted-foreground text-center py-8">{t.noProposalsSubmitted}</p>;
+    }
+    
+    return (
+        <div className="space-y-4">
+            {myProposals.map(proposal => {
+                const job = jobs.find(j => j.id === proposal.jobId);
+                const status = proposal.status || 'Pending';
+                if (!job) return null;
+                
+                return (
+                    <Card key={proposal.id}>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <CardTitle className="text-lg">{job.title}</CardTitle>
+                                <Badge variant={status === 'Accepted' ? 'default' : status === 'Rejected' ? 'destructive' : 'secondary'}>
+                                    {t[status.toLowerCase() as keyof typeof t] || status}
+                                </Badge>
+                            </div>
+                            <CardDescription>
+                                {t.budget}: ${job.budget}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="font-semibold text-sm">{t.yourProposal}</p>
+                            <blockquote className="mt-2 pl-4 border-l-2 italic text-muted-foreground">
+                                "{proposal.coverLetter}"
+                            </blockquote>
+                            <p className="font-semibold text-sm mt-4">{t.proposedRate}: <span className="font-normal">${proposal.proposedRate}/hr</span></p>
+                        </CardContent>
+                        {status === 'Pending' && (
+                            <CardFooter className="flex justify-end gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setEditingProposal(proposal)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    {t.edit}
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => setDeletingProposal(proposal)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {t.delete}
+                                </Button>
+                            </CardFooter>
+                        )}
+                    </Card>
+                )
+            })}
+        </div>
+    )
+  }
 
   return (
     <>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
+                <TabsTrigger value="my-proposals">{t.myProposals}</TabsTrigger>
                 <TabsTrigger value="my-projects">{t.myProjects}</TabsTrigger>
             </TabsList>
             <TabsContent value="find-work" className="mt-6">
@@ -307,6 +390,15 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                     <CardContent>{renderFindWorkContent()}</CardContent>
                 </Card>
             </TabsContent>
+            <TabsContent value="my-proposals" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t.myProposals}</CardTitle>
+                        <CardDescription>{t.myProposalsDesc}</CardDescription>
+                    </CardHeader>
+                    <CardContent>{renderMyProposalsContent()}</CardContent>
+                </Card>
+            </TabsContent>
             <TabsContent value="my-projects" className="mt-6">
                 <Card>
                     <CardHeader>
@@ -334,6 +426,18 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 onSubmit={handleReviewSubmit}
             />
         )}
+        <AlertDialog open={!!deletingProposal} onOpenChange={(isOpen) => !isOpen && setDeletingProposal(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t.deleteProposalConfirmTitle}</AlertDialogTitle>
+                    <AlertDialogDescription>{t.deleteProposalConfirmDesc}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setDeletingProposal(null)}>{t.cancel}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteProposal} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </>
   );
 }

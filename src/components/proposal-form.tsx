@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,8 +10,8 @@ import { assistProposalGeneration } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Wand2 } from 'lucide-react';
 import { LoadingDots } from './loading-dots';
-import type { Job } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import type { Job, Proposal } from '@/lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { useLanguage } from '@/hooks/use-language';
 import { useProposals } from '@/hooks/use-proposals';
 import { useAuth } from '@/hooks/use-auth';
@@ -19,17 +20,28 @@ interface ProposalFormProps {
     job: Job;
     freelancerProfile: string;
     onFinished: () => void;
+    proposalToEdit?: Proposal | null;
 }
 
-export function ProposalForm({ job, freelancerProfile, onFinished }: ProposalFormProps) {
+export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdit }: ProposalFormProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [coverLetter, setCoverLetter] = React.useState('');
   const [proposedRate, setProposedRate] = React.useState('');
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { addProposal } = useProposals();
+  const { addProposal, updateProposal } = useProposals();
   const { user } = useAuth();
+  
+  const isEditMode = !!proposalToEdit;
+
+  React.useEffect(() => {
+    if (isEditMode && proposalToEdit) {
+        setCoverLetter(proposalToEdit.coverLetter);
+        setProposedRate(String(proposalToEdit.proposedRate));
+    }
+  }, [isEditMode, proposalToEdit]);
+
 
   const handleGenerateProposal = async () => {
     setIsGenerating(true);
@@ -63,18 +75,28 @@ export function ProposalForm({ job, freelancerProfile, onFinished }: ProposalFor
     }
 
     setIsSubmitting(true);
-    const success = await addProposal({
-        jobId: job.id,
-        freelancerId: user.id,
-        coverLetter: coverLetter,
-        proposedRate: Number(proposedRate),
-    });
+    let success = false;
+
+    if (isEditMode && proposalToEdit) {
+        success = await updateProposal(proposalToEdit.id, {
+            coverLetter: coverLetter,
+            proposedRate: Number(proposedRate)
+        });
+    } else {
+        success = await addProposal({
+            jobId: job.id,
+            freelancerId: user.id,
+            coverLetter: coverLetter,
+            proposedRate: Number(proposedRate),
+        });
+    }
+
     setIsSubmitting(false);
 
     if (success) {
         toast({
-            title: t.proposalSubmitted,
-            description: t.proposalSubmittedDesc,
+            title: isEditMode ? t.proposalUpdated : t.proposalSubmitted,
+            description: isEditMode ? t.proposalUpdatedDesc : t.proposalSubmittedDesc,
         });
         onFinished();
     } else {
@@ -90,8 +112,8 @@ export function ProposalForm({ job, freelancerProfile, onFinished }: ProposalFor
     <Card className="w-full border-2 border-accent/50">
         <form onSubmit={handleSubmit}>
             <CardHeader>
-                <CardTitle>{t.submitYourProposal}</CardTitle>
-                <CardDescription>{t.submitProposalDesc}</CardDescription>
+                <CardTitle>{isEditMode ? t.editProposal : t.submitYourProposal}</CardTitle>
+                <CardDescription>{isEditMode ? "" : t.submitProposalDesc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -130,10 +152,13 @@ export function ProposalForm({ job, freelancerProfile, onFinished }: ProposalFor
                         />
                     )}
                 </div>
-                <Button type="submit" className="w-full md:w-auto" disabled={isGenerating || isSubmitting}>
-                    {isSubmitting ? t.submittingProposal : t.submitProposal}
-                </Button>
             </CardContent>
+            <CardFooter className="flex justify-between">
+                <Button type="submit" disabled={isGenerating || isSubmitting}>
+                    {isSubmitting ? t.submittingProposal : (isEditMode ? t.saveChanges : t.submitProposal)}
+                </Button>
+                 {isEditMode && <Button type="button" variant="ghost" onClick={onFinished}>{t.cancel}</Button>}
+            </CardFooter>
         </form>
     </Card>
   );

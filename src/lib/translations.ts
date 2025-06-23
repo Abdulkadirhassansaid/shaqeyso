@@ -1,3 +1,4 @@
+
 export const translations = {
     en: {
         // General
@@ -28,6 +29,7 @@ export const translations = {
         actions: 'Actions',
         changeStatus: 'Change Status',
         deleteJob: 'Delete Job',
+        edit: 'Edit',
         delete: 'Delete',
         jobDeleted: 'Job Deleted',
         jobDeletedDesc: 'The job posting has been successfully deleted.',
@@ -274,6 +276,18 @@ export const translations = {
         projectCompletedAndPaid: 'Project completed and paid',
         noActiveProjects: "You don't have any active projects yet.",
         chatWithClient: 'Chat with Client',
+        myProposals: "My Proposals",
+        myProposalsDesc: "View and manage all your submitted job proposals.",
+        noProposalsSubmitted: "You have not submitted any proposals yet.",
+        yourProposal: "Your Proposal",
+        editProposal: "Edit Proposal",
+        deleteProposal: "Delete Proposal",
+        deleteProposalConfirmTitle: "Are you sure you want to delete this proposal?",
+        deleteProposalConfirmDesc: "This action cannot be undone. The client will no longer see your application.",
+        proposalUpdated: "Proposal Updated",
+        proposalUpdatedDesc: "Your proposal has been successfully updated.",
+        proposalDeleted: "Proposal Deleted",
+        proposalDeletedDesc: "Your proposal has been successfully withdrawn.",
         
         // Proposal Form
         yourHourlyRate: 'Your Hourly Rate ($)',
@@ -401,6 +415,7 @@ export const translations = {
         actions: 'Tallaabooyin',
         changeStatus: 'Beddel Xaaladda',
         deleteJob: 'Tirtir Shaqada',
+        edit: 'Wax ka beddel',
         delete: 'Tirtir',
         jobDeleted: 'Shaqada Waa La Tirtiray',
         jobDeletedDesc: 'Shaqo qoristii si guul leh ayaa loo tirtiray.',
@@ -648,6 +663,18 @@ export const translations = {
         projectCompletedAndPaid: 'Mashruuca waa la dhameeyay oo waa la bixiyay',
         noActiveProjects: "Weli ma lihid mashaariic firfircoon.",
         chatWithClient: 'La sheekeyso Macmiilka',
+        myProposals: "Codsiyadayda",
+        myProposalsDesc: "Eeg oo maamul dhammaan codsiyadaada shaqo ee aad gudbisay.",
+        noProposalsSubmitted: "Weli wax codsiyo ah ma aadan gudbin.",
+        yourProposal: "Codsigaaga",
+        editProposal: "Wax ka Beddel Codsiga",
+        deleteProposal: "Tirtir Codsiga",
+        deleteProposalConfirmTitle: "Ma hubtaa inaad rabto inaad tirtirto codsigan?",
+        deleteProposalConfirmDesc: "Tallaabadan lama laaban karo. Macmiilku mar dambe ma arki doono codsigaaga.",
+        proposalUpdated: "Codsiga Waa La Cusboonaysiiyay",
+        proposalUpdatedDesc: "Codsigaaga si guul leh ayaa loo cusboonaysiiyay.",
+        proposalDeleted: "Codsiga Waa La Tirtiray",
+        proposalDeletedDesc: "Codsigaaga si guul leh ayaa loola noqday.",
         
         // Proposal Form
         yourHourlyRate: 'Qiimahaaga Saacaddii ($)',
