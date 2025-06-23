@@ -815,7 +815,7 @@ export function AdminDashboard() {
                                         </div>
                                     )}
                                     <div className="flex justify-end pt-1">
-                                        <Button asChild variant="outline" size="sm">
+                                        <Button asChild variant="secondary" size="sm">
                                             <a href={reviewingUser.passportOrIdUrl} download={`id_doc_${reviewingUser.id}`}>
                                                 <Download className="mr-2 h-4 w-4" />
                                                 {t.download}
@@ -845,7 +845,7 @@ export function AdminDashboard() {
                                         </div>
                                     )}
                                     <div className="flex justify-end pt-1">
-                                        <Button asChild variant="outline" size="sm">
+                                        <Button asChild variant="secondary" size="sm">
                                             <a href={reviewingUser.businessCertificateUrl} download={`business_cert_${reviewingUser.id}`}>
                                                 <Download className="mr-2 h-4 w-4" />
                                                 {t.download}
