@@ -36,6 +36,8 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateJobDescriptionInputSchema},
   output: {schema: GenerateJobDescriptionOutputSchema},
   prompt: `You are an expert job description writer. Given a short prompt, you will generate a detailed and appealing job description.
+Do not use markdown formatting like ** for bold text. Instead of bolding, use plain text for headings.
+For any lists, use a hyphen (-) as a bullet point.
 
 Prompt: {{{prompt}}}`,
 });

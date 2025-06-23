@@ -39,6 +39,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert career coach who helps freelancers write compelling bios.
 Given the freelancer's name and skills, generate a professional and engaging bio in 2-3 short paragraphs.
 The bio should highlight their key skills and present them as a competent professional.
+Do not use any markdown formatting like ** for bold text.
 
 Freelancer Name: {{{name}}}
 Skills:
