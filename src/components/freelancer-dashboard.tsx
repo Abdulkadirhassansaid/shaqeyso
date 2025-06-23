@@ -30,6 +30,12 @@ import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import { useProposals } from '@/hooks/use-proposals';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 
 interface FreelancerDashboardProps {
@@ -309,48 +315,53 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     }
     
     return (
-        <div className="space-y-4">
+        <Accordion type="single" collapsible className="w-full space-y-4">
             {myProposals.map(proposal => {
                 const job = jobs.find(j => j.id === proposal.jobId);
                 const status = proposal.status || 'Pending';
                 if (!job) return null;
                 
                 return (
-                    <Card key={proposal.id}>
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <CardTitle className="text-lg">{job.title}</CardTitle>
+                    <AccordionItem value={proposal.id} key={proposal.id} className="border rounded-lg bg-card overflow-hidden">
+                        <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                            <div className="flex justify-between items-center w-full">
+                                <div className="text-left">
+                                    <h4 className="font-semibold text-base">{job.title}</h4>
+                                    <p className="text-sm text-muted-foreground">{t.budget}: ${job.budget.toFixed(2)}</p>
+                                </div>
                                 <Badge variant={status === 'Accepted' ? 'default' : status === 'Rejected' ? 'destructive' : 'secondary'}>
                                     {t[status.toLowerCase() as keyof typeof t] || status}
                                 </Badge>
                             </div>
-                            <CardDescription>
-                                {t.budget}: ${job.budget}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="font-semibold text-sm">{t.yourProposal}</p>
-                            <blockquote className="mt-2 pl-4 border-l-2 italic text-muted-foreground">
-                                "{proposal.coverLetter}"
-                            </blockquote>
-                            <p className="font-semibold text-sm mt-4">{t.proposedRate}: <span className="font-normal">${proposal.proposedRate}/hr</span></p>
-                        </CardContent>
-                        {status === 'Pending' && (
-                            <CardFooter className="flex justify-end gap-2">
-                                <Button variant="outline" size="sm" onClick={() => setEditingProposal(proposal)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    {t.edit}
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => setDeletingProposal(proposal)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    {t.delete}
-                                </Button>
-                            </CardFooter>
-                        )}
-                    </Card>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-4 pt-4">
+                             <div className="space-y-4">
+                                <div>
+                                    <p className="font-semibold text-sm mb-2">{t.yourProposal}</p>
+                                    <blockquote className="pl-4 border-l-2 italic text-muted-foreground">
+                                        "{proposal.coverLetter}"
+                                    </blockquote>
+                                </div>
+                                <p className="font-semibold text-sm">{t.proposedRate}: <span className="font-normal">${proposal.proposedRate}/hr</span></p>
+                            
+                                {status === 'Pending' && (
+                                    <div className="flex justify-end gap-2 pt-4 border-t">
+                                        <Button variant="outline" size="sm" onClick={() => setEditingProposal(proposal)}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            {t.edit}
+                                        </Button>
+                                        <Button variant="destructive" size="sm" onClick={() => setDeletingProposal(proposal)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            {t.delete}
+                                        </Button>
+                                    </div>
+                                )}
+                             </div>
+                        </AccordionContent>
+                    </AccordionItem>
                 )
             })}
-        </div>
+        </Accordion>
     )
   }
 
