@@ -29,13 +29,17 @@ import { ChatDialog } from './chat-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import { useProposals } from '@/hooks/use-proposals';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Label } from './ui/label';
 
 
 interface FreelancerDashboardProps {
@@ -49,7 +53,7 @@ type RecommendedJob = Job & {
 
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const { jobs, markJobAsReviewed } = useJobs();
-  const { proposals, updateProposal, deleteProposal } = useProposals();
+  const { proposals, deleteProposal } = useProposals();
   const { freelancerProfiles, users: allUsers } = useAuth();
   const { toast } = useToast();
   const { addReview } = useReviews();
@@ -57,6 +61,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [editingProposal, setEditingProposal] = React.useState<Proposal | null>(null);
   const [deletingProposal, setDeletingProposal] = React.useState<Proposal | null>(null);
+  const [viewingProposal, setViewingProposal] = React.useState<Proposal | null>(null);
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [recommendedJobs, setRecommendedJobs] = React.useState<RecommendedJob[]>([]);
@@ -315,53 +320,39 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     }
     
     return (
-        <Accordion type="single" collapsible className="w-full space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {myProposals.map(proposal => {
                 const job = jobs.find(j => j.id === proposal.jobId);
                 const status = proposal.status || 'Pending';
                 if (!job) return null;
                 
                 return (
-                    <AccordionItem value={proposal.id} key={proposal.id} className="border rounded-lg bg-card overflow-hidden">
-                        <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                            <div className="flex justify-between items-center w-full">
-                                <div className="text-left">
-                                    <h4 className="font-semibold text-base">{job.title}</h4>
-                                    <p className="text-sm text-muted-foreground">{t.budget}: ${job.budget.toFixed(2)}</p>
-                                </div>
+                    <Card 
+                        key={proposal.id} 
+                        className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow" 
+                        onClick={() => setViewingProposal(proposal)}
+                    >
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <CardTitle className="text-lg line-clamp-2">{job.title}</CardTitle>
                                 <Badge variant={status === 'Accepted' ? 'default' : status === 'Rejected' ? 'destructive' : 'secondary'}>
                                     {t[status.toLowerCase() as keyof typeof t] || status}
                                 </Badge>
                             </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-4 pt-4">
-                             <div className="space-y-4">
-                                <div>
-                                    <p className="font-semibold text-sm mb-2">{t.yourProposal}</p>
-                                    <blockquote className="pl-4 border-l-2 italic text-muted-foreground">
-                                        "{proposal.coverLetter}"
-                                    </blockquote>
-                                </div>
-                                <p className="font-semibold text-sm">{t.proposedRate}: <span className="font-normal">${proposal.proposedRate}/hr</span></p>
-                            
-                                {status === 'Pending' && (
-                                    <div className="flex justify-end gap-2 pt-4 border-t">
-                                        <Button variant="outline" size="sm" onClick={() => setEditingProposal(proposal)}>
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            {t.edit}
-                                        </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => setDeletingProposal(proposal)}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            {t.delete}
-                                        </Button>
-                                    </div>
-                                )}
-                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                            <CardDescription>{t.budget}: ${job.budget.toFixed(2)}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                             <p className="text-sm text-muted-foreground line-clamp-3 italic">
+                                "{proposal.coverLetter}"
+                            </p>
+                        </CardContent>
+                        <CardFooter>
+                            <Button variant="link" className="p-0 h-auto">{t.viewDetailsAndProposals}</Button>
+                        </CardFooter>
+                    </Card>
                 )
             })}
-        </Accordion>
+        </div>
     )
   }
 
@@ -436,6 +427,54 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 job={jobToReview}
                 onSubmit={handleReviewSubmit}
             />
+        )}
+        {viewingProposal && (
+            <Dialog open={!!viewingProposal} onOpenChange={(isOpen) => !isOpen && setViewingProposal(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{jobs.find(j => j.id === viewingProposal.jobId)?.title}</DialogTitle>
+                        <DialogDescription>
+                            {t.yourProposal}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div>
+                            <Label className="font-semibold">{t.coverLetter}</Label>
+                            <div className="mt-2 rounded-md border p-4 text-sm text-muted-foreground max-h-60 overflow-y-auto">
+                                <p className="whitespace-pre-wrap">{viewingProposal.coverLetter}</p>
+                            </div>
+                        </div>
+                        <p className="font-semibold text-sm">{t.proposedRate}: <span className="font-normal">${viewingProposal.proposedRate}/hr</span></p>
+                    </div>
+                    <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between items-center">
+                         <Badge variant={viewingProposal.status === 'Accepted' ? 'default' : viewingProposal.status === 'Rejected' ? 'destructive' : 'secondary'}>
+                            {t.status}: {t[viewingProposal.status.toLowerCase() as keyof typeof t] || viewingProposal.status}
+                        </Badge>
+                        {viewingProposal.status === 'Pending' ? (
+                            <div className="flex justify-end gap-2">
+                                <Button variant="destructive" onClick={() => {
+                                    setDeletingProposal(viewingProposal);
+                                    setViewingProposal(null);
+                                }}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {t.delete}
+                                </Button>
+                                <Button variant="outline" onClick={() => {
+                                    setEditingProposal(viewingProposal);
+                                    setViewingProposal(null);
+                                }}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    {t.edit}
+                                </Button>
+                            </div>
+                        ) : (
+                           <DialogClose asChild>
+                             <Button type="button" variant="secondary" onClick={() => setViewingProposal(null)}>{t.closed}</Button>
+                           </DialogClose>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         )}
         <AlertDialog open={!!deletingProposal} onOpenChange={(isOpen) => !isOpen && setDeletingProposal(null)}>
             <AlertDialogContent>
