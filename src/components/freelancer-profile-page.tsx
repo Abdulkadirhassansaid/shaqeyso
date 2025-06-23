@@ -17,6 +17,12 @@ interface FreelancerProfilePageProps {
   user: User;
 }
 
+const commonSkills = [
+  'React', 'Next.js', 'TypeScript', 'Node.js', 'UI/UX Design', 
+  'Graphic Design', 'Content Writing', 'SEO', 'Shopify', 'Mobile Development',
+  'Project Management', 'Marketing', 'Illustration'
+];
+
 export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const { updateUserProfile } = useAuth();
   const { toast } = useToast();
@@ -27,21 +33,14 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [bio, setBio] = React.useState(freelancerProfile?.bio || '');
   const [hourlyRate, setHourlyRate] = React.useState(freelancerProfile?.hourlyRate || 0);
   const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
-  const [currentSkill, setCurrentSkill] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
 
-  const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && currentSkill.trim()) {
-      e.preventDefault();
-      if (!skills.includes(currentSkill.trim())) {
-        setSkills([...skills, currentSkill.trim()]);
-      }
-      setCurrentSkill('');
-    }
-  };
-
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSkills(skills.filter(skill => skill !== skillToRemove));
+  const handleToggleSkill = (skillToToggle: string) => {
+    setSkills(prevSkills => 
+        prevSkills.includes(skillToToggle) 
+            ? prevSkills.filter(s => s !== skillToToggle) 
+            : [...prevSkills, skillToToggle]
+    );
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -95,25 +94,43 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
             <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
             <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} disabled={isSaving} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="skills">Skills</Label>
-            <Input 
-                id="skills" 
-                placeholder="Add a skill and press Enter" 
-                value={currentSkill}
-                onChange={(e) => setCurrentSkill(e.target.value)}
-                onKeyDown={handleAddSkill}
-                disabled={isSaving}
-            />
-            <div className="flex flex-wrap gap-2 pt-2">
-                {skills.map(skill => (
-                    <Badge key={skill} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
-                        {skill}
-                        <button type="button" onClick={() => handleRemoveSkill(skill)} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
-                           <X className="h-3 w-3" />
-                        </button>
-                    </Badge>
-                ))}
+           <div className="space-y-4">
+            <div className="space-y-2">
+                <Label>Your Skills</Label>
+                <div className="p-3 border rounded-md min-h-[60px] bg-secondary/30">
+                    {skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                            {skills.map(skill => (
+                                <Badge key={skill} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
+                                    {skill}
+                                    <button type="button" onClick={() => handleToggleSkill(skill)} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
+                                       <X className="h-3 w-3" />
+                                    </button>
+                                </Badge>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">Select skills from the list below.</p>
+                    )}
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Choose from common skills</Label>
+                <div className="flex flex-wrap gap-2">
+                    {commonSkills.map(skill => (
+                        <Button
+                            key={skill}
+                            type="button"
+                            variant={skills.includes(skill) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleToggleSkill(skill)}
+                            disabled={isSaving}
+                        >
+                            {skills.includes(skill) && <X className="-ml-1 h-3 w-3" />}
+                            {skill}
+                        </Button>
+                    ))}
+                </div>
             </div>
           </div>
           <Button type="submit" disabled={isSaving}>
