@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,13 +17,14 @@ import { ReviewsProvider } from '@/hooks/use-reviews';
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useLanguage();
 
   React.useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, pathname]);
 
   if (isLoading || !user) {
     return (

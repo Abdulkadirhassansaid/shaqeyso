@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,6 +33,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function SettingsPage() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
@@ -46,9 +47,9 @@ export default function SettingsPage() {
   
   React.useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, pathname]);
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();

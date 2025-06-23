@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,7 +16,7 @@ export default function AdminPage() {
       return; // Wait for the auth state to load
     }
     if (!user) {
-      router.replace('/login'); // Not logged in, go to login
+      router.replace('/login?redirect=/admin/dashboard'); // Not logged in, go to login
     } else if (user.role !== 'admin') {
       router.replace('/'); // Logged in but not admin, go to home
     }

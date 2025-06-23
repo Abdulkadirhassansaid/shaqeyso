@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -34,7 +35,8 @@ export default function LoginPage() {
     setIsLoading(true);
     const result = await login(email, password);
     if (result.success) {
-      router.push('/');
+      const redirectUrl = searchParams.get('redirect');
+      router.push(redirectUrl || '/');
     } else {
       if (result.message === 'blocked') {
         toast({
