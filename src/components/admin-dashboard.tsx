@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -786,46 +786,60 @@ export function AdminDashboard() {
                         {reviewingUser.passportOrIdUrl && (
                              <div className="space-y-2">
                                 <Label>{t.idUploadTitle}</Label>
-                                {reviewingUser.passportOrIdUrl.startsWith('data:image') ? (
-                                    <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer" className="block border rounded-md overflow-hidden">
+                                <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
+                                    {reviewingUser.passportOrIdUrl.startsWith('data:image') ? (
                                         <Image 
                                             src={reviewingUser.passportOrIdUrl} 
                                             alt="ID Document" 
                                             width={500} 
                                             height={300} 
-                                            className="object-contain w-full h-auto"
+                                            className="object-contain w-full h-auto rounded-md"
                                         />
-                                    </a>
-                                ) : (
-                                    <a href={reviewingUser.passportOrIdUrl} download="id_document.pdf" className="p-4 border rounded-md bg-muted hover:bg-muted/80 flex items-center gap-2 text-foreground">
-                                        <FileText className="h-6 w-6 text-muted-foreground" />
-                                        <span className="font-medium">View Document (PDF)</span>
-                                        <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
-                                    </a>
-                                )}
+                                    ) : (
+                                        <div className="p-4 flex items-center gap-2 text-foreground">
+                                            <FileText className="h-6 w-6 text-muted-foreground" />
+                                            <span className="font-medium">PDF Document</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-end pt-1">
+                                        <Button asChild variant="outline" size="sm">
+                                            <a href={reviewingUser.passportOrIdUrl} download={`id_doc_${reviewingUser.id}`}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                {t.download}
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                        
                         {reviewingUser.role === 'client' && reviewingUser.businessCertificateUrl && (
-                             <div className="space-y-2">
+                            <div className="space-y-2">
                                 <Label>{t.certUploadTitle}</Label>
-                                {reviewingUser.businessCertificateUrl.startsWith('data:image') ? (
-                                     <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer" className="block border rounded-md overflow-hidden">
+                                <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
+                                    {reviewingUser.businessCertificateUrl.startsWith('data:image') ? (
                                         <Image 
                                             src={reviewingUser.businessCertificateUrl} 
                                             alt="Business Certificate" 
                                             width={500} 
                                             height={300} 
-                                            className="object-contain w-full h-auto"
+                                            className="object-contain w-full h-auto rounded-md"
                                         />
-                                    </a>
-                                ) : (
-                                    <a href={reviewingUser.businessCertificateUrl} download="business_certificate.pdf" className="p-4 border rounded-md bg-muted hover:bg-muted/80 flex items-center gap-2 text-foreground">
-                                        <FileText className="h-6 w-6 text-muted-foreground" />
-                                        <span className="font-medium">View Certificate (PDF)</span>
-                                        <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
-                                    </a>
-                                )}
+                                    ) : (
+                                        <div className="p-4 flex items-center gap-2 text-foreground">
+                                            <FileText className="h-6 w-6 text-muted-foreground" />
+                                            <span className="font-medium">PDF Document</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-end pt-1">
+                                        <Button asChild variant="outline" size="sm">
+                                            <a href={reviewingUser.businessCertificateUrl} download={`business_cert_${reviewingUser.id}`}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                {t.download}
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
