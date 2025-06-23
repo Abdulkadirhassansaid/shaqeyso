@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers } from '@/lib/mock-data';
-import type { User } from '@/lib/types';
+import { mockUsers, mockFreelancerProfiles, mockClientProfiles } from '@/lib/mock-data';
+import type { User, FreelancerProfile, ClientProfile } from '@/lib/types';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<boolean>;
   logout: () => void;
+  updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -53,17 +54,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (existingUser) {
       return false; // User already exists
     }
+    const newId = `user-${Date.now()}`;
     const newUser: User = {
-      id: `user-${Date.now()}`,
+      id: newId,
       name,
       email,
       password: pass,
       role,
       avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
     };
-    mockUsers.push(newUser); // In a real app, this would be an API call
+    mockUsers.push(newUser); 
+    
+    if (role === 'freelancer') {
+        mockFreelancerProfiles.push({
+            userId: newId,
+            skills: ['Please add your skills'],
+            bio: 'Please add your bio',
+            hourlyRate: 0,
+            portfolio: [],
+        });
+    } else {
+        mockClientProfiles.push({
+            userId: newId,
+            companyName: name,
+            projectsPosted: [],
+        });
+    }
+
     setUser(newUser);
     localStorage.setItem('userId', newUser.id);
+    return true;
+  };
+
+  const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
+    const userIndex = mockUsers.findIndex(u => u.id === userId);
+    if (userIndex === -1) return false;
+
+    // Update user object
+    const updatedUser = { ...mockUsers[userIndex], ...userData };
+    mockUsers[userIndex] = updatedUser;
+    setUser(updatedUser);
+
+    // Update role-specific profile
+    if (profileData) {
+        if (updatedUser.role === 'freelancer') {
+            const profileIndex = mockFreelancerProfiles.findIndex(p => p.userId === userId);
+            if (profileIndex !== -1) {
+                mockFreelancerProfiles[profileIndex] = { ...mockFreelancerProfiles[profileIndex], ...(profileData as Partial<FreelancerProfile>) };
+            }
+        } else {
+            const profileIndex = mockClientProfiles.findIndex(p => p.userId === userId);
+            if (profileIndex !== -1) {
+                mockClientProfiles[profileIndex] = { ...mockClientProfiles[profileIndex], ...(profileData as Partial<ClientProfile>) };
+            }
+        }
+    }
+    
     return true;
   };
   
@@ -73,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const value = { user, isLoading, login, logout, signup };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
