@@ -46,6 +46,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
@@ -56,7 +57,8 @@ export function AdminDashboard() {
   const { deleteDirectMessagesForUser } = useDirectMessages();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [revenuePeriod, setRevenuePeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
+  const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'analytics');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
 
@@ -264,7 +266,7 @@ export function AdminDashboard() {
             <h1 className="text-3xl font-bold tracking-tight">{t.adminDashboard}</h1>
             <p className="text-muted-foreground mt-1">{t.adminDashboardDesc}</p>
         </header>
-        <Tabs defaultValue="analytics" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab as (value: string) => void} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="analytics">{t.analytics}</TabsTrigger>
                 <TabsTrigger value="users">{t.users}</TabsTrigger>
