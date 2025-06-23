@@ -8,21 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { assistProposalGeneration } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Wand2, AlertCircle } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 import { LoadingDots } from './loading-dots';
 import type { Job, Proposal } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { useLanguage } from '@/hooks/use-language';
 import { useProposals } from '@/hooks/use-proposals';
 import { useAuth } from '@/hooks/use-auth';
-import Link from 'next/link';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 interface ProposalFormProps {
     job: Job;
@@ -42,8 +34,6 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
   const { user } = useAuth();
   
   const isEditMode = !!proposalToEdit;
-  const isVerified = user?.verificationStatus === 'verified';
-
 
   React.useEffect(() => {
     if (isEditMode && proposalToEdit) {
@@ -75,15 +65,6 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isVerified) {
-        toast({
-            title: t.verificationRequiredTitle,
-            description: t.verificationRequiredFreelancerDesc,
-            variant: "destructive"
-        });
-        return;
-    }
 
     if (!coverLetter || !proposedRate || !user) {
         toast({
@@ -129,23 +110,7 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
   };
 
   const SubmitButton = () => {
-    const button = <Button type="submit" disabled={isGenerating || isSubmitting || !isVerified}>{isSubmitting ? t.submittingProposal : (isEditMode ? t.saveChanges : t.submitProposal)}</Button>;
-    if (isVerified) {
-        return button;
-    }
-
-     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span tabIndex={0}>{button}</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>{t.mustBeVerifiedToApply}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
+    return <Button type="submit" disabled={isGenerating || isSubmitting}>{isSubmitting ? t.submittingProposal : (isEditMode ? t.saveChanges : t.submitProposal)}</Button>;
   }
 
   return (
@@ -156,18 +121,6 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
                 <CardDescription>{isEditMode ? "" : t.submitProposalDesc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {!isVerified && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>{t.verificationRequiredTitle}</AlertTitle>
-                        <AlertDescription>
-                            {t.verificationRequiredFreelancerDesc}{' '}
-                            <Link href="/verify" className="font-bold underline">
-                                {t.verifyNow}
-                            </Link>
-                        </AlertDescription>
-                    </Alert>
-                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="rate">{t.yourHourlyRate}</Label>

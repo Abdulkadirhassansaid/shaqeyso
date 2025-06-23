@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User, Proposal } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -41,6 +41,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from './ui/label';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 
 interface FreelancerDashboardProps {
@@ -172,11 +174,24 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
         </CardContent>
         <CardFooter className='flex-col items-start gap-6'>
-            <ProposalForm 
-                job={selectedJob} 
-                freelancerProfile={profileString} 
-                onFinished={() => setSelectedJob(null)}
-            />
+          {user.verificationStatus === 'verified' ? (
+              <ProposalForm 
+                  job={selectedJob} 
+                  freelancerProfile={profileString} 
+                  onFinished={() => setSelectedJob(null)}
+              />
+          ) : (
+             <Alert variant="default" className="w-full flex flex-col items-center text-center p-6">
+              <AlertCircle className="h-6 w-6 mb-2" />
+              <AlertTitle className="text-lg font-semibold">{t.verificationRequiredTitle}</AlertTitle>
+              <AlertDescription className="mt-1">
+                {t.verificationRequiredFreelancerDesc}
+              </AlertDescription>
+              <Button asChild className="mt-4">
+                <Link href="/verify">{t.verifyNow}</Link>
+              </Button>
+            </Alert>
+          )}
         </CardFooter>
       </Card>
     );
