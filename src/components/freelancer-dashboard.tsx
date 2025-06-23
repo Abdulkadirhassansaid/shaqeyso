@@ -347,7 +347,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </p>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="link" className="p-0 h-auto">{t.viewDetailsAndProposals}</Button>
+                            <Button variant="link" className="p-0 h-auto dark:text-accent">{t.viewDetailsAndProposals}</Button>
                         </CardFooter>
                     </Card>
                 )
