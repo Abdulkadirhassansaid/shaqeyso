@@ -4,6 +4,7 @@ export type User = {
   email: string;
   avatarUrl: string;
   role: 'client' | 'freelancer';
+  password?: string;
 };
 
 export type Job = {

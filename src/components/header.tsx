@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Icons } from './icons';
 import { UserNav } from './user-nav';
-import { LanguageSwitcher } from './language-switcher';
 
 export default function Header() {
   return (
@@ -17,7 +16,6 @@ export default function Header() {
         </Link>
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
-            <LanguageSwitcher />
             <UserNav />
           </nav>
         </div>

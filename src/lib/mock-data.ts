@@ -7,6 +7,7 @@ export const mockUsers: User[] = [
     email: 'client@example.com',
     avatarUrl: 'https://placehold.co/100x100/E8F5FF/000000.png?text=FI',
     role: 'client',
+    password: 'password123',
   },
   {
     id: 'freelancer-1',
@@ -14,6 +15,7 @@ export const mockUsers: User[] = [
     email: 'aisha@example.com',
     avatarUrl: 'https://placehold.co/100x100/29ABE2/FFFFFF.png?text=AA',
     role: 'freelancer',
+    password: 'password123',
   },
   {
     id: 'freelancer-2',
@@ -21,6 +23,7 @@ export const mockUsers: User[] = [
     email: 'yusuf@example.com',
     avatarUrl: 'https://placehold.co/100x100/F9A825/000000.png?text=YA',
     role: 'freelancer',
+    password: 'password123',
   },
 ];
 
