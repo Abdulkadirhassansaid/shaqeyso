@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Job, User, Proposal, RankedFreelancer, SubmittedFile } from '@/lib/types';
+import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
 import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, Download } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -28,6 +28,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useProposals } from '@/hooks/use-proposals';
 import { ChatDialog } from './chat-dialog';
 import { Separator } from './ui/separator';
+import { ApprovePaymentDialog } from './approve-payment-dialog';
 
 
 interface ClientDashboardProps {
@@ -46,7 +47,6 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const { users: allUsers, freelancerProfiles, addTransaction } = useAuth();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
-  const [jobToApprove, setJobToApprove] = React.useState<Job | null>(null);
   const [isChatOpen, setIsChatOpen] = React.useState(false);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
@@ -100,7 +100,8 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     setProposalToHire(null);
   };
   
-  const handleApproveAndPay = async () => {
+  const handleApproveAndPay = async (jobId: string) => {
+    const jobToApprove = jobs.find(j => j.id === jobId);
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
 
     await releasePayment(jobToApprove.id);
@@ -117,7 +118,6 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
         title: t.paymentComplete,
         description: t.paymentCompleteDesc,
     });
-    setJobToApprove(null);
   };
 
   const handleRankFreelancers = async (job: Job) => {
@@ -362,137 +362,121 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   }
 
   return (
-    <AlertDialog>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-            <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
-            <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="my-jobs" className="mt-6">
-            <Card>
-            <CardHeader>
-                <CardTitle>{t.myJobPostings}</CardTitle>
-                <CardDescription>
-                {t.clientJobDesc}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {clientJobs.map((job) => {
-                const status = job.status || 'Open';
-                const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : null;
-                const canEdit = status === 'Open' || status === 'Interviewing';
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <TabsList>
+        <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
+        <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
+    </TabsList>
+    <TabsContent value="my-jobs" className="mt-6">
+        <Card>
+        <CardHeader>
+            <CardTitle>{t.myJobPostings}</CardTitle>
+            <CardDescription>
+            {t.clientJobDesc}
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {clientJobs.map((job) => {
+            const status = job.status || 'Open';
+            const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+            const canEdit = status === 'Open' || status === 'Interviewing';
 
-                return (
-                    <Card key={job.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                        <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle className="text-lg">{job.title}</CardTitle>
-                            <CardDescription>
-                            {t.budget}: ${job.budget}
-                            </CardDescription>
-                        </div>
-                        <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
-                        </div>
-                    </CardHeader>
-                    <CardFooter className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                           {(status === 'Open' || status === 'Interviewing' || status === 'InProgress' || status === 'AwaitingApproval') && (
-                                <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
-                            )}
-                            {status === 'AwaitingApproval' && (
-                                <AlertDialogTrigger asChild>
-                                    <Button onClick={() => setJobToApprove(job)}>{t.approveAndPay}</Button>
-                                </AlertDialogTrigger>
-                            )}
-                            {status === 'InProgress' && hiredFreelancer && (
-                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                    <UserCheck className="h-5 w-5 text-primary" />
-                                    <span>{t.workInProgressWith} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                                </div>
-                            )}
-                            {status === 'Completed' && hiredFreelancer && (
-                                <div className="flex items-center text-sm text-green-500 gap-2">
-                                    <CheckCircle className="h-5 w-5"/>
-                                    <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                                </div>
-                            )}
-                        </div>
+            return (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="text-lg">{job.title}</CardTitle>
+                        <CardDescription>
+                        {t.budget}: ${job.budget}
+                        </CardDescription>
+                    </div>
+                    <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
+                    </div>
+                </CardHeader>
+                <CardFooter className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                       {(status === 'Open' || status === 'Interviewing' || status === 'InProgress' || status === 'AwaitingApproval') && (
+                            <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
+                        )}
+                        {status === 'AwaitingApproval' && (
+                            <ApprovePaymentDialog 
+                                job={job}
+                                freelancer={hiredFreelancer}
+                                onConfirm={() => handleApproveAndPay(job.id)}
+                            >
+                                <Button>{t.approveAndPay}</Button>
+                            </ApprovePaymentDialog>
+                        )}
+                        {status === 'InProgress' && hiredFreelancer && (
+                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                <UserCheck className="h-5 w-5 text-primary" />
+                                <span>{t.workInProgressWith} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                            </div>
+                        )}
+                        {status === 'Completed' && hiredFreelancer && (
+                            <div className="flex items-center text-sm text-green-500 gap-2">
+                                <CheckCircle className="h-5 w-5"/>
+                                <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                            </div>
+                        )}
+                    </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">{t.actions}</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>{t.editJob}</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSub>
-                                <DropdownMenuSubTrigger disabled={status === 'Completed'}>{t.changeStatus}</DropdownMenuSubTrigger>
-                                <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
-                                    <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                                </DropdownMenuPortal>
-                            </DropdownMenuSub>
-                            <DropdownMenuSeparator />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">{t.actions}</span>
+                        </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>{t.editJob}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger disabled={status === 'Completed'}>{t.changeStatus}</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
+                                <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
+                                <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
                                 {t.deleteJob}
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </CardFooter>
-                    </Card>
-                );
-                })}
-                {clientJobs.length === 0 && (
-                <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
-                )}
-            </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="post-job" className="mt-6">
-            <JobPostForm onFinished={() => setActiveTab('my-jobs')} />
-        </TabsContent>
-        </Tabs>
-        <AlertDialogContent>
-            {jobToApprove ? (
-                 <>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t.confirmPaymentTitle}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {t.confirmPaymentDesc(jobToApprove.budget, allUsers.find(u => u.id === jobToApprove.hiredFreelancerId)?.name || 'the freelancer')}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setJobToApprove(null)}>{t.cancel}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleApproveAndPay}>{t.approveAndPay}</AlertDialogAction>
-                    </AlertDialogFooter>
-                 </>
-            ) : (
-                <>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {t.deleteJobConfirmDesc}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                        {/* This needs a way to know which job to delete. The original logic was flawed. For now, this will be handled by the component state which is not ideal. Let's assume it works for now. */}
-                         <AlertDialogAction onClick={() => {}} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
-                    </AlertDialogFooter>
-                </>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                                    <AlertDialogDescription>{t.deleteJobConfirmDesc}</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </CardFooter>
+                </Card>
+            );
+            })}
+            {clientJobs.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
             )}
-        </AlertDialogContent>
-    </AlertDialog>
+        </CardContent>
+        </Card>
+    </TabsContent>
+    <TabsContent value="post-job" className="mt-6">
+        <JobPostForm onFinished={() => setActiveTab('my-jobs')} />
+    </TabsContent>
+    </Tabs>
   );
 }

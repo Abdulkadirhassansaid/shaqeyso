@@ -186,6 +186,11 @@ export const translations = {
         submittedWork: 'Submitted Work',
         downloadFile: 'Download File',
         chatWith: 'Chat with',
+        releaseEscrowPayment: 'Release Escrow Payment',
+        releaseEscrowDesc: 'You are about to release the payment for this project. Please review the details below.',
+        escrow: 'Escrow',
+        amountToBeReleased: 'Amount to be released',
+        finalPaymentWarning: 'By clicking Approve & Pay, you confirm that you are satisfied with the work and are authorizing the release of funds. This action cannot be undone.',
 
 
         // Job Post Form
@@ -495,6 +500,12 @@ export const translations = {
         submittedWork: 'Shaqada la Gudbiyey',
         downloadFile: 'Soo Degso Faylka',
         chatWith: 'La sheekeyso',
+        releaseEscrowPayment: 'Sii-dayn Lacagta Escrow',
+        releaseEscrowDesc: 'Waxaad ku dhowdahay inaad sii deyso lacagta mashruucan. Fadlan hoos ka eeg faahfaahinta.',
+        escrow: 'Escrow',
+        amountToBeReleased: 'Lacagta la sii daynayo',
+        finalPaymentWarning: 'Markaad gujiso Ansixi & Bixi, waxaad xaqiijinaysaa inaad ku qanacsan tahay shaqada oo aad oggolaanayso sii daynta lacagta. Tallaabadan lama laaban karo.',
+
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',
