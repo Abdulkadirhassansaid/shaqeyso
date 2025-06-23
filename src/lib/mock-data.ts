@@ -40,17 +40,6 @@ export const mockUsers: User[] = [
     ],
     isBlocked: false,
   },
-  {
-    id: 'freelancer-2',
-    name: 'Yusuf Ali',
-    email: 'yusuf@example.com',
-    avatarUrl: 'https://placehold.co/100x100/F9A825/000000.png?text=YA',
-    role: 'freelancer',
-    password: 'password123',
-    paymentMethods: [],
-    transactions: [],
-    isBlocked: true,
-  },
    {
     id: 'admin-1',
     name: 'Admin User',
@@ -89,10 +78,11 @@ export const mockJobs: Job[] = [
     budget: 1800,
     deadline: '2024-09-15',
     clientId: 'client-1',
-    status: 'Open',
-    clientReviewed: false,
+    status: 'Completed',
+    hiredFreelancerId: 'freelancer-1',
+    clientReviewed: true,
     freelancerReviewed: false,
-    postedDate: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    postedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
   },
   {
     id: 'job-3',
@@ -119,31 +109,16 @@ export const mockProposals: Proposal[] = [
         proposedRate: 60,
         status: 'Pending',
     },
-    {
-        id: 'prop-2',
-        jobId: 'job-1',
-        freelancerId: 'freelancer-2',
-        coverLetter: "My portfolio speaks for itself. I specialize in creating seamless user experiences for e-commerce. I am confident I can build a website that exceeds your expectations.",
-        proposedRate: 55,
-        status: 'Pending',
-    }
 ];
 
 export const mockFreelancerProfiles: FreelancerProfile[] = [
     {
         userId: 'freelancer-1',
-        skills: ['React', 'Next.js', 'TypeScript', 'Shopify', 'Tailwind CSS'],
+        skills: ['React', 'Next.js', 'TypeScript', 'Shopify', 'Tailwind CSS', 'UI/UX Design'],
         hourlyRate: 60,
-        bio: 'Senior frontend developer specializing in building fast and beautiful e-commerce websites.',
+        bio: 'Senior full-stack developer specializing in building fast, beautiful e-commerce websites and mobile applications. I have a keen eye for design and a passion for creating intuitive user experiences.',
         portfolio: [],
     },
-    {
-        userId: 'freelancer-2',
-        skills: ['React', 'Vue.js', 'Node.js', 'UI/UX Design'],
-        hourlyRate: 55,
-        bio: 'Full-stack developer with a passion for clean code and intuitive design.',
-        portfolio: [],
-    }
 ];
 
 export const mockClientProfiles: ClientProfile[] = [
