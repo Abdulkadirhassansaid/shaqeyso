@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function SignupPage() {
   const [name, setName] = React.useState('');
@@ -28,6 +29,7 @@ export default function SignupPage() {
   const { signup } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +39,8 @@ export default function SignupPage() {
       router.push('/');
     } else {
       toast({
-        title: 'Signup Failed',
-        description: 'An account with this email already exists.',
+        title: t.signupFailed,
+        description: t.signupFailedDesc,
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -52,17 +54,17 @@ export default function SignupPage() {
           <div className="flex justify-center mb-4">
             <Icons.logo className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>Create an Account</CardTitle>
-          <CardDescription>Join the largest Somali freelance marketplace.</CardDescription>
+          <CardTitle>{t.createAccount}</CardTitle>
+          <CardDescription>{t.signupPrompt}</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t.fullNameLabel}</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Your Name"
+                placeholder={t.yourNamePlaceholder}
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -70,7 +72,7 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
@@ -82,7 +84,7 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.passwordLabel}</Label>
               <Input
                 id="password"
                 type="password"
@@ -93,7 +95,7 @@ export default function SignupPage() {
               />
             </div>
              <div className="space-y-2">
-              <Label>I am a...</Label>
+              <Label>{t.iAmA}</Label>
               <RadioGroup
                 defaultValue="freelancer"
                 className="flex gap-4"
@@ -102,23 +104,23 @@ export default function SignupPage() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="freelancer" id="r-freelancer" />
-                  <Label htmlFor="r-freelancer">Freelancer</Label>
+                  <Label htmlFor="r-freelancer">{t.freelancer}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="client" id="r-client" />
-                  <Label htmlFor="r-client">Client</Label>
+                  <Label htmlFor="r-client">{t.client}</Label>
                 </div>
               </RadioGroup>
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading ? t.creatingAccount : t.createAccount}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
+              {t.alreadyHaveAccount}{' '}
               <Link href="/login" className="font-semibold text-primary hover:underline">
-                Sign In
+                {t.signIn}
               </Link>
             </p>
           </CardFooter>

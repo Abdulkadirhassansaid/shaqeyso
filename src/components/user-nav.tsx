@@ -14,9 +14,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
+import { useLanguage } from '@/hooks/use-language';
 
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
@@ -26,10 +28,10 @@ export function UserNav() {
     return (
       <div className="flex items-center gap-2">
         <Button asChild variant="outline" size="sm">
-            <Link href="/login">Log In</Link>
+            <Link href="/login">{t.logIn}</Link>
         </Button>
         <Button asChild size="sm">
-            <Link href="/signup">Sign Up</Link>
+            <Link href="/signup">{t.signUp}</Link>
         </Button>
       </div>
     );
@@ -57,15 +59,15 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/profile">Profile</Link>
+            <Link href="/profile">{t.profile}</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
+          <DropdownMenuItem>{t.billing}</DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">Settings</Link>
+            <Link href="/settings">{t.settings}</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>{t.logOut}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

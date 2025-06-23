@@ -14,6 +14,7 @@ import type { Job, User } from '@/lib/types';
 import { ArrowLeft, DollarSign, Tag, Clock } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
+import { useLanguage } from '@/hooks/use-language';
 
 interface FreelancerDashboardProps {
   user: User;
@@ -22,6 +23,7 @@ interface FreelancerDashboardProps {
 
 export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
+  const { t } = useLanguage();
 
   if (selectedJob) {
     return (
@@ -29,13 +31,13 @@ export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
         <CardHeader>
            <Button variant="ghost" size="sm" onClick={() => setSelectedJob(null)} className="justify-start mb-4 w-fit px-2">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Jobs
+            {t.backToJobs}
           </Button>
           <CardTitle className="font-headline text-2xl md:text-3xl">{selectedJob.title}</CardTitle>
           <div className="flex flex-wrap items-center gap-4 pt-2 text-muted-foreground">
              <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                <span>Budget: ${selectedJob.budget}</span>
+                <span>{t.budget}: ${selectedJob.budget}</span>
              </div>
              <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4" />
@@ -43,12 +45,12 @@ export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
              </div>
              <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Deadline: {selectedJob.deadline}</span>
+                <span>{t.deadline}: {selectedJob.deadline}</span>
              </div>
           </div>
         </CardHeader>
         <CardContent>
-            <h3 className='font-semibold mb-2'>Job Description</h3>
+            <h3 className='font-semibold mb-2'>{t.jobDescriptionTitle}</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
         </CardContent>
         <CardFooter className='flex-col items-start gap-6'>
@@ -61,8 +63,8 @@ export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
   return (
     <Card>
         <CardHeader>
-            <CardTitle>Find Work</CardTitle>
-            <CardDescription>Browse and apply for jobs that match your skills.</CardDescription>
+            <CardTitle>{t.findWork}</CardTitle>
+            <CardDescription>{t.findWorkDesc}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => (
@@ -82,7 +84,7 @@ export function FreelancerDashboard({ user, jobs }: FreelancerDashboardProps) {
                             <DollarSign className="h-5 w-5 text-green-500" />
                             <span>${job.budget}</span>
                         </div>
-                        <Button className="w-full" onClick={() => setSelectedJob(job)}>View & Apply</Button>
+                        <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
                     </CardFooter>
                 </Card>
             ))}

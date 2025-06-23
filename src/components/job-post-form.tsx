@@ -24,18 +24,20 @@ import { generateJobDescription } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Wand2 } from 'lucide-react';
 import { LoadingDots } from './loading-dots';
+import { useLanguage } from '@/hooks/use-language';
 
 export function JobPostForm() {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [description, setDescription] = React.useState('');
   const promptRef = React.useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleGenerateDescription = async () => {
     if (!promptRef.current?.value) {
       toast({
-        title: 'Prompt is empty',
-        description: 'Please provide a short description of the job.',
+        title: t.promptEmpty,
+        description: t.promptEmptyDesc,
         variant: 'destructive',
       });
       return;
@@ -50,8 +52,8 @@ export function JobPostForm() {
     } catch (error) {
       console.error('Error generating job description:', error);
       toast({
-        title: 'Generation Failed',
-        description: 'Could not generate job description at this time.',
+        title: t.generationFailed,
+        description: t.generationFailedDesc,
         variant: 'destructive',
       });
     } finally {
@@ -62,56 +64,56 @@ export function JobPostForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Post a New Job</CardTitle>
+        <CardTitle>{t.postNewJobTitle}</CardTitle>
         <CardDescription>
-          Fill in the details below. Use our AI assistant to help write a great job description.
+          {t.postNewJobDesc}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-                <Label htmlFor="job-title">Job Title</Label>
-                <Input id="job-title" placeholder="e.g., Senior React Developer" />
+                <Label htmlFor="job-title">{t.jobTitle}</Label>
+                <Input id="job-title" placeholder={t.jobTitlePlaceholder} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t.category}</Label>
                 <Select>
                     <SelectTrigger id="category">
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder={t.selectCategory} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="web-dev">Web Development</SelectItem>
-                        <SelectItem value="mobile-dev">Mobile Development</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="writing">Writing</SelectItem>
+                        <SelectItem value="web-dev">{t.webDev}</SelectItem>
+                        <SelectItem value="mobile-dev">{t.mobileDev}</SelectItem>
+                        <SelectItem value="design">{t.design}</SelectItem>
+                        <SelectItem value="writing">{t.writing}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-                <Label htmlFor="budget">Budget ($)</Label>
-                <Input id="budget" type="number" placeholder="e.g., 500" />
+                <Label htmlFor="budget">{t.budgetLabel}</Label>
+                <Input id="budget" type="number" placeholder={t.budgetPlaceholder} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="deadline">Deadline</Label>
+                <Label htmlFor="deadline">{t.deadlineLabel}</Label>
                 <Input id="deadline" type="date" />
             </div>
         </div>
         <div className="space-y-2">
-            <Label htmlFor="ai-prompt">Job summary prompt</Label>
+            <Label htmlFor="ai-prompt">{t.jobSummaryPrompt}</Label>
             <Textarea 
                 id="ai-prompt" 
                 ref={promptRef}
-                placeholder="e.g., I need a logo for my new coffee shop. It should be modern and minimalist." 
+                placeholder={t.jobSummaryPlaceholder} 
             />
             <Button variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isGenerating}>
                 <Wand2 className="mr-2 h-4 w-4" />
-                {isGenerating ? 'Generating...' : 'Generate Description with AI'}
+                {isGenerating ? t.generating : t.generateWithAI}
             </Button>
         </div>
         <div className="space-y-2">
-            <Label htmlFor="description">Job Description</Label>
+            <Label htmlFor="description">{t.jobDescription}</Label>
             {isGenerating ? (
                 <div className="flex items-center justify-center rounded-md border border-dashed min-h-[120px]">
                     <LoadingDots />
@@ -121,14 +123,14 @@ export function JobPostForm() {
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="The AI-generated job description will appear here."
+                    placeholder={t.jobDescriptionPlaceholder}
                     rows={8}
                 />
             )}
         </div>
       </CardContent>
       <CardFooter>
-        <Button>Post Job</Button>
+        <Button>{t.postJob}</Button>
       </CardFooter>
     </Card>
   );

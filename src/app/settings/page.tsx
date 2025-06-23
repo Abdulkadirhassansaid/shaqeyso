@@ -11,13 +11,15 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import type { Language } from '@/lib/translations';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function SettingsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
 
-  const [language, setLanguage] = React.useState('en');
   const [isSaving, setIsSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -33,8 +35,8 @@ export default function SettingsPage() {
     // For now, we'll just show a toast notification.
     setTimeout(() => {
       toast({
-        title: 'Settings Saved',
-        description: 'Your new settings have been applied.',
+        title: t.settingsSaved,
+        description: t.settingsSavedDesc,
       });
       setIsSaving(false);
       router.back();
@@ -61,31 +63,35 @@ export default function SettingsPage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Settings</CardTitle>
-            <CardDescription>Manage your application settings here.</CardDescription>
+            <CardTitle>{t.settingsTitle}</CardTitle>
+            <CardDescription>{t.settingsDescription}</CardDescription>
           </CardHeader>
           <form onSubmit={handleSaveSettings}>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select value={language} onValueChange={setLanguage} disabled={isSaving}>
+                <Label htmlFor="language">{t.language}</Label>
+                <Select
+                  value={language}
+                  onValueChange={(value) => setLanguage(value as Language)}
+                  disabled={isSaving}
+                >
                   <SelectTrigger id="language">
-                    <SelectValue placeholder="Select a language" />
+                    <SelectValue placeholder={t.selectLanguage} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="so">Somali</SelectItem>
+                    <SelectItem value="en">{t.english}</SelectItem>
+                    <SelectItem value="so">{t.somali}</SelectItem>
                   </SelectContent>
                 </Select>
                  <p className="text-sm text-muted-foreground">
-                    Choose your preferred language for the interface.
+                    {t.languageDescription}
                 </p>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Dark Mode</Label>
+                    <Label className="text-base">{t.darkMode}</Label>
                     <p className="text-sm text-muted-foreground">
-                        Enable or disable dark mode for the application.
+                        {t.darkModeDescription}
                     </p>
                   </div>
                   <Switch
@@ -95,7 +101,7 @@ export default function SettingsPage() {
               </div>
 
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Settings'}
+                {isSaving ? t.savingSettings : t.saveSettings}
               </Button>
             </CardContent>
           </form>

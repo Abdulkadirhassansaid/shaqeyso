@@ -15,6 +15,7 @@ import { Wand2, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateFreelancerBio } from '@/app/actions';
 import { LoadingDots } from './loading-dots';
+import { useLanguage } from '@/hooks/use-language';
 
 interface FreelancerProfilePageProps {
   user: User;
@@ -30,6 +31,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const { updateUserProfile, freelancerProfiles } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useLanguage();
   
   const freelancerProfile = freelancerProfiles.find(p => p.userId === user.id);
 
@@ -92,8 +94,8 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const handleGenerateBio = async () => {
     if (skills.length === 0) {
       toast({
-        title: 'Add Skills First',
-        description: 'Please add some skills before generating a bio.',
+        title: t.addSkillsFirst,
+        description: t.addSkillsFirstDesc,
         variant: 'destructive',
       });
       return;
@@ -109,8 +111,8 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
     } catch (error) {
       console.error('Error generating freelancer bio:', error);
       toast({
-        title: 'Generation Failed',
-        description: 'Could not generate your bio at this time.',
+        title: t.generationFailed,
+        description: t.proposalGenFailedDesc, // Re-using translation key
         variant: 'destructive',
       });
     } finally {
@@ -132,14 +134,14 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
 
     if (success) {
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile information has been saved.',
+        title: t.profileUpdated,
+        description: t.freelancerProfileUpdatedDesc,
       });
       router.back();
     } else {
       toast({
-        title: 'Update Failed',
-        description: 'Could not save your profile. Please try again.',
+        title: t.updateFailed,
+        description: t.updateFailedDesc,
         variant: 'destructive',
       });
     }
@@ -149,22 +151,22 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Your Freelancer Profile</CardTitle>
-        <CardDescription>This is how clients will see you. Make it count!</CardDescription>
+        <CardTitle>{t.freelancerProfileTitle}</CardTitle>
+        <CardDescription>{t.freelancerProfileDesc}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSave}>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t.fullNameLabel}</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled={isSaving || isGeneratingBio} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t.emailLabel}</Label>
             <Input id="email" value={user.email} disabled />
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <Label htmlFor="bio">Your Bio</Label>
+                <Label htmlFor="bio">{t.yourBio}</Label>
                 <Button
                     type="button"
                     variant="outline"
@@ -173,7 +175,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     disabled={isSaving || isGeneratingBio}
                 >
                     <Wand2 className="mr-2 h-4 w-4" />
-                    {isGeneratingBio ? 'Generating...' : 'Generate with AI'}
+                    {isGeneratingBio ? t.generatingBio : t.generateBioWithAI}
                 </Button>
             </div>
             {isGeneratingBio ? (
@@ -186,17 +188,17 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     rows={4}
-                    placeholder="Tell clients about yourself, or use the AI to generate a bio based on your skills."
+                    placeholder={t.bioPlaceholder}
                     disabled={isSaving}
                 />
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+            <Label htmlFor="hourlyRate">{t.hourlyRateLabel}</Label>
             <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} disabled={isSaving || isGeneratingBio} />
           </div>
            <div className="space-y-2">
-            <Label htmlFor="skill-input">Your Skills</Label>
+            <Label htmlFor="skill-input">{t.yourSkills}</Label>
              <Popover open={popoverOpen && availableSkills.length > 0} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
                 <div 
@@ -213,7 +215,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     ))}
                     <Input
                         id="skill-input"
-                        placeholder={skills.length === 0 ? "Type to add skills..." : ""}
+                        placeholder={skills.length === 0 ? t.addSkillsPlaceholder : ""}
                         value={skillInput}
                         onChange={handleSkillInputChange}
                         onKeyDown={handleSkillInputKeyDown}
@@ -244,11 +246,11 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
               </PopoverContent>
             </Popover>
             {skillInput && availableSkills.length === 0 && !commonSkills.some(s => s.toLowerCase() === skillInput.toLowerCase()) && (
-                <p className="text-sm text-muted-foreground italic">Press Enter to add "{skillInput}".</p>
+                <p className="text-sm text-muted-foreground italic">{t.addSkillPrompt} "{skillInput}".</p>
             )}
           </div>
           <Button type="submit" disabled={isSaving || isGeneratingBio}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t.saving : t.saveChanges}
           </Button>
         </CardContent>
       </form>

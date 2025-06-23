@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockProposals } from '@/lib/mock-data';
 import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
+import { useLanguage } from '@/hooks/use-language';
 
 interface ClientDashboardProps {
   user: User;
@@ -33,6 +34,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
   const { users: allUsers, freelancerProfiles } = useAuth();
+  const { t } = useLanguage();
 
   const clientJobs = initialJobs.filter((job) => job.clientId === user.id);
 
@@ -44,8 +46,8 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
       if (jobProposals.length === 0) {
         toast({
             variant: "destructive",
-            title: "No Proposals",
-            description: "There are no proposals for this job yet to rank freelancers.",
+            title: t.noProposalsToRank,
+            description: t.noProposalsToRankDesc,
         });
         return;
       }
@@ -67,8 +69,8 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
       console.error('Error ranking freelancers:', error);
       toast({
         variant: "destructive",
-        title: "Ranking Failed",
-        description: "Could not rank freelancers at this time.",
+        title: t.rankingFailed,
+        description: t.rankingFailedDesc,
       });
     } finally {
       setIsRanking(false);
@@ -81,20 +83,20 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
         <CardHeader>
           <Button variant="ghost" size="sm" onClick={() => { setSelectedJob(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Jobs
+            {t.backToJobs}
           </Button>
           <CardTitle>{selectedJob.title}</CardTitle>
           <CardDescription>
-            {selectedJob.category} - Budget: ${selectedJob.budget}
+            {selectedJob.category} - {t.budget}: ${selectedJob.budget}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
           <div className="mt-6">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> Proposals</h3>
+                <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
                 <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
-                    {isRanking ? 'Ranking...' : 'Find Best Matches (AI)'}
+                    {isRanking ? t.ranking : t.findBestMatches}
                 </Button>
             </div>
             
@@ -114,12 +116,12 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
                                   #{freelancer.rank}
                                 </Badge>
                                 <div>
-                                <CardTitle className="text-base">Top Match</CardTitle>
-                                <CardDescription>Reasoning: {freelancer.reason}</CardDescription>
+                                <CardTitle className="text-base">{t.topMatch}</CardTitle>
+                                <CardDescription>{t.reasoning}: {freelancer.reason}</CardDescription>
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm font-semibold">Proposal:</p>
+                                <p className="text-sm font-semibold">{t.proposal}</p>
                                 <p className="text-sm text-muted-foreground italic">"{freelancer.proposal}"</p>
                             </CardContent>
                         </Card>
@@ -129,24 +131,24 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
                  mockProposals.filter(p => p.jobId === selectedJob.id).length > 0 ? (
                     <div className="space-y-4">
                         {mockProposals.filter(p => p.jobId === selectedJob.id).map(proposal => {
-                            const freelancer = allUsers.find(u => u.id === proposal.freelancerId);
+                            const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
                             return (
                                 <Card key={proposal.id}>
                                     <CardHeader className='flex-row items-center gap-4'>
                                         <Avatar>
-                                            <AvatarImage src={freelancer?.avatarUrl} alt={freelancer?.name} />
-                                            <AvatarFallback>{freelancer?.name.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={freelancerUser?.avatarUrl} alt={freelancerUser?.name} />
+                                            <AvatarFallback>{freelancerUser?.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold">{freelancer?.name}</p>
-                                            <p className="text-sm text-muted-foreground">Proposed Rate: ${proposal.proposedRate}/hr</p>
+                                            <p className="font-semibold">{freelancerUser?.name}</p>
+                                            <p className="text-sm text-muted-foreground">{t.proposedRate}: ${proposal.proposedRate}/hr</p>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
                                         <p className="text-sm text-muted-foreground">{proposal.coverLetter}</p>
                                     </CardContent>
                                     <CardFooter>
-                                        <Button size="sm">Hire Freelancer</Button>
+                                        <Button size="sm">{t.hireFreelancer}</Button>
                                     </CardFooter>
                                 </Card>
                             )
@@ -154,7 +156,7 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
                     </div>
                  ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                        <p>No proposals submitted yet.</p>
+                        <p>{t.noProposals}</p>
                     </div>
                  )
             )}
@@ -167,15 +169,15 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
   return (
     <Tabs defaultValue="my-jobs" className="w-full">
       <TabsList>
-        <TabsTrigger value="my-jobs">My Job Postings</TabsTrigger>
-        <TabsTrigger value="post-job">Post a New Job</TabsTrigger>
+        <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
+        <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
       </TabsList>
       <TabsContent value="my-jobs" className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>My Job Postings</CardTitle>
+            <CardTitle>{t.myJobPostings}</CardTitle>
             <CardDescription>
-              Here are the jobs you've posted. Click on a job to see proposals.
+              {t.clientJobDesc}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -184,18 +186,18 @@ export function ClientDashboard({ user, jobs: initialJobs }: ClientDashboardProp
                 <CardHeader>
                   <CardTitle className="text-lg">{job.title}</CardTitle>
                   <CardDescription>
-                    Budget: ${job.budget}
+                    {t.budget}: ${job.budget}
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <Button onClick={() => setSelectedJob(job)}>
-                    View Details & Proposals
+                    {t.viewDetailsAndProposals}
                   </Button>
                 </CardFooter>
               </Card>
             ))}
             {clientJobs.length === 0 && (
-              <p className="text-muted-foreground text-center py-4">You haven't posted any jobs yet.</p>
+              <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
             )}
           </CardContent>
         </Card>

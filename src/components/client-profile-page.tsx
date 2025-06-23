@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
 
 interface ClientProfilePageProps {
   user: User;
@@ -18,6 +19,7 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const { updateUserProfile, clientProfiles } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useLanguage();
   
   const clientProfile = clientProfiles.find(p => p.userId === user.id);
 
@@ -33,14 +35,14 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
 
     if (success) {
       toast({
-        title: 'Profile Updated',
-        description: 'Your company information has been saved.',
+        title: t.profileUpdated,
+        description: t.profileUpdatedDesc,
       });
       router.back();
     } else {
       toast({
-        title: 'Update Failed',
-        description: 'Could not save your profile. Please try again.',
+        title: t.updateFailed,
+        description: t.updateFailedDesc,
         variant: 'destructive',
       });
     }
@@ -50,13 +52,13 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Company Profile</CardTitle>
-        <CardDescription>Update your company's information here.</CardDescription>
+        <CardTitle>{t.companyProfile}</CardTitle>
+        <CardDescription>{t.companyProfileDesc}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSave}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name</Label>
+            <Label htmlFor="companyName">{t.companyName}</Label>
             <Input
               id="companyName"
               value={companyName}
@@ -65,11 +67,11 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t.emailLabel}</Label>
             <Input id="email" value={user.email} disabled />
           </div>
           <Button type="submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t.saving : t.saveChanges}
           </Button>
         </CardContent>
       </form>

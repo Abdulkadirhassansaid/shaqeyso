@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +36,8 @@ export default function LoginPage() {
       router.push('/');
     } else {
       toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password. Please try again.',
+        title: t.loginFailed,
+        description: t.loginFailedDesc,
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -49,13 +51,13 @@ export default function LoginPage() {
            <div className="flex justify-center mb-4">
             <Icons.logo className="h-8 w-8 text-primary" />
            </div>
-          <CardTitle>Welcome Back!</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardTitle>{t.welcomeBack}</CardTitle>
+          <CardDescription>{t.loginPrompt}</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
@@ -67,7 +69,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.passwordLabel}</Label>
               <Input
                 id="password"
                 type="password"
@@ -80,12 +82,12 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? t.signingIn : t.signIn}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              {t.noAccount}{' '}
               <Link href="/signup" className="font-semibold text-primary hover:underline">
-                Sign up
+                {t.signUp}
               </Link>
             </p>
           </CardFooter>
