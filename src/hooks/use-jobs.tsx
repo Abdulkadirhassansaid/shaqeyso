@@ -8,7 +8,7 @@ import type { Job } from '@/lib/types';
 
 interface JobsContextType {
   jobs: Job[];
-  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed'>) => Promise<boolean>;
+  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>) => Promise<boolean>;
   deleteJob: (jobId: string) => Promise<boolean>;
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
@@ -22,13 +22,14 @@ const JobsContext = React.createContext<JobsContextType | null>(null);
 export function JobsProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useLocalStorageState('shaqo-jobs', initialJobs);
 
-  const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed'>): Promise<boolean> => {
+  const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>): Promise<boolean> => {
     const newJob: Job = {
       ...jobData,
       id: `job-${Date.now()}`,
       status: 'Open',
       clientReviewed: false,
       freelancerReviewed: false,
+      postedDate: new Date().toISOString(),
     };
     setJobs(prevJobs => [newJob, ...prevJobs]);
     return true;

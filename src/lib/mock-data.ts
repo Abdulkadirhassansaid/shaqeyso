@@ -79,6 +79,7 @@ export const mockJobs: Job[] = [
     status: 'Open',
     clientReviewed: false,
     freelancerReviewed: false,
+    postedDate: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
   },
   {
     id: 'job-2',
@@ -91,6 +92,7 @@ export const mockJobs: Job[] = [
     status: 'Open',
     clientReviewed: false,
     freelancerReviewed: false,
+    postedDate: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
   },
   {
     id: 'job-3',
@@ -104,6 +106,7 @@ export const mockJobs: Job[] = [
     hiredFreelancerId: 'freelancer-1',
     clientReviewed: false,
     freelancerReviewed: false,
+    postedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
   },
 ];
 

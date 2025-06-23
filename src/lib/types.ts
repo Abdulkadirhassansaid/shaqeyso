@@ -30,6 +30,7 @@ export type Job = {
   hiredFreelancerId?: string;
   clientReviewed?: boolean;
   freelancerReviewed?: boolean;
+  postedDate: string;
 };
 
 export type Proposal = {

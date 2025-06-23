@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User, Proposal } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -40,6 +40,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Label } from './ui/label';
+import { formatDistanceToNow } from 'date-fns';
 
 
 interface FreelancerDashboardProps {
@@ -156,6 +157,10 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
              </div>
              <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
+                <span>{t.posted} {formatDistanceToNow(new Date(selectedJob.postedDate), { addSuffix: true })}</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
                 <span>{t.deadline}: {selectedJob.deadline}</span>
              </div>
           </div>
@@ -226,9 +231,19 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                                 </Badge>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 pt-1">
-                            <Tag className="h-4 w-4 text-muted-foreground" />
-                            <Badge variant={isRecommended ? "outline" : "secondary"}>{job.category}</Badge>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                              <Tag className="h-4 w-4" />
+                              <Badge variant={isRecommended ? "outline" : "secondary"}>{job.category}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <span>
+                                  {formatDistanceToNow(new Date(job.postedDate), {
+                                      addSuffix: true,
+                                  })}
+                              </span>
+                          </div>
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow space-y-3">
