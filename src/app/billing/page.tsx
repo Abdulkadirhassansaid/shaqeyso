@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function BillingPage() {
-  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser } = useAuth();
+  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } = useAuth();
   const router = useRouter();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -121,7 +121,6 @@ export default function BillingPage() {
         status: 'Pending',
     });
     toast({ title: t.withdrawalInitiated, description: `${t.withdrawalInitiatedDesc} $${withdrawalAmount.toFixed(2)}.` });
-    refreshUser();
   };
   
   const getPaymentMethodIcon = (type: PaymentMethod['type']) => {
@@ -168,7 +167,6 @@ export default function BillingPage() {
     setTopUpAmount('');
     setSelectedMethodId(undefined);
     setTopUpOpen(false);
-    refreshUser();
   };
 
 

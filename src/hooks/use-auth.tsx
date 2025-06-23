@@ -24,7 +24,6 @@ interface AuthContextType {
   addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
   removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id'>) => Promise<boolean>;
-  refreshUser: () => void;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -38,15 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
 
-  const refreshUser = React.useCallback(() => {
-    const currentUserId = user?.id;
-    if (currentUserId) {
-        const refreshedUser = users.find(u => u.id === currentUserId);
-        if (refreshedUser) {
-            setUser(refreshedUser);
-        }
-    }
-  }, [user, users]);
 
   React.useEffect(() => {
     try {
@@ -219,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
-  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser };
+  const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
