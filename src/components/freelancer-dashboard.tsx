@@ -155,10 +155,12 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 <Tag className="h-4 w-4" />
                 <Badge variant="secondary">{selectedJob.category}</Badge>
              </div>
-             <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{t.posted} {formatDistanceToNow(new Date(selectedJob.postedDate), { addSuffix: true })}</span>
-             </div>
+             {selectedJob.postedDate && (
+                <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{t.posted} {formatDistanceToNow(new Date(selectedJob.postedDate), { addSuffix: true })}</span>
+                </div>
+             )}
              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>{t.deadline}: {selectedJob.deadline}</span>
@@ -236,14 +238,16 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                               <Tag className="h-4 w-4" />
                               <Badge variant={isRecommended ? "outline" : "secondary"}>{job.category}</Badge>
                           </div>
-                          <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                  {formatDistanceToNow(new Date(job.postedDate), {
-                                      addSuffix: true,
-                                  })}
-                              </span>
-                          </div>
+                          {job.postedDate && (
+                            <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                <span>
+                                    {formatDistanceToNow(new Date(job.postedDate), {
+                                        addSuffix: true,
+                                    })}
+                                </span>
+                            </div>
+                          )}
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow space-y-3">
