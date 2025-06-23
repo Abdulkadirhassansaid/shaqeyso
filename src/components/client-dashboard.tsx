@@ -185,7 +185,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const getStatusVariant = (status: Job['status']) => {
     switch (status) {
         case 'Open': return 'default';
-        case 'AwaitingApproval': return 'accent';
+        case 'AwaitingApproval': return 'secondary';
         case 'Completed': return 'default';
         default: return 'secondary';
     }
