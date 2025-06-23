@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -13,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -32,8 +33,8 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
-  const { jobs, deleteJob, updateJobStatus } = useJobs();
-  const { proposals } = useProposals();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob } = useJobs();
+  const { proposals, acceptProposal } = useProposals();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
@@ -42,9 +43,25 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const { toast } = useToast();
   const { users: allUsers, freelancerProfiles } = useAuth();
   const { t } = useLanguage();
+  const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
   
+  const handleHireFreelancer = async () => {
+    if (!proposalToHire) return;
+
+    await hireFreelancerForJob(proposalToHire.jobId, proposalToHire.freelancerId);
+    await acceptProposal(proposalToHire.id, proposalToHire.jobId);
+
+    toast({
+        title: t.freelancerHired,
+        description: t.freelancerHiredDesc,
+    });
+    setProposalToHire(null);
+    setSelectedJob(null);
+    setRankedFreelancers([]);
+  };
+
   const handleRankFreelancers = async (job: Job) => {
     setIsRanking(true);
     setRankedFreelancers([]);
@@ -71,7 +88,14 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
         jobDescription: job.description,
         freelancerProfiles: freelancerProfilesWithProposals,
       });
-      setRankedFreelancers(result.sort((a, b) => b.rank - a.rank));
+
+      const rankedWithOriginals = result.map(ranked => {
+          const originalProposal = proposals.find(p => p.jobId === job.id && p.coverLetter === ranked.proposal);
+          return { ...ranked, originalProposal };
+      }).filter((item): item is RankedFreelancer => !!item.originalProposal);
+
+
+      setRankedFreelancers(rankedWithOriginals.sort((a, b) => b.rank - a.rank));
     } catch (error) {
       console.error('Error ranking freelancers:', error);
       toast({
@@ -111,91 +135,117 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   
   if (selectedJob) {
     const jobProposals = proposals.filter(p => p.jobId === selectedJob.id);
+    const ProposalCard = ({ proposal, isRanked = false, rank, reason }: { proposal: Proposal, isRanked?: boolean, rank?: number, reason?: string }) => {
+        const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
+        const proposalStatus = proposal.status || 'Pending';
+        const statusVariant = proposalStatus === 'Accepted' ? 'default' : proposalStatus === 'Rejected' ? 'destructive' : 'secondary';
+        
+        return (
+            <Card className={isRanked ? "bg-secondary" : ""}>
+                <CardHeader className='flex-row items-start gap-4'>
+                    {isRanked && rank && (
+                        <Badge variant="default" className="text-lg h-8 w-8 flex items-center justify-center rounded-full shrink-0">
+                          #{rank}
+                        </Badge>
+                    )}
+                    <Avatar>
+                        <AvatarImage src={freelancerUser?.avatarUrl} alt={freelancerUser?.name} />
+                        <AvatarFallback>{freelancerUser?.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                        <div className="flex justify-between items-center">
+                            <p className="font-semibold">{freelancerUser?.name}</p>
+                            <Badge variant={statusVariant}>{t[proposalStatus.toLowerCase() as keyof typeof t] || proposalStatus}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{t.proposedRate}: ${proposal.proposedRate}/hr</p>
+                        {isRanked && reason && <CardDescription className="pt-1">{t.reasoning}: {reason}</CardDescription>}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground italic">"{proposal.coverLetter}"</p>
+                </CardContent>
+                {selectedJob?.status === 'Open' && (
+                    <CardFooter>
+                         <Button size="sm" onClick={() => setProposalToHire(proposal)}>{t.hireFreelancer}</Button>
+                    </CardFooter>
+                )}
+            </Card>
+        );
+    };
+
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <Button variant="ghost" size="sm" onClick={() => { setSelectedJob(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backToJobs}
-          </Button>
-          <CardTitle>{selectedJob.title}</CardTitle>
-          <CardDescription>
-            {selectedJob.category} - {t.budget}: ${selectedJob.budget}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
-                <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
-                    {isRanking ? t.ranking : t.findBestMatches}
-                </Button>
-            </div>
-            
-            {isRanking && (
-                <div className="space-y-4">
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                </div>
-            )}
-            
-            {rankedFreelancers.length > 0 ? (
-                <div className="space-y-4">
-                    {rankedFreelancers.map((freelancer, index) => (
-                        <Card key={index} className="bg-secondary">
-                            <CardHeader className='flex-row items-start gap-4'>
-                                <Badge variant="default" className="text-lg h-8 w-8 flex items-center justify-center rounded-full shrink-0">
-                                  #{freelancer.rank}
-                                </Badge>
-                                <div>
-                                <CardTitle className="text-base">{t.topMatch}</CardTitle>
-                                <CardDescription>{t.reasoning}: {freelancer.reason}</CardDescription>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm font-semibold">{t.proposal}</p>
-                                <p className="text-sm text-muted-foreground italic">"{freelancer.proposal}"</p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                 jobProposals.length > 0 ? (
-                    <div className="space-y-4">
-                        {jobProposals.map(proposal => {
-                            const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
-                            return (
-                                <Card key={proposal.id}>
-                                    <CardHeader className='flex-row items-center gap-4'>
-                                        <Avatar>
-                                            <AvatarImage src={freelancerUser?.avatarUrl} alt={freelancerUser?.name} />
-                                            <AvatarFallback>{freelancerUser?.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="font-semibold">{freelancerUser?.name}</p>
-                                            <p className="text-sm text-muted-foreground">{t.proposedRate}: ${proposal.proposedRate}/hr</p>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground">{proposal.coverLetter}</p>
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button size="sm">{t.hireFreelancer}</Button>
-                                    </CardFooter>
-                                </Card>
-                            )
-                        })}
+        <AlertDialog>
+            <Card className="w-full">
+                <CardHeader>
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedJob(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        {t.backToJobs}
+                    </Button>
+                    <CardTitle>{selectedJob.title}</CardTitle>
+                    <CardDescription>
+                        {selectedJob.category} - {t.budget}: ${selectedJob.budget}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
+                <div className="mt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
+                        {selectedJob.status === 'Open' && (
+                             <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
+                                {isRanking ? t.ranking : t.findBestMatches}
+                            </Button>
+                        )}
                     </div>
-                 ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                        <p>{t.noProposals}</p>
-                    </div>
-                 )
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                    
+                    {isRanking && (
+                        <div className="space-y-4">
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                        </div>
+                    )}
+                    
+                    {rankedFreelancers.length > 0 ? (
+                        <div className="space-y-4">
+                            {rankedFreelancers.map((freelancer) => (
+                                <ProposalCard 
+                                    key={freelancer.originalProposal.id} 
+                                    proposal={freelancer.originalProposal}
+                                    isRanked={true}
+                                    rank={freelancer.rank}
+                                    reason={freelancer.reason}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        jobProposals.length > 0 ? (
+                            <div className="space-y-4">
+                                {jobProposals.map(proposal => (
+                                    <ProposalCard key={proposal.id} proposal={proposal} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                <p>{t.noProposals}</p>
+                            </div>
+                        )
+                    )}
+                </div>
+                </CardContent>
+            </Card>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t.hireConfirmTitle}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {t.hireConfirmDesc(allUsers.find(u => u.id === proposalToHire?.freelancerId)?.name || 'this freelancer')}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setProposalToHire(null)}>{t.cancel}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleHireFreelancer} className="bg-primary hover:bg-primary/90">{t.hireFreelancer}</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
   }
 
@@ -216,6 +266,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
           <CardContent className="space-y-4">
             {clientJobs.map((job) => {
               const status = job.status || 'Open';
+              const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : null;
               return (
                 <Card key={job.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
@@ -230,9 +281,17 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     </div>
                   </CardHeader>
                   <CardFooter className="flex justify-between items-center">
-                    <Button onClick={() => setSelectedJob(job)}>
-                      {t.viewDetailsAndProposals}
-                    </Button>
+                    {status === 'Closed' && hiredFreelancer ? (
+                        <div className="flex items-center text-sm text-muted-foreground gap-2">
+                           <UserCheck className="h-5 w-5 text-green-500" />
+                           <span>{t.hired}: <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                        </div>
+                    ) : (
+                        <Button onClick={() => setSelectedJob(job)}>
+                            {t.viewDetailsAndProposals}
+                        </Button>
+                    )}
+
                     <AlertDialog>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -243,12 +302,12 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setEditingJob(job)}>
+                          <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={status === 'Closed'}>
                             <Edit className="mr-2 h-4 w-4" />
                             <span>{t.editJob}</span>
                           </DropdownMenuItem>
                           <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>{t.changeStatus}</DropdownMenuSubTrigger>
+                            <DropdownMenuSubTrigger disabled={status === 'Closed'}>{t.changeStatus}</DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                               <DropdownMenuSubContent>
                                 <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>

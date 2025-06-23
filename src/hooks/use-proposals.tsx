@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,8 @@ import type { Proposal } from '@/lib/types';
 
 interface ProposalsContextType {
   proposals: Proposal[];
-  addProposal: (proposalData: Omit<Proposal, 'id'>) => Promise<boolean>;
+  addProposal: (proposalData: Omit<Proposal, 'id' | 'status'>) => Promise<boolean>;
+  acceptProposal: (proposalId: string, jobId: string) => Promise<boolean>;
 }
 
 const ProposalsContext = React.createContext<ProposalsContextType | null>(null);
@@ -15,16 +17,28 @@ const ProposalsContext = React.createContext<ProposalsContextType | null>(null);
 export function ProposalsProvider({ children }: { children: React.ReactNode }) {
   const [proposals, setProposals] = useLocalStorageState('shaqo-proposals', initialProposals);
 
-  const addProposal = async (proposalData: Omit<Proposal, 'id'>): Promise<boolean> => {
+  const addProposal = async (proposalData: Omit<Proposal, 'id' | 'status'>): Promise<boolean> => {
     const newProposal: Proposal = {
       ...proposalData,
       id: `prop-${Date.now()}`,
+      status: 'Pending',
     };
     setProposals(prevProposals => [newProposal, ...prevProposals]);
     return true;
   };
 
-  const value = { proposals, addProposal };
+  const acceptProposal = async (proposalId: string, jobId: string): Promise<boolean> => {
+    setProposals(prevProposals => 
+        prevProposals.map(p => {
+            if (p.jobId !== jobId) return p;
+            if (p.id === proposalId) return { ...p, status: 'Accepted' };
+            return { ...p, status: 'Rejected' };
+        })
+    );
+    return true;
+  };
+
+  const value = { proposals, addProposal, acceptProposal };
 
   return <ProposalsContext.Provider value={value}>{children}</ProposalsContext.Provider>;
 }

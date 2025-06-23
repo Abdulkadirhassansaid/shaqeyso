@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,10 +8,11 @@ import type { Job } from '@/lib/types';
 
 interface JobsContextType {
   jobs: Job[];
-  addJob: (jobData: Omit<Job, 'id' | 'proposals' | 'status'>) => Promise<boolean>;
+  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId'>) => Promise<boolean>;
   deleteJob: (jobId: string) => Promise<boolean>;
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
+  hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -18,7 +20,7 @@ const JobsContext = React.createContext<JobsContextType | null>(null);
 export function JobsProvider({ children }: { children: React.ReactNode }) {
   const [jobs, setJobs] = useLocalStorageState('shaqo-jobs', initialJobs);
 
-  const addJob = async (jobData: Omit<Job, 'id' | 'proposals' | 'status'>): Promise<boolean> => {
+  const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId'>): Promise<boolean> => {
     const newJob: Job = {
       ...jobData,
       id: `job-${Date.now()}`,
@@ -46,8 +48,16 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     ));
     return true;
   };
+  
+  const hireFreelancerForJob = async (jobId: string, freelancerId: string): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, status: 'Closed', hiredFreelancerId: freelancerId } : job
+    ));
+    return true;
+  }
 
-  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob };
+
+  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob };
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

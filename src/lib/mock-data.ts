@@ -90,6 +90,7 @@ export const mockProposals: Proposal[] = [
         freelancerId: 'freelancer-1',
         coverLetter: "I am a perfect fit for this role. With over 5 years of experience in Next.js and Shopify, I've delivered high-performance e-commerce sites that drive sales. I can start immediately.",
         proposedRate: 60,
+        status: 'Pending',
     },
     {
         id: 'prop-2',
@@ -97,6 +98,7 @@ export const mockProposals: Proposal[] = [
         freelancerId: 'freelancer-2',
         coverLetter: "My portfolio speaks for itself. I specialize in creating seamless user experiences for e-commerce. I am confident I can build a website that exceeds your expectations.",
         proposedRate: 55,
+        status: 'Pending',
     }
 ];
 

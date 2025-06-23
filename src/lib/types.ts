@@ -19,6 +19,7 @@ export type Job = {
   deadline: string;
   clientId: string;
   status: 'Open' | 'Interviewing' | 'Closed';
+  hiredFreelancerId?: string;
 };
 
 export type Proposal = {
@@ -27,6 +28,7 @@ export type Proposal = {
   freelancerId: string;
   coverLetter: string;
   proposedRate: number;
+  status: 'Pending' | 'Accepted' | 'Rejected';
 };
 
 export type FreelancerProfile = {
@@ -48,6 +50,7 @@ export type RankedFreelancer = {
   proposal: string;
   rank: number;
   reason: string;
+  originalProposal: Proposal;
 };
 
 export type PaymentMethod = {

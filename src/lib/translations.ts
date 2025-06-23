@@ -36,6 +36,9 @@ export const translations = {
         jobStatusUpdatedDesc: 'The job status has been successfully updated.',
         deleteJobConfirmTitle: 'Are you sure you want to delete this job?',
         deleteJobConfirmDesc: 'This action cannot be undone and the job will be permanently removed.',
+        accepted: 'Accepted',
+        rejected: 'Rejected',
+        hired: 'Hired',
 
 
         // Header
@@ -161,6 +164,11 @@ export const translations = {
         proposal: 'Proposal:',
         hireFreelancer: 'Hire Freelancer',
         proposedRate: 'Proposed Rate',
+        freelancerHired: 'Freelancer Hired!',
+        freelancerHiredDesc: 'You have successfully hired the freelancer for this project.',
+        hireConfirmTitle: 'Are you sure?',
+        hireConfirmDesc: (name: string) => `Are you sure you want to hire ${name}? This action will close the job to new proposals.`,
+
 
         // Job Post Form
         postNewJobTitle: 'Post a New Job',
@@ -301,6 +309,9 @@ export const translations = {
         jobStatusUpdatedDesc: 'Xaaladda shaqada si guul leh ayaa loo cusboonaysiiyay.',
         deleteJobConfirmTitle: 'Ma hubtaa inaad rabto inaad tirtirto shaqadan?',
         deleteJobConfirmDesc: 'Tallaabadan lama laaban karo, shaqadana si joogto ah ayaa meesha looga saari doonaa.',
+        accepted: 'La Aqbalay',
+        rejected: 'La Diiday',
+        hired: 'La Shaqaaleeyay',
 
 
         // Header
@@ -427,6 +438,10 @@ export const translations = {
         proposal: 'Codsiga:',
         hireFreelancer: 'Shaqaaleysii Xirfadlaha',
         proposedRate: 'Qiimaha la soo jeediyay',
+        freelancerHired: 'Xirfadle Waa la Shaqaaleeyay!',
+        freelancerHiredDesc: 'Si guul leh ayaad u shaqaaleysiisay xirfadlaha mashruucan.',
+        hireConfirmTitle: 'Ma Hubtaa?',
+        hireConfirmDesc: (name: string) => `Ma hubtaa inaad rabto inaad shaqaaleysiiso ${name}? Tallaabadani waxay xiri doontaa shaqada si aan codsiyo dambe loo helin.`,
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',
