@@ -77,6 +77,13 @@ export function AdminDashboard() {
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
 
   const pendingVerifications = users.filter(u => u.verificationStatus === 'pending');
+  
+  const verificationSubmissions = users
+    .filter(u => u.passportOrIdUrl && u.role !== 'admin')
+    .sort((a, b) => {
+        const order = { pending: 1, rejected: 2, verified: 3, unverified: 99 };
+        return (order[a.verificationStatus] || 99) - (order[b.verificationStatus] || 99);
+    });
 
   const handleToggleBlock = async (userId: string, isBlocked: boolean) => {
     await toggleUserBlockStatus(userId);
@@ -539,7 +546,7 @@ export function AdminDashboard() {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={getVerificationStatusVariant(user.verificationStatus)}>
-                                                {t[user.verificationStatus] || user.verificationStatus}
+                                                {t[user.verificationStatus as keyof typeof t] || user.verificationStatus}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -715,11 +722,12 @@ export function AdminDashboard() {
                                 <TableRow>
                                     <TableHead>{t.user}</TableHead>
                                     <TableHead>{t.role}</TableHead>
+                                    <TableHead>{t.status}</TableHead>
                                     <TableHead className="text-right">{t.actions}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {pendingVerifications.length > 0 ? pendingVerifications.map((user) => (
+                                {verificationSubmissions.length > 0 ? verificationSubmissions.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -736,14 +744,19 @@ export function AdminDashboard() {
                                          <TableCell>
                                             <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
                                         </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getVerificationStatusVariant(user.verificationStatus)}>
+                                                {t[user.verificationStatus as keyof typeof t] || user.verificationStatus}
+                                            </Badge>
+                                        </TableCell>
                                         <TableCell className="text-right">
-                                            <Button onClick={() => setReviewingUser(user)}>{t.review}</Button>
+                                            <Button onClick={() => setReviewingUser(user)}>{user.verificationStatus === 'pending' ? t.review : t.view}</Button>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
-                                            {t.noPendingVerifications}
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            {t.noVerificationSubmissions}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -778,7 +791,7 @@ export function AdminDashboard() {
             }}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{t.reviewVerificationTitle.replace('{name}', reviewingUser.name)}</DialogTitle>
+                        <DialogTitle>{reviewingUser.verificationStatus === 'pending' ? t.reviewVerificationTitle.replace('{name}', reviewingUser.name) : t.verificationDetailsTitle.replace('{name}', reviewingUser.name)}</DialogTitle>
                         <DialogDescription>{reviewingUser.email}</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
@@ -844,30 +857,36 @@ export function AdminDashboard() {
                         )}
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setReviewingUser(null)}>{t.cancel}</Button>
-                        <AlertDialog open={isRejecting} onOpenChange={setIsRejecting}>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive">{t.reject}</Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>{t.rejectVerificationTitle}</AlertDialogTitle>
-                                    <AlertDialogDescription>{t.rejectVerificationDesc}</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <div className="py-2">
-                                    <Textarea
-                                        placeholder={t.rejectionReasonPlaceholder}
-                                        value={rejectionReason}
-                                        onChange={(e) => setRejectionReason(e.target.value)}
-                                    />
-                                </div>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleReject}>{t.confirmRejection}</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        <Button onClick={() => handleApprove(reviewingUser.id)}>{t.approve}</Button>
+                        {reviewingUser.verificationStatus === 'pending' ? (
+                            <>
+                                <Button variant="ghost" onClick={() => { setReviewingUser(null); setIsRejecting(false); setRejectionReason('')}}>{t.cancel}</Button>
+                                <AlertDialog open={isRejecting} onOpenChange={setIsRejecting}>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive">{t.reject}</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>{t.rejectVerificationTitle}</AlertDialogTitle>
+                                            <AlertDialogDescription>{t.rejectVerificationDesc}</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <div className="py-2">
+                                            <Textarea
+                                                placeholder={t.rejectionReasonPlaceholder}
+                                                value={rejectionReason}
+                                                onChange={(e) => setRejectionReason(e.target.value)}
+                                            />
+                                        </div>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleReject}>{t.confirmRejection}</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                                <Button onClick={() => handleApprove(reviewingUser.id)}>{t.approve}</Button>
+                            </>
+                        ) : (
+                            <Button onClick={() => { setReviewingUser(null); setIsRejecting(false); setRejectionReason('')}}>{t.closed}</Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
