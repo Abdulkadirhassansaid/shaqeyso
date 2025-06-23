@@ -69,6 +69,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   };
 
   const availableSkills = React.useMemo(() => {
+    if (!skillInput) return [];
     return commonSkills.filter(s => 
         !skills.includes(s) && s.toLowerCase().includes(skillInput.toLowerCase())
     );
@@ -127,52 +128,51 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           </div>
            <div className="space-y-4">
             <div className="space-y-2">
-                <Label>Your Skills</Label>
-                <div className="p-3 border rounded-md min-h-[60px] bg-secondary/30">
-                    {skills.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                            {skills.map(skill => (
-                                <Badge key={skill} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
-                                    {skill}
-                                    <button type="button" onClick={() => handleRemoveSkill(skill)} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
-                                       <X className="h-3 w-3" />
-                                    </button>
-                                </Badge>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground italic">Add your skills below.</p>
-                    )}
+                <Label htmlFor="skill-input">Your Skills</Label>
+                <div 
+                    className="flex flex-wrap items-center w-full gap-2 p-1.5 border rounded-md bg-background focus-within:ring-2 focus-within:ring-ring"
+                    onClick={() => document.getElementById('skill-input')?.focus()}
+                >
+                    {skills.map(skill => (
+                        <Badge key={skill} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
+                            {skill}
+                            <button type="button" onClick={(e) => { e.stopPropagation(); handleRemoveSkill(skill); }} className="ml-1 rounded-full p-0.5 hover:bg-destructive/20">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </Badge>
+                    ))}
+                    <Input
+                        id="skill-input"
+                        placeholder={skills.length === 0 ? "Type to add skills..." : ""}
+                        value={skillInput}
+                        onChange={handleSkillInputChange}
+                        onKeyDown={handleSkillInputKeyDown}
+                        disabled={isSaving}
+                        className="flex-grow h-8 p-1 bg-transparent border-0 shadow-none outline-none focus:ring-0 focus-visible:ring-0"
+                    />
                 </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="skill-input">Add or find skills</Label>
-              <Input
-                id="skill-input"
-                placeholder="Type a skill and press Enter, or select from the list below"
-                value={skillInput}
-                onChange={handleSkillInputChange}
-                onKeyDown={handleSkillInputKeyDown}
-                disabled={isSaving}
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-                {availableSkills.map(skill => (
-                    <Button
-                        key={skill}
-                        type="button"
-                        variant={"outline"}
-                        size="sm"
-                        onClick={() => handleAddSkill(skill)}
-                        disabled={isSaving}
-                    >
-                        {skill}
-                    </Button>
-                ))}
-                 {availableSkills.length === 0 && skillInput && !commonSkills.includes(skillInput) && (
-                    <p className="text-sm text-muted-foreground italic">No matching common skills. Press Enter to add "{skillInput}".</p>
-                )}
-            </div>
+            
+            {availableSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                    {availableSkills.map(skill => (
+                        <Button
+                            key={skill}
+                            type="button"
+                            variant={"outline"}
+                            size="sm"
+                            onClick={() => handleAddSkill(skill)}
+                            disabled={isSaving}
+                        >
+                            + {skill}
+                        </Button>
+                    ))}
+                </div>
+            ) : null}
+
+            {skillInput && availableSkills.length === 0 && !commonSkills.some(s => s.toLowerCase() === skillInput.toLowerCase()) && (
+                <p className="text-sm text-muted-foreground italic">No matching skills. Press Enter to add "{skillInput}".</p>
+            )}
           </div>
           <Button type="submit" disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
