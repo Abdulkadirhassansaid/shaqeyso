@@ -126,8 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isBlocked: false,
     };
     
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers); 
+    setUsers(prev => [...prev, newUser]);
     
     if (role === 'freelancer') {
         setFreelancerProfiles(prev => [...prev, {
@@ -151,15 +150,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    let updatedUser: User | null = null;
-    const newUsers = users.map(u => {
+    setUsers(prevUsers => prevUsers.map(u => {
         if (u.id === userId) {
-            updatedUser = { ...u, ...userData };
-            return updatedUser;
+            return { ...u, ...userData };
         }
         return u;
-    });
-    setUsers(newUsers);
+    }));
 
     if (profileData) {
         const targetUser = users.find(u => u.id === userId);
@@ -184,66 +180,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
     
-    if (user?.id === userId && updatedUser) {
-        setUser(updatedUser);
-    }
-
     return true;
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
-    let updatedUser : User | null = null;
-    const newUsers = users.map(u => {
+    setUsers(prevUsers => prevUsers.map(u => {
         if (u.id === userId) {
             const newMethod = { ...method, id: `pm-${Date.now()}` };
             const paymentMethods = [...(u.paymentMethods || []), newMethod];
-            updatedUser = { ...u, paymentMethods };
-            return updatedUser;
+            return { ...u, paymentMethods };
         }
         return u;
-    });
-    setUsers(newUsers);
-
-    if (user?.id === userId && updatedUser) {
-      setUser(updatedUser);
-    }
+    }));
     return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    let updatedUser : User | null = null;
-    const newUsers = users.map(u => {
+    setUsers(prevUsers => prevUsers.map(u => {
         if (u.id === userId) {
             const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-            updatedUser = { ...u, paymentMethods };
-            return updatedUser;
+            return { ...u, paymentMethods };
         }
         return u;
-    });
-    setUsers(newUsers);
-
-    if (user?.id === userId && updatedUser) {
-      setUser(updatedUser);
-    }
+    }));
     return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
-     let updatedUser : User | null = null;
-     const newUsers = users.map(u => {
+     setUsers(prevUsers => prevUsers.map(u => {
         if (u.id === userId) {
             const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
             const transactions = [...(u.transactions || []), newTransaction];
-            updatedUser = { ...u, transactions };
-            return updatedUser;
+            return { ...u, transactions };
         }
         return u;
-    });
-    setUsers(newUsers);
-    
-    if (user?.id === userId && updatedUser) {
-        setUser(updatedUser);
-    }
+    }));
     return true;
   };
   
