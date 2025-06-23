@@ -86,7 +86,15 @@ const recommendJobsFlow = ai.defineFlow(
     outputSchema: RecommendJobsForFreelancerOutputSchema,
   },
   async input => {
-    const {output} = await recommendJobsPrompt(input);
-    return output!;
+    try {
+      const {output} = await recommendJobsPrompt(input);
+      // The output can be null if the model has nothing to return.
+      // We return an empty array if output is null or undefined.
+      return output || [];
+    } catch (error) {
+      console.error('Error in recommendJobsFlow:', error);
+      // On failure (e.g., model overloaded), return an empty array to prevent crashing.
+      return [];
+    }
   }
 );
