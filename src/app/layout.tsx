@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/hooks/use-language';
+import { ThemeProvider } from '@/hooks/use-theme';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -42,12 +43,14 @@ export default function RootLayout({
           ptSans.variable
         )}
       >
-        <LanguageProvider>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

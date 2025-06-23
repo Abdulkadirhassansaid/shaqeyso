@@ -13,12 +13,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Language } from '@/lib/translations';
 import { useLanguage } from '@/hooks/use-language';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function SettingsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -95,7 +97,8 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <Switch
-                    // In a real app, you would manage theme state.
+                    checked={theme === 'dark'}
+                    onCheckedChange={toggleTheme}
                     disabled={isSaving}
                   />
               </div>
