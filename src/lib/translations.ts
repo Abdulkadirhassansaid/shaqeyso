@@ -162,12 +162,16 @@ export const translations = {
         topMatch: 'Top Match',
         reasoning: 'Reasoning',
         proposal: 'Proposal:',
-        hireFreelancer: 'Hire Freelancer',
+        hireFreelancer: 'Take Action',
         proposedRate: 'Proposed Rate',
         freelancerHired: 'Freelancer Hired!',
         freelancerHiredDesc: 'You have successfully hired the freelancer for this project.',
-        hireConfirmTitle: 'Are you sure?',
-        hireConfirmDesc: (name: string) => `Are you sure you want to hire ${name}? This action will close the job to new proposals.`,
+        chooseNextStep: 'Choose Next Step',
+        nextStepDesc: (name: string) => `What is the next step for ${name}? You can start an interview or hire them directly.`,
+        startInterview: 'Start Interview',
+        hireDirectly: 'Hire Directly',
+        interviewProcessStarted: 'Interview Started',
+        interviewProcessStartedDesc: 'The job status has been updated to "Interviewing".',
 
 
         // Job Post Form
@@ -436,12 +440,17 @@ export const translations = {
         topMatch: 'Ugu Fiican',
         reasoning: 'Sababayn',
         proposal: 'Codsiga:',
-        hireFreelancer: 'Shaqaaleysii Xirfadlaha',
+        hireFreelancer: 'Tallaabo Qaad',
         proposedRate: 'Qiimaha la soo jeediyay',
         freelancerHired: 'Xirfadle Waa la Shaqaaleeyay!',
         freelancerHiredDesc: 'Si guul leh ayaad u shaqaaleysiisay xirfadlaha mashruucan.',
-        hireConfirmTitle: 'Ma Hubtaa?',
-        hireConfirmDesc: (name: string) => `Ma hubtaa inaad rabto inaad shaqaaleysiiso ${name}? Tallaabadani waxay xiri doontaa shaqada si aan codsiyo dambe loo helin.`,
+        chooseNextStep: 'Dooro Tallaabada Xigta',
+        nextStepDesc: (name: string) => `Waa maxay tallaabada xigta ee ${name}? Waxaad bilaabi kartaa waraysi ama si toos ah ayaad u shaqaaleysiin kartaa.`,
+        startInterview: 'Bilow Waraysi',
+        hireDirectly: 'Toos u Shaqaaleysii',
+        interviewProcessStarted: 'Waraysiga Waa La Bilaabay',
+        interviewProcessStartedDesc: 'Xaaladda shaqada waxaa lagu beddelay "Waraysi".',
+
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',

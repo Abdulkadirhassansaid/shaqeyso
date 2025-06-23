@@ -46,6 +46,16 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
+
+  React.useEffect(() => {
+    if (selectedJob) {
+        const freshJobData = jobs.find(j => j.id === selectedJob.id);
+        // Use stringify to prevent infinite re-renders from object comparison
+        if (freshJobData && JSON.stringify(freshJobData) !== JSON.stringify(selectedJob)) {
+            setSelectedJob(freshJobData);
+        }
+    }
+  }, [jobs, selectedJob]);
   
   const handleHireFreelancer = async () => {
     if (!proposalToHire) return;
@@ -60,6 +70,20 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     setProposalToHire(null);
     setSelectedJob(null);
     setRankedFreelancers([]);
+  };
+
+  const handleStartInterview = async () => {
+    if (!proposalToHire) return;
+    const jobId = proposalToHire.jobId;
+
+    await updateJobStatus(jobId, 'Interviewing');
+
+    toast({
+        title: t.interviewProcessStarted,
+        description: t.interviewProcessStartedDesc,
+    });
+    
+    setProposalToHire(null);
   };
 
   const handleRankFreelancers = async (job: Job) => {
@@ -164,7 +188,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 <CardContent>
                     <p className="text-sm text-muted-foreground italic">"{proposal.coverLetter}"</p>
                 </CardContent>
-                {selectedJob?.status === 'Open' && (
+                {(selectedJob?.status === 'Open' || selectedJob?.status === 'Interviewing') && (
                     <CardFooter>
                          <Button size="sm" onClick={() => setProposalToHire(proposal)}>{t.hireFreelancer}</Button>
                     </CardFooter>
@@ -174,7 +198,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     };
 
     return (
-        <AlertDialog>
+        <AlertDialog open={!!proposalToHire} onOpenChange={(isOpen) => !isOpen && setProposalToHire(null)}>
             <Card className="w-full">
                 <CardHeader>
                     <Button variant="ghost" size="sm" onClick={() => { setSelectedJob(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
@@ -235,14 +259,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
             </Card>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{t.hireConfirmTitle}</AlertDialogTitle>
+                    <AlertDialogTitle>{t.chooseNextStep}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {t.hireConfirmDesc(allUsers.find(u => u.id === proposalToHire?.freelancerId)?.name || 'this freelancer')}
+                        {proposalToHire && t.nextStepDesc(allUsers.find(u => u.id === proposalToHire.freelancerId)?.name || 'this freelancer')}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setProposalToHire(null)}>{t.cancel}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleHireFreelancer} className="bg-primary hover:bg-primary/90">{t.hireFreelancer}</AlertDialogAction>
+                    <Button variant="secondary" onClick={handleStartInterview}>{t.startInterview}</Button>
+                    <AlertDialogAction onClick={handleHireFreelancer}>{t.hireDirectly}</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
