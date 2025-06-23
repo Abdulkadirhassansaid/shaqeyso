@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -70,6 +70,7 @@ export function AdminDashboard() {
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
   const [selectedWithdrawalMethodId, setSelectedWithdrawalMethodId] = React.useState<string | undefined>(undefined);
+  const [userSearchQuery, setUserSearchQuery] = React.useState('');
 
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
@@ -302,6 +303,13 @@ export function AdminDashboard() {
     }
   }
 
+  const filteredUsers = users
+    .filter(u => u.role !== 'admin')
+    .filter(user =>
+      user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+    );
+
   return (
     <div>
         <header className='mb-6'>
@@ -514,6 +522,17 @@ export function AdminDashboard() {
                     <CardHeader>
                         <CardTitle>{t.manageUsers}</CardTitle>
                         <CardDescription>{t.manageUsersDesc}</CardDescription>
+                        <div className="pt-2">
+                           <div className="relative">
+                               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                               <Input
+                                   placeholder={t.searchUsersPlaceholder}
+                                   className="pl-8 w-full"
+                                   value={userSearchQuery}
+                                   onChange={(e) => setUserSearchQuery(e.target.value)}
+                               />
+                           </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -527,94 +546,102 @@ export function AdminDashboard() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.filter(u => u.role !== 'admin').map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">{user.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                {filteredUsers.length > 0 ? (
+                                    filteredUsers.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage src={user.avatarUrl} alt={user.name} />
+                                                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <p className="font-medium">{user.name}</p>
+                                                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={getVerificationStatusVariant(user.verificationStatus)}>
-                                                {t[user.verificationStatus as keyof typeof t] || user.verificationStatus}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.isBlocked ? 'destructive' : 'default'}>
-                                                {user.isBlocked ? t.blocked : t.active}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
-                                                    <MessageCircle className="h-4 w-4" />
-                                                    <span className="sr-only">Chat with {user.name}</span>
-                                                </Button>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleToggleBlock(user.id, !!user.isBlocked)}>
-                                                            {user.isBlocked ? (
-                                                                <>
-                                                                    <UserCheck className="mr-2 h-4 w-4" />
-                                                                    <span>{t.unblockUser}</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Slash className="mr-2 h-4 w-4" />
-                                                                    <span>{t.blockUser}</span>
-                                                                </>
-                                                            )}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <DropdownMenuItem
-                                                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                                    onSelect={(e) => e.preventDefault()}
-                                                                >
-                                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                                    <span>{t.deleteUser}</span>
-                                                                </DropdownMenuItem>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>{t.deleteUserConfirmTitle}</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        {t.deleteUserConfirmDesc.replace('{name}', user.name)}
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleDeleteUser(user)}
-                                                                        className="bg-destructive hover:bg-destructive/90"
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.role === 'client' ? 'default' : 'secondary'}>{t[user.role as keyof typeof t] || user.role}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={getVerificationStatusVariant(user.verificationStatus)}>
+                                                    {t[user.verificationStatus as keyof typeof t] || user.verificationStatus}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.isBlocked ? 'destructive' : 'default'}>
+                                                    {user.isBlocked ? t.blocked : t.active}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
+                                                        <MessageCircle className="h-4 w-4" />
+                                                        <span className="sr-only">Chat with {user.name}</span>
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleToggleBlock(user.id, !!user.isBlocked)}>
+                                                                {user.isBlocked ? (
+                                                                    <>
+                                                                        <UserCheck className="mr-2 h-4 w-4" />
+                                                                        <span>{t.unblockUser}</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Slash className="mr-2 h-4 w-4" />
+                                                                        <span>{t.blockUser}</span>
+                                                                    </>
+                                                                )}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <DropdownMenuItem
+                                                                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                                        onSelect={(e) => e.preventDefault()}
                                                                     >
-                                                                        {t.deleteUser}
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        <span>{t.deleteUser}</span>
+                                                                    </DropdownMenuItem>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>{t.deleteUserConfirmTitle}</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            {t.deleteUserConfirmDesc.replace('{name}', user.name)}
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleDeleteUser(user)}
+                                                                            className="bg-destructive hover:bg-destructive/90"
+                                                                        >
+                                                                            {t.deleteUser}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            {t.noUsersFound}
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>

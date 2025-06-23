@@ -466,6 +466,8 @@ export const translations = {
         verificationApprovedDesc: "The user has been successfully verified.",
         verificationRejected: "Verification Rejected",
         verificationRejectedDesc: "The user's submission has been rejected.",
+        searchUsersPlaceholder: 'Search by name or email...',
+        noUsersFound: 'No users found.',
     },
     so: {
         // General
@@ -773,7 +775,7 @@ export const translations = {
         updateProfileForAITitle: 'Cusboonaysii Boggaga',
         updateProfileForAIDesc: 'Fadlan ku dar xirfado ama taariikh-nololeed boggaaga si aad u hesho talooyin AI.',
         noRecommendationsTitle: 'Ma jiraan Talooyin Gaar ah',
-        noRecommendationsDesc: 'Hadda ma aanan helin wax shaqo ah oo si gaar ah kuugu habboon. Isku day inaad ballaadhiso xirfadahaaga!',
+        noRecommendationsDesc: "Hadda ma aanan helin wax shaqo ah oo si gaar ah kuugu habboon. Isku day inaad ballaadhiso xirfadahaaga!",
         recommendationFailedTitle: 'Talo Heliddu waa Fashilantay',
         recommendationFailedDesc: 'Waqtigan xaadirka ah lama heli karo talooyinka AI. Fadlan mar dambe isku day.',
         matchReason: 'Sababta Isku-aadka',
@@ -933,6 +935,8 @@ export const translations = {
         verificationApprovedDesc: "Isticmaalaha si guul leh ayaa loo xaqiijiyay.",
         verificationRejected: "Xaqiijinta Waa La Diiday",
         verificationRejectedDesc: "Gudbinta isticmaalaha waa la diiday.",
+        searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
+        noUsersFound: 'Lama helin isticmaaleyaal.',
     }
 };
 
