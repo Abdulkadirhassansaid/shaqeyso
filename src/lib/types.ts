@@ -52,10 +52,11 @@ export type RankedFreelancer = {
 
 export type PaymentMethod = {
   id: string;
-  type: 'Visa' | 'Mastercard';
-  last4: string;
-  expiryMonth: number;
-  expiryYear: number;
+  type: 'Visa' | 'Mastercard' | 'EVC Plus' | 'EDahab' | 'Zaad';
+  last4?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  phoneNumber?: string;
   isPrimary: boolean;
 };
 
@@ -66,3 +67,5 @@ export type Transaction = {
   amount: number; // positive for income, negative for withdrawal/fee
   status: 'Completed' | 'Pending' | 'Failed';
 };
+
+    

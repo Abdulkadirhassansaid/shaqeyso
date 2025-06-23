@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { CreditCard, PlusCircle, AlertTriangle } from 'lucide-react';
+import { CreditCard, PlusCircle, Wallet, Smartphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function BillingPage() {
   const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction, refreshUser } = useAuth();
@@ -26,8 +27,10 @@ export default function BillingPage() {
   const { t } = useLanguage();
   const { toast } = useToast();
 
-  const [isAddCardOpen, setAddCardOpen] = React.useState(false);
+  const [isAddMethodOpen, setAddMethodOpen] = React.useState(false);
+  const [methodType, setMethodType] = React.useState<PaymentMethod['type'] | ''>('');
   const [newCard, setNewCard] = React.useState({ last4: '', expiry: '' });
+  const [newPhone, setNewPhone] = React.useState('');
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -53,24 +56,47 @@ export default function BillingPage() {
     ? (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0)
     : 0;
 
-  const handleAddCard = async (e: React.FormEvent) => {
+  const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newCard.last4.length !== 4 || !/^\d{2}\/\d{2}$/.test(newCard.expiry)) {
-        toast({ title: t.invalidCardDetails, description: t.invalidCardDetailsDesc, variant: 'destructive' });
+    if (!methodType) {
+        toast({ title: t.selectPaymentMethod, variant: 'destructive' });
         return;
     }
-    const [month, year] = newCard.expiry.split('/');
-    const newMethod: Omit<PaymentMethod, 'id'> = {
-        type: 'Visa', // Mock
-        last4: newCard.last4,
-        expiryMonth: parseInt(month),
-        expiryYear: 2000 + parseInt(year),
-        isPrimary: !(user.paymentMethods && user.paymentMethods.length > 0),
-    };
+
+    let newMethod: Omit<PaymentMethod, 'id'> | null = null;
+    const isFirstMethod = !(user.paymentMethods && user.paymentMethods.length > 0);
+
+    if (methodType === 'Visa' || methodType === 'Mastercard') {
+        if (newCard.last4.length !== 4 || !/^\d{2}\/\d{2}$/.test(newCard.expiry)) {
+            toast({ title: t.invalidCardDetails, description: t.invalidCardDetailsDesc, variant: 'destructive' });
+            return;
+        }
+        const [month, year] = newCard.expiry.split('/');
+        newMethod = {
+            type: methodType,
+            last4: newCard.last4,
+            expiryMonth: parseInt(month),
+            expiryYear: 2000 + parseInt(year),
+            isPrimary: isFirstMethod,
+        };
+    } else {
+        if (newPhone.length < 9) { // Simple validation for phone number
+            toast({ title: t.invalidPhoneNumber, description: t.invalidPhoneNumberDesc, variant: 'destructive' });
+            return;
+        }
+        newMethod = {
+            type: methodType,
+            phoneNumber: newPhone,
+            isPrimary: isFirstMethod,
+        };
+    }
+
     await addPaymentMethod(user.id, newMethod);
     toast({ title: t.cardAddedSuccess, description: t.cardAddedSuccessDesc });
     setNewCard({ last4: '', expiry: '' });
-    setAddCardOpen(false);
+    setNewPhone('');
+    setMethodType('');
+    setAddMethodOpen(false);
   };
 
   const handleRemoveCard = async (methodId: string) => {
@@ -89,6 +115,20 @@ export default function BillingPage() {
     toast({ title: t.withdrawalInitiated, description: `${t.withdrawalInitiatedDesc} $${withdrawalAmount.toFixed(2)}.` });
     refreshUser();
   };
+  
+  const getPaymentMethodIcon = (type: PaymentMethod['type']) => {
+    switch (type) {
+        case 'Visa':
+        case 'Mastercard':
+            return <CreditCard className="h-8 w-8 text-muted-foreground" />;
+        case 'EVC Plus':
+        case 'EDahab':
+        case 'Zaad':
+            return <Smartphone className="h-8 w-8 text-muted-foreground" />;
+        default:
+            return <Wallet className="h-8 w-8 text-muted-foreground" />;
+    }
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -121,7 +161,7 @@ export default function BillingPage() {
                   <CardTitle>{t.paymentMethods}</CardTitle>
                   <CardDescription>{t.paymentMethodsDesc}</CardDescription>
               </div>
-              <Dialog open={isAddCardOpen} onOpenChange={setAddCardOpen}>
+              <Dialog open={isAddMethodOpen} onOpenChange={setAddMethodOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline">
                         <PlusCircle className="mr-2" />
@@ -133,16 +173,41 @@ export default function BillingPage() {
                         <DialogTitle>{t.addCardTitle}</DialogTitle>
                         <DialogDescription>{t.addCardDesc}</DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleAddCard}>
+                    <form onSubmit={handleAddMethod}>
                         <div className="grid gap-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="card-last4">{t.cardLast4Label}</Label>
-                                <Input id="card-last4" value={newCard.last4} onChange={e => setNewCard({...newCard, last4: e.target.value.replace(/\D/g, '').slice(0, 4)})} placeholder="1234" required />
+                                <Label htmlFor="payment-type">{t.selectPaymentMethod}</Label>
+                                <Select onValueChange={(value) => setMethodType(value as PaymentMethod['type'])} value={methodType}>
+                                    <SelectTrigger id="payment-type">
+                                        <SelectValue placeholder={t.selectPaymentMethod} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Visa">{t.creditCard}</SelectItem>
+                                        <SelectItem value="EVC Plus">{t.evcPlus}</SelectItem>
+                                        <SelectItem value="EDahab">{t.eDahab}</SelectItem>
+                                        <SelectItem value="Zaad">{t.zaad}</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="card-expiry">{t.cardExpiryLabel}</Label>
-                                <Input id="card-expiry" value={newCard.expiry} onChange={e => setNewCard({...newCard, expiry: e.target.value})} placeholder="MM/YY" required />
-                            </div>
+
+                            {(methodType === 'Visa' || methodType === 'Mastercard') && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="card-last4">{t.cardLast4Label}</Label>
+                                        <Input id="card-last4" value={newCard.last4} onChange={e => setNewCard({...newCard, last4: e.target.value.replace(/\D/g, '').slice(0, 4)})} placeholder="1234" required />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="card-expiry">{t.cardExpiryLabel}</Label>
+                                        <Input id="card-expiry" value={newCard.expiry} onChange={e => setNewCard({...newCard, expiry: e.target.value})} placeholder="MM/YY" required />
+                                    </div>
+                                </>
+                            )}
+                            {(methodType === 'EVC Plus' || methodType === 'EDahab' || methodType === 'Zaad') && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone-number">{t.phoneNumber}</Label>
+                                    <Input id="phone-number" value={newPhone} onChange={e => setNewPhone(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 61xxxxxxx" required />
+                                </div>
+                            )}
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>
@@ -160,11 +225,18 @@ export default function BillingPage() {
                     {(user.paymentMethods || []).map(method => (
                         <div key={method.id} className="border rounded-lg p-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                            <CreditCard className="h-8 w-8 text-muted-foreground" />
-                            <div>
-                                <p className="font-medium">{method.type} {t.endingIn} {method.last4}</p>
-                                <p className="text-sm text-muted-foreground">{t.expires} {String(method.expiryMonth).padStart(2, '0')}/{method.expiryYear.toString().slice(-2)}</p>
-                            </div>
+                                {getPaymentMethodIcon(method.type)}
+                                {method.last4 ? (
+                                    <div>
+                                        <p className="font-medium">{method.type} {t.endingIn} {method.last4}</p>
+                                        <p className="text-sm text-muted-foreground">{t.expires} {String(method.expiryMonth).padStart(2, '0')}/{method.expiryYear?.toString().slice(-2)}</p>
+                                    </div>
+                                ) : (
+                                     <div>
+                                        <p className="font-medium">{method.type}</p>
+                                        <p className="text-sm text-muted-foreground">{t.phoneNumber}: ****{method.phoneNumber?.slice(-4)}</p>
+                                    </div>
+                                )}
                             </div>
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
@@ -237,3 +309,5 @@ export default function BillingPage() {
     </div>
   );
 }
+
+    

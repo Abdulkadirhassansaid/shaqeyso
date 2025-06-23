@@ -11,6 +11,7 @@ export const mockUsers: User[] = [
     password: 'password123',
     paymentMethods: [
       { id: 'pm-1', type: 'Visa', last4: '4242', expiryMonth: 12, expiryYear: 2026, isPrimary: true },
+      { id: 'pm-c1', type: 'EVC Plus', phoneNumber: '611234567', isPrimary: false },
     ],
     transactions: [
       { id: 'txn-c1', date: '2024-07-20T10:00:00Z', description: 'Payment for "E-commerce Website"', amount: -2500, status: 'Completed' },
@@ -27,6 +28,7 @@ export const mockUsers: User[] = [
     password: 'password123',
     paymentMethods: [
       { id: 'pm-2', type: 'Visa', last4: '1234', expiryMonth: 8, expiryYear: 2025, isPrimary: true },
+      { id: 'pm-f1', type: 'EDahab', phoneNumber: '621234567', isPrimary: false },
     ],
     transactions: [
       { id: 'txn-f1', date: '2024-07-20T10:00:00Z', description: 'Payment for "E-commerce Website"', amount: 2500, status: 'Completed' },
@@ -119,3 +121,5 @@ export const mockClientProfiles: ClientProfile[] = [
         projectsPosted: ['job-1', 'job-2', 'job-3'],
     }
 ];
+
+    
