@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import { useLanguage } from '@/hooks/use-language';
-import type { Job, User } from '@/lib/types';
+import type { Job, User, PaymentMethod } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2 } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -42,6 +42,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus, deleteUser, addTransaction } = useAuth();
@@ -56,6 +60,10 @@ export function AdminDashboard() {
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
 
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
+  const [selectedWithdrawalMethodId, setSelectedWithdrawalMethodId] = React.useState<string | undefined>(undefined);
+
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
 
@@ -65,19 +73,44 @@ export function AdminDashboard() {
     await toggleUserBlockStatus(userId);
     toast({
         title: isBlocked ? t.userUnblocked : t.userBlocked,
-        description: isBlocked ? t.userUnblockedDesc : t.userUnblockedDesc,
+        description: isBlocked ? t.userUnblockedDesc : t.userBlockedDesc,
     });
   }
   
-  const handleWithdraw = async () => {
-    if (!adminUser || platformBalance <= 0) return;
-    const withdrawalAmount = platformBalance;
+  const handleConfirmWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUser) return;
+    
+    const amount = parseFloat(withdrawalAmount);
+
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: t.invalidWithdrawalAmount, variant: 'destructive' });
+      return;
+    }
+    if (amount > platformBalance) {
+      toast({ title: t.amountExceedsBalance, variant: 'destructive' });
+      return;
+    }
+    if (!selectedWithdrawalMethodId) {
+        toast({ title: t.mustSelectPaymentMethod, variant: 'destructive' });
+        return;
+    }
+
+    const method = adminUser.paymentMethods?.find(pm => pm.id === selectedWithdrawalMethodId);
+    if (!method) return;
+
+    const description = `${t.withdrawalTo} ${method.type} ${method.last4 ? `****${method.last4}` : `(${method.phoneNumber})`}`;
+
     await addTransaction(adminUser.id, {
-        description: t.withdrawalToBank,
-        amount: -withdrawalAmount,
+        description: description,
+        amount: -amount,
         status: 'Pending',
     });
-    toast({ title: t.withdrawalInitiated, description: `${t.withdrawalInitiatedDesc} $${withdrawalAmount.toFixed(2)}.` });
+
+    toast({ title: t.withdrawalInitiated, description: t.withdrawalInitiatedDesc(amount) });
+    setWithdrawalAmount('');
+    setSelectedWithdrawalMethodId(undefined);
+    setIsWithdrawDialogOpen(false);
   };
   
   const handleDeleteJob = async (jobId: string) => {
@@ -211,6 +244,20 @@ export function AdminDashboard() {
     }
   };
 
+  const getPaymentMethodIcon = (type: PaymentMethod['type']) => {
+    switch (type) {
+        case 'Visa':
+        case 'Mastercard':
+            return <CreditCard className="h-8 w-8 text-muted-foreground" />;
+        case 'EVC Plus':
+        case 'EDahab':
+        case 'Zaad':
+            return <Smartphone className="h-8 w-8 text-muted-foreground" />;
+        default:
+            return <Wallet className="h-8 w-8 text-muted-foreground" />;
+    }
+  }
+
   return (
     <div>
         <header className='mb-6'>
@@ -234,7 +281,52 @@ export function AdminDashboard() {
                             <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
                         </CardContent>
                         <CardFooter>
-                           <Button size="sm" onClick={handleWithdraw} disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
+                            <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm" disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>{t.withdrawDialogTitle}</DialogTitle>
+                                        <DialogDescription>{t.withdrawDialogDesc}</DialogDescription>
+                                    </DialogHeader>
+                                    <form onSubmit={handleConfirmWithdrawal}>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="withdraw-amount">{t.withdrawalAmount}</Label>
+                                                <Input id="withdraw-amount" type="number" placeholder="e.g., 100.00" value={withdrawalAmount} onChange={e => setWithdrawalAmount(e.target.value)} required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>{t.withdrawTo}</Label>
+                                                <RadioGroup value={selectedWithdrawalMethodId} onValueChange={setSelectedWithdrawalMethodId}>
+                                                    {(adminUser?.paymentMethods || []).map(method => (
+                                                        <div key={method.id} className="flex items-center space-x-2 border rounded-md p-3">
+                                                            <RadioGroupItem value={method.id} id={`withdraw-${method.id}`} />
+                                                            <Label htmlFor={`withdraw-${method.id}`} className="flex items-center gap-2 font-normal w-full cursor-pointer">
+                                                                {getPaymentMethodIcon(method.type)}
+                                                                {method.last4 ? (
+                                                                    <span>{method.type} {t.endingIn} {method.last4}</span>
+                                                                ) : (
+                                                                    <span>{method.type} ({method.phoneNumber})</span>
+                                                                )}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </RadioGroup>
+                                                {(adminUser?.paymentMethods || []).length === 0 && (
+                                                    <p className="text-sm text-muted-foreground text-center">{t.noPaymentMethodsAdmin}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" variant="ghost">{t.cancel}</Button>
+                                            </DialogClose>
+                                            <Button type="submit" disabled={(adminUser?.paymentMethods || []).length === 0}>{t.confirmWithdrawal}</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
                         </CardFooter>
                     </Card>
                     <Card>
