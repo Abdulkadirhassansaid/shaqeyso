@@ -8,7 +8,7 @@ import { ClientDashboard } from '@/components/client-dashboard';
 import { FreelancerDashboard } from '@/components/freelancer-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ShaqoFinderApp() {
+export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 

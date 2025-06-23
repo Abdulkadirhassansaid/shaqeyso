@@ -15,7 +15,7 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Shaqo Finder',
+  title: 'Shaqeyso Hub',
   description: 'A freelancer marketplace for Somali users.',
 };
 

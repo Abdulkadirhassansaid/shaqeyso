@@ -39,7 +39,7 @@ export const translations = {
 
 
         // Header
-        shaqoFinder: 'Shaqo Finder',
+        shaqoFinder: 'Shaqeyso Hub',
         
         // UserNav
         logIn: 'Log In',
@@ -281,7 +281,7 @@ export const translations = {
 
 
         // Header
-        shaqoFinder: 'Shaqo Helaha',
+        shaqoFinder: 'Shaqeyso Hub',
         
         // UserNav
         logIn: 'Soo Gal',
