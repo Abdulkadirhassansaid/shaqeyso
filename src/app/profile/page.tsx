@@ -9,6 +9,7 @@ import Header from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ClientProfilePage } from '@/components/client-profile-page';
 import { FreelancerProfilePage } from '@/components/freelancer-profile-page';
+import { AdminProfilePage } from '@/components/admin-profile-page';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
@@ -46,15 +47,16 @@ export default function ProfilePage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
             <Button asChild variant="outline" size="sm">
-                <Link href="/">
+                <Link href={user.role === 'admin' ? '/admin/dashboard' : '/'}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t.backToHome}
+                    {user.role === 'admin' ? t.adminDashboard : t.backToHome}
                 </Link>
             </Button>
         </div>
         <ReviewsProvider>
           {user.role === 'client' && <ClientProfilePage user={user} />}
           {user.role === 'freelancer' && <FreelancerProfilePage user={user} />}
+          {user.role === 'admin' && <AdminProfilePage user={user} />}
         </ReviewsProvider>
       </main>
     </div>

@@ -316,6 +316,9 @@ export const translations = {
         profileUpdatedDesc: "Your company information has been saved.",
         updateFailed: 'Update Failed',
         updateFailedDesc: 'Could not save your profile. Please try again.',
+        adminProfileTitle: 'Admin Profile',
+        adminProfileDesc: 'Manage your administrator account details.',
+        adminProfileUpdatedDesc: 'Your admin profile has been successfully updated.',
 
         // Freelancer Profile
         freelancerProfileTitle: 'Your Freelancer Profile',
@@ -703,6 +706,9 @@ export const translations = {
         profileUpdatedDesc: 'Macluumaadka shirkaddaada waa la kaydiyay.',
         updateFailed: 'Cusboonaysiintu Waa Fashilantay',
         updateFailedDesc: 'Lama kaydin karin boggaaga. Fadlan isku day mar kale.',
+        adminProfileTitle: 'Bogga Maamulka',
+        adminProfileDesc: 'Maamul faahfaahinta koontadaada maamulka.',
+        adminProfileUpdatedDesc: 'Boggaaga maamulka si guul leh ayaa loo cusboonaysiiyay.',
 
         // Freelancer Profile
         freelancerProfileTitle: 'Boggaaga Shaqaale Madaxbannaan',
