@@ -13,6 +13,7 @@ export const translations = {
         details: 'Details',
         proposals: 'Proposals',
         skills: 'Skills',
+        cancel: 'Cancel',
 
         // Header
         shaqoFinder: 'Shaqo Finder',
@@ -58,11 +59,26 @@ export const translations = {
         languageDescription: 'Choose your preferred language for the interface.',
         darkMode: 'Dark Mode',
         darkModeDescription: 'Enable or disable dark mode for the application.',
-        saveSettings: 'Save Settings',
+        saveSettings: 'Save All Settings',
         savingSettings: 'Saving...',
         settingsSaved: 'Settings Saved',
         settingsSavedDesc: 'Your new settings have been applied.',
         
+        notifications: 'Notifications',
+        emailNotifications: 'Email Notifications',
+        jobAlertsDesc: 'Receive emails about new job postings that match your skills.',
+        proposalUpdatesDesc: 'Get notified when a freelancer submits a proposal to your job.',
+        
+        account: 'Account',
+        changePassword: 'Change Password',
+        currentPassword: 'Current Password',
+        newPassword: 'New Password',
+        updatePassword: 'Update Password',
+        deleteAccount: 'Delete Account',
+        deleteAccountDesc: 'Permanently delete your account and all associated data.',
+        deleteAccountConfirmTitle: 'Are you absolutely sure?',
+        deleteAccountConfirmDesc: 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+
         // Client Dashboard
         myJobPostings: 'My Job Postings',
         postNewJob: 'Post a New Job',
@@ -165,6 +181,7 @@ export const translations = {
         details: 'Faahfaahin',
         proposals: 'Codsiyada',
         skills: 'Xirfadaha',
+        cancel: 'Iska daa',
 
         // Header
         shaqoFinder: 'Shaqo Helaha',
@@ -210,11 +227,27 @@ export const translations = {
         languageDescription: 'Dooro luqadda aad doorbidayso ee is-dhexgalka.',
         darkMode: 'Hab Madow',
         darkModeDescription: 'Daar ama dami habka madow ee barnaamijka.',
-        saveSettings: 'Kaydi Dejinta',
+        saveSettings: 'Kaydi Dhammaan Dejinta',
         savingSettings: 'Waa la kaydinayaa...',
         settingsSaved: 'Dejinta Waa La Kaydiyey',
         settingsSavedDesc: 'Dejintaada cusub waa la hirgeliyey.',
         
+        notifications: 'Ogeysiisyada',
+        emailNotifications: 'Ogeysiisyada Iimaylka',
+        jobAlertsDesc: 'Hel iimaylo ku saabsan shaqooyinka cusub ee ku habboon xirfadahaaga.',
+        proposalUpdatesDesc: 'Hel ogeysiis marka uu xirfadle codsi u soo gudbiyo shaqadaada.',
+
+        account: 'Akoonka',
+        changePassword: 'Beddel Ereyga Sirta ah',
+        currentPassword: 'Ereyga Sirta ah ee Hadda',
+        newPassword: 'Ereyga Sirta ah ee Cusub',
+        updatePassword: 'Cusboonaysii Ereyga Sirta ah',
+        deleteAccount: 'Tirtir Akoonka',
+        deleteAccountDesc: 'Si joogto ah u tirtir akoonkaaga iyo dhammaan xogta la xidhiidha.',
+        deleteAccountConfirmTitle: 'Ma si buuxda ayaad u hubtaa?',
+        deleteAccountConfirmDesc: 'Tallaabadan lama laaban karo. Tani waxay si joogto ah u tirtiri doontaa akoonkaaga oo ka saari doontaa xogtaada seerfaradayada.',
+
+
         // Client Dashboard
         myJobPostings: 'Shaqooyinkayga La Soo Geliyey',
         postNewJob: 'Soo Geli Shaqo Cusub',
