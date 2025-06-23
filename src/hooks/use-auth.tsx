@@ -152,69 +152,109 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  const updateUserInState = (userId: string, updateFn: (user: User) => User) => {
+  const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
     let updatedUser: User | undefined;
     const newUsers = users.map(u => {
         if (u.id === userId) {
-            updatedUser = updateFn(u);
+            updatedUser = { ...u, ...userData };
             return updatedUser;
         }
         return u;
     });
 
-    setUsers(newUsers);
-
-    if (user && user.id === userId && updatedUser) {
-        setUser(updatedUser);
-    }
-    return !!updatedUser;
-  };
-
-  const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    const success = updateUserInState(userId, u => ({ ...u, ...userData }));
-
-    if (success && profileData) {
-        const targetUser = users.find(u => u.id === userId);
-        if (targetUser?.role === 'freelancer') {
-            setFreelancerProfiles(prevProfiles => {
-                return prevProfiles.map(p => p.userId === userId ? { ...p, ...profileData } : p);
-            });
-        } else if (targetUser?.role === 'client') {
-            setClientProfiles(prevProfiles => {
-                return prevProfiles.map(p => p.userId === userId ? { ...p, ...profileData } : p);
-            });
+    if (updatedUser) {
+        setUsers(newUsers);
+        if (user && user.id === userId) {
+            setUser(updatedUser);
         }
+
+        if (profileData) {
+            if (updatedUser.role === 'freelancer') {
+                setFreelancerProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
+            } else if (updatedUser.role === 'client') {
+                setClientProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
+            }
+        }
+        return true;
     }
-    return success;
+    return false;
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
-    return updateUserInState(userId, u => {
-      const newMethod = { ...method, id: `pm-${Date.now()}` };
-      return { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
+    const newMethod = { ...method, id: `pm-${Date.now()}` };
+    let updatedUser: User | undefined;
+    
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
+            return updatedUser;
+        }
+        return u;
     });
+
+    if (updatedUser) {
+        setUsers(newUsers);
+        if (user?.id === userId) setUser(updatedUser);
+        return true;
+    }
+    return false;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    return updateUserInState(userId, u => {
-      const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-      return { ...u, paymentMethods };
+    let updatedUser: User | undefined;
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
+            updatedUser = { ...u, paymentMethods };
+            return updatedUser;
+        }
+        return u;
     });
+    
+    if (updatedUser) {
+        setUsers(newUsers);
+        if (user?.id === userId) setUser(updatedUser);
+        return true;
+    }
+    return false;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
-    return updateUserInState(userId, u => {
-      const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-      return { ...u, transactions: [...(u.transactions || []), newTransaction] };
+    const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
+    let updatedUser: User | undefined;
+    
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, transactions: [...(u.transactions || []), newTransaction] };
+            return updatedUser;
+        }
+        return u;
     });
+    
+    if (updatedUser) {
+        setUsers(newUsers);
+        if (user?.id === userId) setUser(updatedUser);
+        return true;
+    }
+    return false;
   };
   
   const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
-    const success = updateUserInState(userId, u => ({ ...u, isBlocked: !u.isBlocked }));
-    if (user?.id === userId && users.find(u => u.id === userId)?.isBlocked) {
-        logout();
+    let updatedUser: User | undefined;
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, isBlocked: !u.isBlocked };
+            return updatedUser;
+        }
+        return u;
+    });
+
+    if (updatedUser) {
+        setUsers(newUsers);
+        // The useEffect hook will handle logging out the user if they are the one being blocked.
+        return true;
     }
-    return success;
+    return false;
   };
 
   const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus };
