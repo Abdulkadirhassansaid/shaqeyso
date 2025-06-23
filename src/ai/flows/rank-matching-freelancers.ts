@@ -1,4 +1,3 @@
-// src/ai/flows/rank-matching-freelancers.ts
 'use server';
 /**
  * @fileOverview Ranks freelancers based on their suitability for a given job.
@@ -39,6 +38,7 @@ export async function rankMatchingFreelancers(input: RankMatchingFreelancersInpu
 
 const rankMatchingFreelancersPrompt = ai.definePrompt({
   name: 'rankMatchingFreelancersPrompt',
+  model: 'googleai/gemini-2.0-flash',
   input: {schema: RankMatchingFreelancersInputSchema},
   output: {schema: RankMatchingFreelancersOutputSchema},
   prompt: `You are an expert in matching freelancers to jobs. Given a job description and a list of freelancer profiles and proposals, rank the freelancers based on how well they fit the job requirements. Provide the reason for the rank for each freelancer.
