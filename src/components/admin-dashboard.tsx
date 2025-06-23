@@ -37,7 +37,7 @@ export function AdminDashboard() {
   
   const adminUser = users.find(u => u.role === 'admin');
 
-  const getStatusVariant = (status: Job['status']) => {
+  const getStatusVariant = (status: Job['status'] | undefined) => {
     switch (status) {
         case 'Open': return 'default';
         case 'Completed': return 'default';
@@ -182,6 +182,7 @@ export function AdminDashboard() {
                                 {jobs.map((job) => {
                                     const client = users.find(u => u.id === job.clientId);
                                     const freelancer = job.hiredFreelancerId ? users.find(u => u.id === job.hiredFreelancerId) : null;
+                                    const status = job.status || 'Unknown';
                                     return (
                                         <TableRow key={job.id}>
                                             <TableCell className="font-medium">{job.title}</TableCell>
@@ -189,7 +190,7 @@ export function AdminDashboard() {
                                             <TableCell>{freelancer?.name || 'N/A'}</TableCell>
                                             <TableCell>${job.budget.toFixed(2)}</TableCell>
                                             <TableCell>
-                                                 <Badge variant={getStatusVariant(job.status)}>{t[job.status.toLowerCase() as keyof typeof t] || job.status}</Badge>
+                                                 <Badge variant={getStatusVariant(job.status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                             </TableCell>
                                         </TableRow>
                                     )
