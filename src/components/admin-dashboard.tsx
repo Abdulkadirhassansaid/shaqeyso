@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import { useLanguage } from '@/hooks/use-language';
-import type { Job } from '@/lib/types';
+import type { Job, User } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -18,9 +18,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, CalendarDays } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth } from 'date-fns';
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus } = useAuth();
@@ -37,7 +40,56 @@ export function AdminDashboard() {
   }
   
   const adminUser = users.find(u => u.role === 'admin');
-  const adminBalance = (adminUser?.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+  const adminTransactions = adminUser?.transactions || [];
+
+  const totalRevenue = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
+
+  const thisMonthRevenue = adminTransactions
+    .filter(tx => isThisMonth(parseISO(tx.date)))
+    .reduce((acc, tx) => acc + tx.amount, 0);
+
+  const weeklyChartData = React.useMemo(() => {
+    const weeks = new Map<string, number>();
+    const last12Weeks = eachWeekOfInterval({
+        start: subDays(new Date(), 12 * 7),
+        end: new Date()
+    }, { weekStartsOn: 1 });
+
+    last12Weeks.forEach(week => {
+        weeks.set(format(week, 'MMM d'), 0);
+    });
+
+    adminTransactions.forEach(tx => {
+        const weekStart = startOfWeek(parseISO(tx.date), { weekStartsOn: 1 });
+        const weekKey = format(weekStart, 'MMM d');
+        if (weeks.has(weekKey)) {
+            weeks.set(weekKey, (weeks.get(weekKey) || 0) + tx.amount);
+        }
+    });
+
+    return Array.from(weeks.entries()).map(([date, revenue]) => ({ date, revenue }));
+  }, [adminTransactions]);
+
+  const chartConfig = {
+      revenue: {
+        label: 'Revenue',
+        color: 'hsl(var(--primary))',
+      },
+  };
+
+  const recentTransactions = adminTransactions.slice(-5).reverse();
+
+  const recentTransactionsWithUsers = recentTransactions.map(tx => {
+    const jobTitleMatch = tx.description.match(/"(.*?)"/);
+    if (!jobTitleMatch) return { ...tx, user: null };
+    
+    const jobTitle = jobTitleMatch[1];
+    const job = jobs.find(j => j.title === jobTitle);
+    if (!job) return { ...tx, user: null };
+    
+    const client = users.find(u => u.id === job.clientId);
+    return { ...tx, user: client || null };
+  });
 
   const getStatusVariant = (status: Job['status'] | undefined) => {
     switch (status) {
@@ -59,16 +111,26 @@ export function AdminDashboard() {
                 <TabsTrigger value="users">{t.users}</TabsTrigger>
                 <TabsTrigger value="jobs">{t.jobs}</TabsTrigger>
             </TabsList>
-            <TabsContent value="analytics" className="mt-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <TabsContent value="analytics" className="mt-6 space-y-6">
+                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${adminBalance.toFixed(2)}</div>
+                            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
                             <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+                            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">${thisMonthRevenue.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Platform fees from this month.</p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -89,6 +151,65 @@ export function AdminDashboard() {
                         <CardContent>
                             <div className="text-2xl font-bold">{jobs.length}</div>
                             <p className="text-xs text-muted-foreground">{jobs.filter(j => j.status === 'Completed').length} {t.completed.toLowerCase()}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+                    <Card className="lg:col-span-4">
+                        <CardHeader>
+                            <CardTitle>Weekly Revenue</CardTitle>
+                             <CardDescription>Platform fees over the last 12 weeks.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pl-2">
+                            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                                <BarChart data={weeklyChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickLine={false}
+                                        tickMargin={10}
+                                        axisLine={false}
+                                        stroke="#888888"
+                                        fontSize={12}
+                                    />
+                                    <YAxis
+                                        stroke="#888888"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => `$${value}`}
+                                    />
+                                    <Tooltip
+                                        content={<ChartTooltipContent formatter={(value) => `$${Number(value).toFixed(2)}`} />}
+                                    />
+                                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                    <Card className="lg:col-span-3">
+                        <CardHeader>
+                            <CardTitle>Recent Transactions</CardTitle>
+                            <CardDescription>
+                                {`You've received ${adminTransactions.length} platform fees in total.`}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="space-y-6">
+                                {recentTransactionsWithUsers.map(tx => (
+                                    <div key={tx.id} className="flex items-center">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarImage src={tx.user?.avatarUrl} alt="Avatar" />
+                                            <AvatarFallback>{tx.user?.name.charAt(0) ?? 'U'}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="ml-4 space-y-1">
+                                            <p className="text-sm font-medium leading-none">{tx.user?.name ?? 'Unknown User'}</p>
+                                            <p className="text-sm text-muted-foreground">{tx.description}</p>
+                                        </div>
+                                        <div className="ml-auto font-medium text-green-500">+${tx.amount.toFixed(2)}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
