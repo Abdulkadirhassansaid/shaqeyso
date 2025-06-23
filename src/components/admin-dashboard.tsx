@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -283,7 +283,7 @@ export function AdminDashboard() {
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" disabled={platformBalance <= 0}>{t.withdrawToBank}</Button>
+                                    <Button size="sm" disabled={platformBalance <= 0}><Banknote />{t.withdrawToBank}</Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
