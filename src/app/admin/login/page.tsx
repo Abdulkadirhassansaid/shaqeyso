@@ -22,15 +22,15 @@ import { useLanguage } from '@/hooks/use-language';
 export default function AdminLoginPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const { login, logout } = useAuth();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { login, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useLanguage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     const result = await login(email, password);
 
     if (result.success && result.user) {
@@ -42,8 +42,7 @@ export default function AdminLoginPage() {
           description: "You do not have permission to access the admin dashboard.",
           variant: 'destructive',
         });
-        // Log the non-admin user out and send them to the regular login page
-        logout();
+        setIsSubmitting(false);
       }
     } else {
       if (result.message === 'blocked') {
@@ -59,9 +58,11 @@ export default function AdminLoginPage() {
           variant: 'destructive',
         });
       }
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  const isDisabled = isSubmitting || isAuthLoading;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -84,7 +85,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isDisabled}
               />
             </div>
             <div className="space-y-2">
@@ -95,13 +96,13 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isDisabled}
               />
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t.signingIn : 'Sign In as Admin'}
+            <Button type="submit" className="w-full" disabled={isDisabled}>
+              {isSubmitting ? t.signingIn : 'Sign In as Admin'}
             </Button>
             <p className="text-sm text-muted-foreground">
                 <Link href="/" className="font-semibold text-primary hover:underline">

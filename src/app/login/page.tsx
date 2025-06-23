@@ -23,8 +23,8 @@ import { useLanguage } from '@/hooks/use-language';
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { login, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     const result = await login(email, password);
     if (result.success) {
       const redirectUrl = searchParams.get('redirect');
@@ -51,9 +51,11 @@ export default function LoginPage() {
           variant: 'destructive',
         });
       }
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+  
+  const isDisabled = isSubmitting || isAuthLoading;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -76,7 +78,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isDisabled}
               />
             </div>
             <div className="space-y-2">
@@ -87,13 +89,13 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isDisabled}
               />
             </div>
           </CardContent>
           <CardFooter className="flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t.signingIn : t.signIn}
+            <Button type="submit" className="w-full" disabled={isDisabled}>
+              {isSubmitting ? t.signingIn : t.signIn}
             </Button>
             <p className="text-sm text-muted-foreground">
               {t.noAccount}{' '}
