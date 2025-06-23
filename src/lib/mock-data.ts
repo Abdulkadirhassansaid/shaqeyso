@@ -1,5 +1,5 @@
 
-import type { User, Job, Proposal, FreelancerProfile, ClientProfile } from './types';
+import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -60,6 +60,7 @@ export const mockJobs: Job[] = [
     deadline: '2024-08-30',
     clientId: 'client-1',
     status: 'Open',
+    submittedFiles: [],
   },
   {
     id: 'job-2',
@@ -70,6 +71,7 @@ export const mockJobs: Job[] = [
     deadline: '2024-09-15',
     clientId: 'client-1',
     status: 'Open',
+    submittedFiles: [],
   },
   {
     id: 'job-3',
@@ -81,6 +83,7 @@ export const mockJobs: Job[] = [
     clientId: 'client-1',
     status: 'InProgress',
     hiredFreelancerId: 'freelancer-1',
+    submittedFiles: [],
   },
 ];
 
@@ -126,4 +129,21 @@ export const mockClientProfiles: ClientProfile[] = [
         companyName: 'Farmaajo Inc.',
         projectsPosted: ['job-1', 'job-2', 'job-3'],
     }
+];
+
+export const mockMessages: Message[] = [
+    {
+        id: 'msg-1',
+        jobId: 'job-3',
+        senderId: 'client-1',
+        text: 'Hi Aisha, how is the project coming along? Do you have any updates for me?',
+        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+    },
+    {
+        id: 'msg-2',
+        jobId: 'job-3',
+        senderId: 'freelancer-1',
+        text: "Hi! It's going well. I've completed the first draft of the blog posts. I'll be submitting them for your review shortly.",
+        timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
+    },
 ];

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 import { mockJobs as initialJobs } from '@/lib/mock-data';
-import type { Job } from '@/lib/types';
+import type { Job, SubmittedFile } from '@/lib/types';
 
 interface JobsContextType {
   jobs: Job[];
@@ -13,6 +13,8 @@ interface JobsContextType {
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
+  submitProject: (jobId: string, files: SubmittedFile[]) => Promise<boolean>;
+  releasePayment: (jobId: string) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -25,6 +27,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       ...jobData,
       id: `job-${Date.now()}`,
       status: 'Open',
+      submittedFiles: [],
     };
     setJobs(prevJobs => [newJob, ...prevJobs]);
     return true;
@@ -56,8 +59,22 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     return true;
   }
 
+  const submitProject = async (jobId: string, files: SubmittedFile[]): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, status: 'AwaitingApproval', submittedFiles: files } : job
+    ));
+    return true;
+  };
+  
+  const releasePayment = async (jobId: string): Promise<boolean> => {
+    setJobs(prevJobs => prevJobs.map(job => 
+      job.id === jobId ? { ...job, status: 'Completed' } : job
+    ));
+    return true;
+  };
 
-  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob };
+
+  const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, submitProject, releasePayment };
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

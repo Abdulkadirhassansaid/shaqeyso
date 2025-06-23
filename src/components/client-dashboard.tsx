@@ -12,9 +12,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
+import type { Job, User, Proposal, RankedFreelancer, SubmittedFile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, Download } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -26,6 +26,8 @@ import { useJobs } from '@/hooks/use-jobs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useProposals } from '@/hooks/use-proposals';
+import { ChatDialog } from './chat-dialog';
+import { Separator } from './ui/separator';
 
 
 interface ClientDashboardProps {
@@ -33,7 +35,7 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ user }: ClientDashboardProps) {
-  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob } = useJobs();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, releasePayment } = useJobs();
   const { proposals, acceptProposal } = useProposals();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
@@ -45,6 +47,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
   const [jobToApprove, setJobToApprove] = React.useState<Job | null>(null);
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
 
@@ -100,8 +103,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const handleApproveAndPay = async () => {
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
 
-    // 1. Update job status to 'Completed'
-    await updateJobStatus(jobToApprove.id, 'Completed');
+    await releasePayment(jobToApprove.id);
     
     // 2. Release funds from escrow to freelancer
     const paymentDescription = `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`;
@@ -200,6 +202,8 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   
   if (selectedJob) {
     const jobProposals = proposals.filter(p => p.jobId === selectedJob.id);
+    const hiredFreelancer = allUsers.find(u => u.id === selectedJob.hiredFreelancerId);
+    
     const ProposalCard = ({ proposal, isRanked = false, rank, reason }: { proposal: Proposal, isRanked?: boolean, rank?: number, reason?: string }) => {
         const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
         const proposalStatus = proposal.status || 'Pending';
@@ -239,6 +243,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     };
 
     return (
+      <>
         <AlertDialog open={!!proposalToHire} onOpenChange={(isOpen) => !isOpen && setProposalToHire(null)}>
             <Card className="w-full">
                 <CardHeader>
@@ -246,13 +251,45 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         {t.backToJobs}
                     </Button>
-                    <CardTitle>{selectedJob.title}</CardTitle>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>{selectedJob.title}</CardTitle>
+                        {hiredFreelancer && (
+                            <Button variant="outline" onClick={() => setIsChatOpen(true)}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                {t.chatWith} {hiredFreelancer.name}
+                            </Button>
+                        )}
+                    </div>
                     <CardDescription>
                         {selectedJob.category} - {t.budget}: ${selectedJob.budget}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
+                
+                {selectedJob.status === 'AwaitingApproval' && selectedJob.submittedFiles && (
+                    <div className="mt-6">
+                        <Separator />
+                        <div className="py-4">
+                             <h3 className="text-lg font-semibold mb-4">{t.submittedWork}</h3>
+                             <div className="space-y-2">
+                                 {selectedJob.submittedFiles.map(file => (
+                                     <a 
+                                        href={file.url} 
+                                        download={file.name}
+                                        key={file.name}
+                                        className="flex items-center gap-2 p-2 border rounded-md hover:bg-muted"
+                                     >
+                                        <Download className="h-4 w-4" />
+                                        <span>{file.name}</span>
+                                     </a>
+                                 ))}
+                             </div>
+                        </div>
+                        <Separator />
+                    </div>
+                )}
+                
                 <div className="mt-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
@@ -312,6 +349,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        {isChatOpen && selectedJob && selectedJob.hiredFreelancerId && (
+            <ChatDialog 
+                job={selectedJob}
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+            />
+        )}
+      </>
     );
   }
 
@@ -351,7 +397,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     </CardHeader>
                     <CardFooter className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
-                           {(status === 'Open' || status === 'Interviewing') && (
+                           {(status === 'Open' || status === 'Interviewing' || status === 'InProgress' || status === 'AwaitingApproval') && (
                                 <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
                             )}
                             {status === 'AwaitingApproval' && (

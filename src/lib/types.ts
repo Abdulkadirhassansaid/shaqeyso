@@ -10,6 +10,11 @@ export type User = {
   transactions?: Transaction[];
 };
 
+export type SubmittedFile = {
+  name: string;
+  url: string; // For simulation, this will be a placeholder
+};
+
 export type Job = {
   id: string;
   title: string;
@@ -20,6 +25,7 @@ export type Job = {
   clientId: string;
   status: 'Open' | 'Interviewing' | 'InProgress' | 'AwaitingApproval' | 'Completed';
   hiredFreelancerId?: string;
+  submittedFiles?: SubmittedFile[];
 };
 
 export type Proposal = {
@@ -69,4 +75,12 @@ export type Transaction = {
   description: string;
   amount: number; // positive for income, negative for withdrawal/fee
   status: 'Completed' | 'Pending' | 'Failed';
+};
+
+export type Message = {
+    id: string;
+    jobId: string;
+    senderId: string;
+    text: string;
+    timestamp: string; // ISO date string
 };

@@ -151,7 +151,7 @@ export const translations = {
         myJobPostings: 'My Job Postings',
         postNewJob: 'Post a New Job',
         clientJobDesc: "Here are the jobs you've posted. Click on a job to see proposals.",
-        viewDetailsAndProposals: 'View Details & Proposals',
+        viewDetailsAndProposals: 'View Details',
         noJobsPosted: "You haven't posted any jobs yet.",
         backToJobs: 'Back to Jobs',
         findBestMatches: 'Find Best Matches (AI)',
@@ -183,6 +183,9 @@ export const translations = {
         paymentReceivedFromEscrow: 'Payment received for',
         workInProgressWith: 'Work in progress with',
         paidTo: 'Paid to',
+        submittedWork: 'Submitted Work',
+        downloadFile: 'Download File',
+        chatWith: 'Chat with',
 
 
         // Job Post Form
@@ -248,12 +251,13 @@ export const translations = {
         matchReason: 'Match Reason',
         myProjects: 'My Projects',
         myProjectsDesc: 'Track your active and completed projects.',
-        submitProject: 'Submit Project for Approval',
+        submitProject: 'Submit Project',
         projectSubmitted: 'Project Submitted!',
         projectSubmittedDesc: 'The client has been notified to review your work.',
         awaitingClientApproval: 'Awaiting client approval.',
         projectCompletedAndPaid: 'Project completed and paid',
         noActiveProjects: "You don't have any active projects yet.",
+        chatWithClient: 'Chat with Client',
         
         // Proposal Form
         yourHourlyRate: 'Your Hourly Rate ($)',
@@ -295,6 +299,15 @@ export const translations = {
         addSkillsFirst: 'Add Skills First',
         addSkillsFirstDesc: 'Please add some skills before generating a bio.',
         freelancerProfileUpdatedDesc: 'Your profile information has been saved.',
+
+        // New in this change
+        submitFiles: 'Submit Files',
+        dragAndDrop: 'Drag & drop files here, or click to select files',
+        noFilesSelected: 'No files selected',
+        submitForApproval: 'Submit for Approval',
+        sendMessage: 'Send Message',
+        typeYourMessage: 'Type your message...',
+        noMessagesYet: 'No messages yet. Start the conversation!',
     },
     so: {
         // General
@@ -447,7 +460,7 @@ export const translations = {
         myJobPostings: 'Shaqooyinkayga La Soo Geliyey',
         postNewJob: 'Soo Geli Shaqo Cusub',
         clientJobDesc: "Waa kuwan shaqooyinka aad soo gelisay. Guji shaqo si aad u aragto codsiyada.",
-        viewDetailsAndProposals: 'Arag Faahfaahinta & Codsiyada',
+        viewDetailsAndProposals: 'Arag Faahfaahinta',
         noJobsPosted: "Weli wax shaqo ah ma aadan soo gelin.",
         backToJobs: 'Ku Laabo Shaqooyinka',
         findBestMatches: 'Soo hel kuwa ugu Fiican (AI)',
@@ -479,7 +492,9 @@ export const translations = {
         paymentReceivedFromEscrow: 'Lacag bixin laga helay',
         workInProgressWith: 'Shaqo ayaa la socota',
         paidTo: 'Loo bixiyay',
-
+        submittedWork: 'Shaqada la Gudbiyey',
+        downloadFile: 'Soo Degso Faylka',
+        chatWith: 'La sheekeyso',
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',
@@ -544,13 +559,14 @@ export const translations = {
         matchReason: 'Sababta Isku-aadka',
         myProjects: 'Mashaariicdayda',
         myProjectsDesc: 'La soco mashaariicdaada firfircoon iyo kuwa dhammaaday.',
-        submitProject: 'Gudbi Mashruuca si loo Ansixiyo',
+        submitProject: 'Gudbi Mashruuca',
         projectSubmitted: 'Mashruuca Waa la Gudbiyay!',
         projectSubmittedDesc: 'Macaamiilka waa la ogeysiiyay si uu u eego shaqadaada.',
         awaitingClientApproval: 'Sugaya ansixinta macmiilka.',
         projectCompletedAndPaid: 'Mashruuca waa la dhameeyay oo waa la bixiyay',
         noActiveProjects: "Weli ma lihid mashaariic firfircoon.",
-
+        chatWithClient: 'La sheekeyso Macmiilka',
+        
         // Proposal Form
         yourHourlyRate: 'Qiimahaaga Saacaddii ($)',
         ratePlaceholder: 'Tusaale, 50',
@@ -591,6 +607,15 @@ export const translations = {
         addSkillsFirst: 'Marka Hore Kudar Xirfado',
         addSkillsFirstDesc: 'Fadlan ku dar qaar ka mid ah xirfadaha ka hor intaadan samayn taariikh nololeed.',
         freelancerProfileUpdatedDesc: 'Macluumaadka boggaaga waa la kaydiyay.',
+
+        // New in this change
+        submitFiles: 'Gudbi Faylasha',
+        dragAndDrop: 'Faylasha halkan ku soo jiid & hoos u dhig, ama guji si aad u doorato faylasha',
+        noFilesSelected: 'Lama dooran faylal',
+        submitForApproval: 'U Gudbi Ansixin',
+        sendMessage: 'Dir Fariin',
+        typeYourMessage: 'Qor fariintaada...',
+        noMessagesYet: 'Wali fariimo ma jiraan. Bilaab wada hadalka!',
     }
 };
 

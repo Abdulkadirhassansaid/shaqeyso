@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -25,6 +25,8 @@ import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { LoadingDots } from './loading-dots';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { SubmitProjectDialog } from './submit-project-dialog';
+import { ChatDialog } from './chat-dialog';
 
 
 interface FreelancerDashboardProps {
@@ -37,8 +39,8 @@ type RecommendedJob = Job & {
 };
 
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
-  const { jobs, updateJobStatus } = useJobs();
-  const { freelancerProfiles } = useAuth();
+  const { jobs, submitProject } = useJobs();
+  const { freelancerProfiles, users: allUsers } = useAuth();
   const { toast } = useToast();
   const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -46,6 +48,9 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [isRecommending, setIsRecommending] = React.useState(false);
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = React.useState('find-work');
+  const [jobToSubmit, setJobToSubmit] = React.useState<Job | null>(null);
+  const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
+
 
   const freelancerProfileData = freelancerProfiles.find(p => p.userId === user.id);
   const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
@@ -88,12 +93,14 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     handleGetRecommendations();
   }, [handleGetRecommendations]);
   
-  const handleSubmitProject = async (jobId: string) => {
-    await updateJobStatus(jobId, 'AwaitingApproval');
+  const handleSubmitProject = async (jobId: string, files: File[]) => {
+    const fileData = files.map(f => ({ name: f.name, url: '#' })); // Simulate URL
+    await submitProject(jobId, fileData);
     toast({
         title: t.projectSubmitted,
         description: t.projectSubmittedDesc,
     });
+    setJobToSubmit(null);
   };
 
 
@@ -208,80 +215,107 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
     return (
         <div className="grid gap-4 md:grid-cols-2">
-            {myProjects.map(job => (
-                <Card key={job.id}>
-                    <CardHeader className="flex flex-row justify-between items-start">
-                        <CardTitle className="text-lg">{job.title}</CardTitle>
-                        <Badge variant={job.status === 'Completed' ? 'default' : 'secondary'}>
-                          {t[job.status.toLowerCase() as keyof typeof t] || job.status}
-                        </Badge>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
-                    </CardContent>
-                    <CardFooter>
-                        {job.status === 'InProgress' && (
-                            <Button onClick={() => handleSubmitProject(job.id)}>{t.submitProject}</Button>
-                        )}
-                        {job.status === 'AwaitingApproval' && (
-                            <p className="text-sm text-muted-foreground italic">{t.awaitingClientApproval}</p>
-                        )}
-                        {job.status === 'Completed' && (
-                            <div className="flex items-center text-sm text-green-500 gap-2">
-                                <CheckCircle className="h-5 w-5"/>
-                                <span>{t.projectCompletedAndPaid} (+${job.budget.toFixed(2)})</span>
-                            </div>
-                        )}
-                    </CardFooter>
-                </Card>
-            ))}
+            {myProjects.map(job => {
+                const client = allUsers.find(u => u.id === job.clientId);
+                return (
+                    <Card key={job.id}>
+                        <CardHeader className="flex flex-row justify-between items-start">
+                            <CardTitle className="text-lg">{job.title}</CardTitle>
+                            <Badge variant={job.status === 'Completed' ? 'default' : 'secondary'}>
+                              {t[job.status.toLowerCase() as keyof typeof t] || job.status}
+                            </Badge>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
+                            {client && <p className="text-sm font-medium mt-2">{t.client}: {client.name}</p>}
+                        </CardContent>
+                        <CardFooter className="flex-col items-start gap-2">
+                            {job.status === 'InProgress' && (
+                                <Button className="w-full" onClick={() => setJobToSubmit(job)}>{t.submitProject}</Button>
+                            )}
+                            {job.status === 'AwaitingApproval' && (
+                                <p className="text-sm text-muted-foreground italic w-full">{t.awaitingClientApproval}</p>
+                            )}
+                            {job.status === 'Completed' && (
+                                <div className="flex items-center text-sm text-green-500 gap-2 w-full">
+                                    <CheckCircle className="h-5 w-5"/>
+                                    <span>{t.projectCompletedAndPaid} (+${job.budget.toFixed(2)})</span>
+                                </div>
+                            )}
+                            <Button className="w-full" variant="outline" onClick={() => setJobToChat(job)}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                {t.chatWithClient}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )
+            })}
         </div>
     );
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
-            <TabsTrigger value="my-projects">{t.myProjects}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="find-work" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <CardTitle>{t.findWork}</CardTitle>
-                        <CardDescription>{t.findWorkDesc}</CardDescription>
-                    </div>
-                    <div className="relative md:w-72">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                        placeholder={t.searchJobsPlaceholder}
-                        className="pl-8"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    </div>
-                    {isRecommending && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-                        <Wand2 className="h-4 w-4" />
-                        <span>{t.gettingRecommendations}</span>
-                    </div>
-                    )}
-                </CardHeader>
-                <CardContent>{renderFindWorkContent()}</CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="my-projects" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t.myProjects}</CardTitle>
-                    <CardDescription>{t.myProjectsDesc}</CardDescription>
-                </CardHeader>
-                <CardContent>{renderMyProjectsContent()}</CardContent>
-            </Card>
-        </TabsContent>
-    </Tabs>
+    <>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
+                <TabsTrigger value="my-projects">{t.myProjects}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="find-work" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <CardTitle>{t.findWork}</CardTitle>
+                            <CardDescription>{t.findWorkDesc}</CardDescription>
+                        </div>
+                        <div className="relative md:w-72">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                            placeholder={t.searchJobsPlaceholder}
+                            className="pl-8"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        </div>
+                        {isRecommending && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                            <Wand2 className="h-4 w-4" />
+                            <span>{t.gettingRecommendations}</span>
+                        </div>
+                        )}
+                    </CardHeader>
+                    <CardContent>{renderFindWorkContent()}</CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="my-projects" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t.myProjects}</CardTitle>
+                        <CardDescription>{t.myProjectsDesc}</CardDescription>
+                    </CardHeader>
+                    <CardContent>{renderMyProjectsContent()}</CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+        
+        {jobToSubmit && (
+            <SubmitProjectDialog 
+                job={jobToSubmit} 
+                isOpen={!!jobToSubmit}
+                onClose={() => setJobToSubmit(null)}
+                onSubmit={handleSubmitProject}
+            />
+        )}
+
+        {jobToChat && (
+            <ChatDialog
+                job={jobToChat}
+                isOpen={!!jobToChat}
+                onClose={() => setJobToChat(null)}
+            />
+        )}
+    </>
   );
 }

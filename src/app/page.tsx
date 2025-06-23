@@ -9,6 +9,7 @@ import { FreelancerDashboard } from '@/components/freelancer-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobsProvider } from '@/hooks/use-jobs';
 import { ProposalsProvider } from '@/hooks/use-proposals';
+import { MessagesProvider } from '@/hooks/use-messages';
 
 export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
@@ -41,8 +42,10 @@ export default function ShaqeysoHubApp() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <JobsProvider key={`jobs-${user.id}`}>
           <ProposalsProvider key={`proposals-${user.id}`}>
-            {user.role === 'client' && <ClientDashboard user={user} />}
-            {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
+            <MessagesProvider key={`messages-${user.id}`}>
+              {user.role === 'client' && <ClientDashboard user={user} />}
+              {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
+            </MessagesProvider>
           </ProposalsProvider>
         </JobsProvider>
       </main>
