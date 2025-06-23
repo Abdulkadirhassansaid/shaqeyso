@@ -1,4 +1,3 @@
-
 export const translations = {
     en: {
         // General
@@ -350,9 +349,12 @@ export const translations = {
         // Admin Panel
         adminDashboardDesc: "Manage users, jobs, and platform settings.",
         users: "Users",
+        jobs: "Jobs",
         analytics: "Analytics",
         manageUsers: "Manage Users",
         manageUsersDesc: "View, block, or unblock users on the platform.",
+        manageJobs: "Manage Jobs",
+        manageJobsDesc: "View and manage all jobs on the platform.",
         user: "User",
         role: "Role",
         active: "Active",
@@ -363,6 +365,12 @@ export const translations = {
         userBlockedDesc: "The user has been successfully blocked.",
         userUnblocked: "User Unblocked",
         userUnblockedDesc: "The user has been successfully unblocked.",
+        totalRevenue: "Total Revenue",
+        totalUsers: "Total Users",
+        totalJobs: "Total Jobs",
+        fromCompletedJobs: "from completed jobs",
+        clients: "clients",
+        freelancers: "freelancers",
     },
     so: {
         // General
@@ -715,9 +723,12 @@ export const translations = {
         // Admin Panel
         adminDashboardDesc: "Maamul isticmaalayaasha, shaqooyinka, iyo dejinta barta.",
         users: "Isticmaalayaasha",
+        jobs: "Shaqooyinka",
         analytics: "Falanqaynta",
         manageUsers: "Maamul Isticmaalayaasha",
         manageUsersDesc: "Eeg, xannib, ama ka qaad xannibaadda isticmaalayaasha barta.",
+        manageJobs: "Maamul Shaqooyinka",
+        manageJobsDesc: "Eeg oo maamul dhammaan shaqooyinka barta.",
         user: "Isticmaale",
         role: "Doorka",
         active: "Firfircoon",
@@ -728,6 +739,12 @@ export const translations = {
         userBlockedDesc: "Isticmaalaha si guul leh ayaa loo xannibay.",
         userUnblocked: "Xannibaadda Waa Laga Qaaday",
         userUnblockedDesc: "Isticmaalaha si guul leh ayaa xannibaadda looga qaaday.",
+        totalRevenue: "Dakhliga Guud",
+        totalUsers: "Isticmaalayaasha Guud",
+        totalJobs: "Shaqooyinka Guud",
+        fromCompletedJobs: "laga helay shaqooyinka la dhameeyay",
+        clients: "macaamiil",
+        freelancers: "shaqaale madaxbanaan",
     }
 };
 

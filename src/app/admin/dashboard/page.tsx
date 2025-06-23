@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { AdminDashboard } from '@/components/admin-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { JobsProvider } from '@/hooks/use-jobs';
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -41,7 +42,9 @@ export default function AdminPage() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <AdminDashboard />
+        <JobsProvider>
+            <AdminDashboard />
+        </JobsProvider>
       </main>
     </div>
   );

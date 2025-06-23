@@ -1,9 +1,10 @@
-
 'use client';
 
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useJobs } from '@/hooks/use-jobs';
 import { useLanguage } from '@/hooks/use-language';
+import type { Job } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -16,14 +17,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { MoreVertical, Slash, UserCheck } from 'lucide-react';
+import { MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import type { User } from '@/lib/types';
-
 
 export function AdminDashboard() {
   const { users, toggleUserBlockStatus } = useAuth();
+  const { jobs } = useJobs();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -34,6 +34,16 @@ export function AdminDashboard() {
         description: isBlocked ? t.userUnblockedDesc : t.userBlockedDesc,
     });
   }
+  
+  const adminUser = users.find(u => u.role === 'admin');
+
+  const getStatusVariant = (status: Job['status']) => {
+    switch (status) {
+        case 'Open': return 'default';
+        case 'Completed': return 'default';
+        default: return 'secondary';
+    }
+  };
 
   return (
     <div>
@@ -41,12 +51,46 @@ export function AdminDashboard() {
             <h1 className="text-3xl font-bold tracking-tight">{t.adminDashboard}</h1>
             <p className="text-muted-foreground mt-1">{t.adminDashboardDesc}</p>
         </header>
-        <Tabs defaultValue="users" className="w-full">
-            <TabsList>
+        <Tabs defaultValue="analytics" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="analytics">{t.analytics}</TabsTrigger>
                 <TabsTrigger value="users">{t.users}</TabsTrigger>
-                <TabsTrigger value="jobs" disabled>{t.jobs}</TabsTrigger>
-                <TabsTrigger value="analytics" disabled>{t.analytics}</TabsTrigger>
+                <TabsTrigger value="jobs">{t.jobs}</TabsTrigger>
             </TabsList>
+            <TabsContent value="analytics" className="mt-6">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">${adminUser?.balance?.toFixed(2) || '0.00'}</div>
+                            <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{t.totalUsers}</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{users.filter(u => u.role !== 'admin').length}</div>
+                            <p className="text-xs text-muted-foreground">{users.filter(u => u.role === 'client').length} {t.clients}, {users.filter(u => u.role === 'freelancer').length} {t.freelancers}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{t.totalJobs}</CardTitle>
+                            <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{jobs.length}</div>
+                            <p className="text-xs text-muted-foreground">{jobs.filter(j => j.status === 'Completed').length} {t.completed.toLowerCase()}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </TabsContent>
             <TabsContent value="users" className="mt-6">
                 <Card>
                     <CardHeader>
@@ -112,6 +156,44 @@ export function AdminDashboard() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+             <TabsContent value="jobs" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t.manageJobs}</CardTitle>
+                        <CardDescription>{t.manageJobsDesc}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>{t.jobTitle}</TableHead>
+                                    <TableHead>{t.client}</TableHead>
+                                    <TableHead>{t.freelancer}</TableHead>
+                                    <TableHead>{t.budget}</TableHead>
+                                    <TableHead>{t.status}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {jobs.map((job) => {
+                                    const client = users.find(u => u.id === job.clientId);
+                                    const freelancer = job.hiredFreelancerId ? users.find(u => u.id === job.hiredFreelancerId) : null;
+                                    return (
+                                        <TableRow key={job.id}>
+                                            <TableCell className="font-medium">{job.title}</TableCell>
+                                            <TableCell>{client?.name}</TableCell>
+                                            <TableCell>{freelancer?.name || 'N/A'}</TableCell>
+                                            <TableCell>${job.budget.toFixed(2)}</TableCell>
+                                            <TableCell>
+                                                 <Badge variant={getStatusVariant(job.status)}>{t[job.status.toLowerCase() as keyof typeof t] || job.status}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
                             </TableBody>
                         </Table>
                     </CardContent>
