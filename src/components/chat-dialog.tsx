@@ -120,6 +120,8 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         ? 'bg-secondary'
                         : 'bg-muted';
                     
+                    const showNameHeader = !isSender || isAdminMessage;
+                    
                     return (
                     <div
                         key={message.id}
@@ -140,7 +142,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                             messageBgClass
                         )}
                         >
-                            {!isSender && senderDetails && (
+                            {showNameHeader && senderDetails && (
                                 <div className="flex items-center gap-2 mb-1">
                                     <p className="font-bold text-sm">{senderDetails.name}</p>
                                     {isAdminMessage && (
