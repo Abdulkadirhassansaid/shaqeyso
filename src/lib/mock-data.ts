@@ -1,5 +1,5 @@
 
-import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message, Review } from './types';
+import type { User, Job, Proposal, FreelancerProfile, ClientProfile, Message, Review, Transaction } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -9,12 +9,12 @@ export const mockUsers: User[] = [
     avatarUrl: 'https://placehold.co/100x100/E8F5FF/000000.png?text=FI',
     role: 'client',
     password: 'password123',
-    balance: 5000,
     paymentMethods: [
       { id: 'pm-1', type: 'Visa', last4: '4242', expiryMonth: 12, expiryYear: 2026, isPrimary: true },
       { id: 'pm-c1', type: 'EVC Plus', phoneNumber: '611234567', isPrimary: false },
     ],
     transactions: [
+      { id: 'txn-c0', date: '2024-07-01T09:00:00Z', description: 'Initial account funding', amount: 5000, status: 'Completed' },
       { id: 'txn-c1', date: '2024-07-20T10:00:00Z', description: 'Payment for "E-commerce Website"', amount: -2500, status: 'Completed' },
       { id: 'txn-c2', date: '2024-07-15T11:30:00Z', description: 'Payment for "Mobile App Design"', amount: -1800, status: 'Completed' },
       { id: 'txn-c3', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: -500, status: 'Completed' },
@@ -33,11 +33,10 @@ export const mockUsers: User[] = [
       { id: 'pm-f1', type: 'EDahab', phoneNumber: '621234567', isPrimary: false },
     ],
     transactions: [
-      { id: 'txn-f1', date: '2024-07-20T10:00:00Z', description: 'Payment for "E-commerce Website"', amount: 2500, status: 'Completed' },
+      { id: 'txn-f1', date: '2024-07-20T10:00:00Z', description: 'Payment for "E-commerce Website"', amount: 2375, status: 'Completed' },
       { id: 'txn-f2', date: '2024-07-18T09:00:00Z', description: 'Withdrawal to Bank Account', amount: -1500, status: 'Completed' },
-      { id: 'txn-f3', date: '2024-07-15T11:30:00Z', description: 'Payment for "Mobile App Design"', amount: 1800, status: 'Completed' },
-      { id: 'txn-f4', date: '2024-07-10T12:00:00Z', description: 'Platform Service Fee', amount: -250, status: 'Completed' },
-      { id: 'txn-f5', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: 500, status: 'Pending' },
+      { id: 'txn-f3', date: '2024-07-15T11:30:00Z', description: 'Payment for "Mobile App Design"', amount: 1710, status: 'Completed' },
+      { id: 'txn-f5', date: '2024-07-05T14:00:00Z', description: 'Payment for "Blog Content"', amount: 475, status: 'Completed' },
     ],
     isBlocked: false,
   },
@@ -59,8 +58,11 @@ export const mockUsers: User[] = [
     avatarUrl: 'https://placehold.co/100x100/1a1a1a/ffffff.png?text=A',
     role: 'admin',
     password: 'adminpassword',
-    balance: 0,
-    transactions: [],
+    transactions: [
+      { id: 'txn-a1', date: '2024-07-20T10:00:00Z', description: 'Platform Fee for "E-commerce Website"', amount: 125, status: 'Completed' },
+      { id: 'txn-a2', date: '2024-07-15T11:30:00Z', description: 'Platform Fee for "Mobile App Design"', amount: 90, status: 'Completed' },
+      { id: 'txn-a3', date: '2024-07-05T14:00:00Z', description: 'Platform Fee for "Blog Content"', amount: 25, status: 'Completed' },
+    ],
     isBlocked: false,
   },
 ];

@@ -6,7 +6,6 @@ export type User = {
   avatarUrl: string;
   role: 'client' | 'freelancer' | 'admin';
   password?: string;
-  balance?: number;
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
   isBlocked?: boolean;

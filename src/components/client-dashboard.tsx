@@ -70,7 +70,9 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
     if (!jobToHire) return;
 
-    if ((user.balance || 0) < jobToHire.budget) {
+    const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+
+    if (clientBalance < jobToHire.budget) {
         toast({
             title: t.insufficientFundsTitle,
             description: t.insufficientFundsDesc,

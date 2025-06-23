@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function BillingPage() {
-  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } = useAuth();
+  const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } from useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
@@ -61,7 +61,7 @@ export default function BillingPage() {
     );
   }
   
-  const freelancerBalance = user.balance || 0;
+  const balance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
 
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,8 +112,8 @@ export default function BillingPage() {
   };
   
   const handleWithdraw = async () => {
-    if (freelancerBalance <= 0) return;
-    const withdrawalAmount = freelancerBalance;
+    if (balance <= 0) return;
+    const withdrawalAmount = balance;
     await addTransaction(user.id, {
         description: t.withdrawalToBank,
         amount: -withdrawalAmount,
@@ -193,11 +193,11 @@ export default function BillingPage() {
                 <CardTitle>{t.currentBalance}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold">${freelancerBalance.toFixed(2)}</p>
+                <p className="text-4xl font-bold">${balance.toFixed(2)}</p>
                 <p className="text-sm text-muted-foreground mt-1">{t.availableForWithdrawal}</p>
               </CardContent>
               <CardFooter>
-                  <Button onClick={handleWithdraw} disabled={freelancerBalance <= 0}>{t.withdrawFunds}</Button>
+                  <Button onClick={handleWithdraw} disabled={balance <= 0}>{t.withdrawFunds}</Button>
               </CardFooter>
             </Card>
           )}
@@ -209,7 +209,7 @@ export default function BillingPage() {
                 <CardDescription>{t.topUpDesc}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold">${user.balance?.toFixed(2) || '0.00'}</p>
+                <p className="text-4xl font-bold">${balance.toFixed(2)}</p>
               </CardContent>
               <CardFooter>
                   <Dialog open={isTopUpOpen} onOpenChange={setTopUpOpen}>

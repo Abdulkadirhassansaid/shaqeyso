@@ -102,6 +102,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false; // User already exists
     }
     const newId = `user-${Date.now()}`;
+    
+    let initialTransactions: Transaction[] = [];
+    if (role === 'client') {
+        initialTransactions.push({ 
+            id: `txn-${Date.now()}`, 
+            date: new Date().toISOString(), 
+            description: 'Initial account funding', 
+            amount: 5000, 
+            status: 'Completed' 
+        });
+    }
+
     const newUser: User = {
       id: newId,
       name,
@@ -110,8 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
       paymentMethods: [],
-      transactions: [],
-      balance: role === 'client' ? 5000 : 0, // Give clients a starting balance
+      transactions: initialTransactions,
       isBlocked: false,
     };
     
@@ -223,13 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (u.id === userId) {
             const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
             const transactions = [...(u.transactions || []), newTransaction];
-            let tempUser = { ...u, transactions };
-
-            if (u.role === 'client' || u.role === 'admin' || u.role === 'freelancer') {
-                const newBalance = (u.balance || 0) + newTransaction.amount;
-                tempUser = { ...tempUser, balance: newBalance };
-            }
-            updatedUser = tempUser;
+            updatedUser = { ...u, transactions };
             return updatedUser;
         }
         return u;

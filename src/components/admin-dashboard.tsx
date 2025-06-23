@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,6 +37,7 @@ export function AdminDashboard() {
   }
   
   const adminUser = users.find(u => u.role === 'admin');
+  const adminBalance = (adminUser?.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
 
   const getStatusVariant = (status: Job['status'] | undefined) => {
     switch (status) {
@@ -65,7 +67,7 @@ export function AdminDashboard() {
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${adminUser?.balance?.toFixed(2) || '0.00'}</div>
+                            <div className="text-2xl font-bold">${adminBalance.toFixed(2)}</div>
                             <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
                         </CardContent>
                     </Card>
