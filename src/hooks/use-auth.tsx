@@ -14,7 +14,7 @@ import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, pass: string) => Promise<{ success: boolean; message?: 'invalid' | 'blocked' }>;
+  login: (email: string, pass: string) => Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }>;
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [users]);
 
-  const login = async (email: string, pass: string): Promise<{ success: boolean; message?: 'invalid' | 'blocked' }> => {
+  const login = async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
     const foundUser = users.find(
       (u) => u.email === email && u.password === pass
     );
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser(foundUser);
       localStorage.setItem('userId', foundUser.id);
-      return { success: true };
+      return { success: true, user: foundUser };
     }
     return { success: false, message: 'invalid' };
   };
@@ -96,7 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       balance: role === 'client' ? 5000 : 0, // Give clients a starting balance
       isBlocked: false,
     };
-    setUsers(prev => [...prev, newUser]); 
+    
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers); 
     
     if (role === 'freelancer') {
         setFreelancerProfiles(prev => [...prev, {
@@ -120,11 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    setUsers(prevUsers => {
-        return prevUsers.map(u => 
-            u.id === userId ? { ...u, ...userData } : u
-        );
+    let updatedUser: User | null = null;
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            updatedUser = { ...u, ...userData };
+            return updatedUser;
+        }
+        return u;
     });
+    setUsers(newUsers);
 
     if (profileData) {
         const targetUser = users.find(u => u.id === userId);
@@ -149,54 +155,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
     
+    if (user?.id === userId && updatedUser) {
+        setUser(updatedUser);
+    }
+
     return true;
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
-    setUsers(prevUsers => {
-        return prevUsers.map(u => {
-            if (u.id === userId) {
-                const newMethod = { ...method, id: `pm-${Date.now()}` };
-                const paymentMethods = [...(u.paymentMethods || []), newMethod];
-                return { ...u, paymentMethods };
-            }
-            return u;
-        });
+    let updatedUser : User | null = null;
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            const newMethod = { ...method, id: `pm-${Date.now()}` };
+            const paymentMethods = [...(u.paymentMethods || []), newMethod];
+            updatedUser = { ...u, paymentMethods };
+            return updatedUser;
+        }
+        return u;
     });
+    setUsers(newUsers);
+
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
     return true;
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    setUsers(prevUsers => {
-        return prevUsers.map(u => {
-            if (u.id === userId) {
-                const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
-                return { ...u, paymentMethods };
-            }
-            return u;
-        });
+    let updatedUser : User | null = null;
+    const newUsers = users.map(u => {
+        if (u.id === userId) {
+            const paymentMethods = (u.paymentMethods || []).filter(pm => pm.id !== methodId);
+            updatedUser = { ...u, paymentMethods };
+            return updatedUser;
+        }
+        return u;
     });
+    setUsers(newUsers);
+
+    if (user?.id === userId && updatedUser) {
+      setUser(updatedUser);
+    }
     return true;
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
-    setUsers(prevUsers => {
-        return prevUsers.map(u => {
-            if (u.id === userId) {
-                const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-                const transactions = [...(u.transactions || []), newTransaction];
-                let updatedUser = { ...u, transactions };
+     let updatedUser : User | null = null;
+     const newUsers = users.map(u => {
+        if (u.id === userId) {
+            const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
+            const transactions = [...(u.transactions || []), newTransaction];
+            let tempUser = { ...u, transactions };
 
-                if (u.role === 'client' || u.role === 'admin' || u.role === 'freelancer') {
-                    const newBalance = (u.balance || 0) + newTransaction.amount;
-                    updatedUser = { ...updatedUser, balance: newBalance };
-                }
-
-                return updatedUser;
+            if (u.role === 'client' || u.role === 'admin' || u.role === 'freelancer') {
+                const newBalance = (u.balance || 0) + newTransaction.amount;
+                tempUser = { ...tempUser, balance: newBalance };
             }
-            return u;
-        });
+            updatedUser = tempUser;
+            return updatedUser;
+        }
+        return u;
     });
+    setUsers(newUsers);
+    
+    if (user?.id === userId && updatedUser) {
+        setUser(updatedUser);
+    }
     return true;
   };
   
