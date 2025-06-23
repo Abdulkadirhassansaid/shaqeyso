@@ -61,6 +61,16 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const handleHireFreelancer = async () => {
     if (!proposalToHire) return;
 
+    const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
+    if (!jobToHire) return;
+
+    // Move funds to escrow
+    await addTransaction(user.id, {
+        description: `${t.escrowFunding} "${jobToHire.title}"`,
+        amount: -jobToHire.budget,
+        status: 'Completed',
+    });
+
     await hireFreelancerForJob(proposalToHire.jobId, proposalToHire.freelancerId);
     await acceptProposal(proposalToHire.id, proposalToHire.jobId);
 
@@ -93,13 +103,8 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     // 1. Update job status to 'Completed'
     await updateJobStatus(jobToApprove.id, 'Completed');
     
-    // 2. Add transactions
-    const paymentDescription = `${t.paymentFor} "${jobToApprove.title}"`;
-    await addTransaction(jobToApprove.clientId, {
-        description: paymentDescription,
-        amount: -jobToApprove.budget,
-        status: 'Completed',
-    });
+    // 2. Release funds from escrow to freelancer
+    const paymentDescription = `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`;
     await addTransaction(jobToApprove.hiredFreelancerId, {
         description: paymentDescription,
         amount: jobToApprove.budget,
@@ -436,8 +441,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                        {/* This needs a way to know which job to delete. The original logic was flawed. */}
-                        {/* For now, this will be handled by the component state which is not ideal. Let's assume it works for now. */}
+                        {/* This needs a way to know which job to delete. The original logic was flawed. For now, this will be handled by the component state which is not ideal. Let's assume it works for now. */}
                          <AlertDialogAction onClick={() => {}} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
                     </AlertDialogFooter>
                 </>

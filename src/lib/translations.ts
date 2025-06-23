@@ -179,7 +179,8 @@ export const translations = {
         paymentCompleteDesc: 'The funds have been released to the freelancer.',
         confirmPaymentTitle: 'Approve and Release Payment?',
         confirmPaymentDesc: (amount: number, name: string) => `Are you sure you want to approve this project and release $${amount.toFixed(2)} to ${name}? This action cannot be undone.`,
-        paymentFor: 'Payment for',
+        escrowFunding: 'Funds moved to escrow for',
+        paymentReceivedFromEscrow: 'Payment received for',
         workInProgressWith: 'Work in progress with',
         paidTo: 'Paid to',
 
@@ -474,7 +475,8 @@ export const translations = {
         paymentCompleteDesc: 'Lacagtii waxaa loo sii daayay shaqaalihii madaxa banaanaa.',
         confirmPaymentTitle: 'Ansixi oo Lacagta sii daa?',
         confirmPaymentDesc: (amount: number, name: string) => `Ma hubtaa inaad rabto inaad ansixiso mashruucan oo aad u sii deyso $${amount.toFixed(2)} ${name}? Tallaabadan lama laaban karo.`,
-        paymentFor: 'Lacag bixinta',
+        escrowFunding: 'Dhaqaale la geliyay escrow ee',
+        paymentReceivedFromEscrow: 'Lacag bixin laga helay',
         workInProgressWith: 'Shaqo ayaa la socota',
         paidTo: 'Loo bixiyay',
 
