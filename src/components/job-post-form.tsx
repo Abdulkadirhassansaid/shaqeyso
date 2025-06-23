@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -78,7 +79,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
       const result = await generateJobDescription({
         prompt: promptRef.current.value,
       });
-      setDescription(result.jobDescription);
+      setDescription(result.jobDescription || '');
     } catch (error) {
       console.error('Error generating job description:', error);
       toast({
