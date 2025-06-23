@@ -13,7 +13,9 @@ export type User = {
 
 export type SubmittedFile = {
   name: string;
-  url: string; // For simulation, this will be a placeholder
+  url: string; // For simulation, this will be a placeholder or blob URL
+  type: string;
+  size: number;
 };
 
 export type Job = {
@@ -82,6 +84,7 @@ export type Message = {
     id: string;
     jobId: string;
     senderId: string;
-    text: string;
+    text?: string;
+    files?: SubmittedFile[];
     timestamp: string; // ISO date string
 };

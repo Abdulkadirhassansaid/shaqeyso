@@ -25,7 +25,6 @@ import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { LoadingDots } from './loading-dots';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { SubmitProjectDialog } from './submit-project-dialog';
 import { ChatDialog } from './chat-dialog';
 
 
@@ -48,7 +47,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [isRecommending, setIsRecommending] = React.useState(false);
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = React.useState('find-work');
-  const [jobToSubmit, setJobToSubmit] = React.useState<Job | null>(null);
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
 
 
@@ -92,17 +90,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   React.useEffect(() => {
     handleGetRecommendations();
   }, [handleGetRecommendations]);
-  
-  const handleSubmitProject = async (jobId: string, files: File[]) => {
-    const fileData = files.map(f => ({ name: f.name, url: '#' })); // Simulate URL
-    await submitProject(jobId, fileData);
-    toast({
-        title: t.projectSubmitted,
-        description: t.projectSubmittedDesc,
-    });
-    setJobToSubmit(null);
-  };
-
 
   if (selectedJob) {
     return (
@@ -238,9 +225,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </div>
                         </CardContent>
                         <CardFooter className="flex-col items-stretch gap-2">
-                            {job.status === 'InProgress' && (
-                                <Button className="w-full" onClick={() => setJobToSubmit(job)}>{t.submitProject}</Button>
-                            )}
                             {job.status === 'AwaitingApproval' && (
                                 <p className="text-sm text-muted-foreground italic w-full text-center py-2">{t.awaitingClientApproval}</p>
                             )}
@@ -307,21 +291,13 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 </Card>
             </TabsContent>
         </Tabs>
-        
-        {jobToSubmit && (
-            <SubmitProjectDialog 
-                job={jobToSubmit} 
-                isOpen={!!jobToSubmit}
-                onClose={() => setJobToSubmit(null)}
-                onSubmit={handleSubmitProject}
-            />
-        )}
 
         {jobToChat && (
             <ChatDialog
                 job={jobToChat}
                 isOpen={!!jobToChat}
                 onClose={() => setJobToChat(null)}
+                onSubmitProject={submitProject}
             />
         )}
     </>
