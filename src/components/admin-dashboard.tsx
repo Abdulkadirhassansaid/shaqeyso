@@ -107,7 +107,7 @@ export function AdminDashboard() {
         status: 'Pending',
     });
 
-    toast({ title: t.withdrawalInitiated, description: t.withdrawalInitiatedDesc(amount) });
+    toast({ title: t.withdrawalInitiated, description: t.withdrawalInitiatedDesc });
     setWithdrawalAmount('');
     setSelectedWithdrawalMethodId(undefined);
     setIsWithdrawDialogOpen(false);
@@ -152,7 +152,7 @@ export function AdminDashboard() {
     
     toast({
         title: t.userDeleted,
-        description: t.userDeletedDesc(userToDelete.name),
+        description: t.userDeletedDesc.replace('{name}', userToDelete.name),
         variant: 'destructive',
     });
   };
@@ -433,7 +433,7 @@ export function AdminDashboard() {
                         <CardHeader>
                             <CardTitle>{t.recentTransactions}</CardTitle>
                             <CardDescription>
-                                {t.totalPlatformFees(adminTransactions.length)}
+                                {t.totalPlatformFees.replace('{count}', String(adminTransactions.length))}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -536,7 +536,7 @@ export function AdminDashboard() {
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>{t.deleteUserConfirmTitle}</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        {t.deleteUserConfirmDesc(user.name)}
+                                                                        {t.deleteUserConfirmDesc.replace('{name}', user.name)}
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>

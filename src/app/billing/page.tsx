@@ -119,7 +119,7 @@ export default function BillingPage() {
         amount: -withdrawalAmount,
         status: 'Pending',
     });
-    toast({ title: t.withdrawalInitiated, description: `${t.withdrawalInitiatedDesc} $${withdrawalAmount.toFixed(2)}.` });
+    toast({ title: t.withdrawalInitiated, description: t.withdrawalInitiatedDesc });
   };
   
   const getPaymentMethodIcon = (type: PaymentMethod['type']) => {
@@ -162,7 +162,7 @@ export default function BillingPage() {
         status: 'Completed',
     });
 
-    toast({ title: t.topUpSuccessTitle, description: t.topUpSuccessDesc(amount) });
+    toast({ title: t.topUpSuccessTitle, description: t.topUpSuccessDesc });
     setTopUpAmount('');
     setSelectedMethodId(undefined);
     setTopUpOpen(false);

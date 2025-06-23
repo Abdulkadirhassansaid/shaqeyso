@@ -364,7 +364,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
               <AlertDialogHeader>
                   <AlertDialogTitle>{t.chooseNextStep}</AlertDialogTitle>
                   <AlertDialogDescription>
-                      {proposalToHire && t.nextStepDesc(allUsers.find(u => u.id === proposalToHire.freelancerId)?.name || 'this freelancer')}
+                      {t.nextStepDesc.replace('{name}', (proposalToHire && allUsers.find(u => u.id === proposalToHire.freelancerId)?.name) || 'this freelancer')}
                   </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
