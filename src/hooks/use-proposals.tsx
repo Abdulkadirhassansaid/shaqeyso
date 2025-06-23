@@ -2,8 +2,19 @@
 'use client';
 
 import * as React from 'react';
-import { useLocalStorageState } from '@/hooks/use-local-storage-state';
-import { mockProposals as initialProposals } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc, 
+  doc,
+  query,
+  where,
+  getDocs,
+  writeBatch
+} from 'firebase/firestore';
 import type { Proposal } from '@/lib/types';
 
 interface ProposalsContextType {
@@ -19,47 +30,84 @@ interface ProposalsContextType {
 const ProposalsContext = React.createContext<ProposalsContextType | null>(null);
 
 export function ProposalsProvider({ children }: { children: React.ReactNode }) {
-  const [proposals, setProposals] = useLocalStorageState('shaqo-proposals', initialProposals);
+  const [proposals, setProposals] = React.useState<Proposal[]>([]);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "proposals"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const proposalsData: Proposal[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Proposal));
+      setProposals(proposalsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const addProposal = async (proposalData: Omit<Proposal, 'id' | 'status'>): Promise<boolean> => {
-    const newProposal: Proposal = {
-      ...proposalData,
-      id: `prop-${Date.now()}`,
-      status: 'Pending',
-    };
-    setProposals(prevProposals => [newProposal, ...prevProposals]);
-    return true;
+    try {
+      const newProposal = {
+        ...proposalData,
+        status: 'Pending' as const,
+      };
+      await addDoc(collection(db, 'proposals'), newProposal);
+      return true;
+    } catch(e) { return false; }
   };
 
   const acceptProposal = async (proposalId: string, jobId: string): Promise<boolean> => {
-    setProposals(prevProposals => 
-        prevProposals.map(p => {
-            if (p.jobId !== jobId) return p;
-            if (p.id === proposalId) return { ...p, status: 'Accepted' };
-            return { ...p, status: 'Rejected' };
-        })
-    );
-    return true;
+    try {
+      const batch = writeBatch(db);
+      // Reject all other proposals for the same job
+      const q = query(collection(db, "proposals"), where("jobId", "==", jobId));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((document) => {
+        if (document.id !== proposalId) {
+          batch.update(document.ref, { status: 'Rejected' });
+        }
+      });
+      // Accept the selected proposal
+      batch.update(doc(db, 'proposals', proposalId), { status: 'Accepted' });
+      
+      await batch.commit();
+      return true;
+    } catch(e) { return false; }
   };
 
   const updateProposal = async (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>): Promise<boolean> => {
-    setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, ...data } : p));
-    return true;
+    try {
+      await updateDoc(doc(db, 'proposals', proposalId), data);
+      return true;
+    } catch(e) { return false; }
   }
 
   const deleteProposal = async (proposalId: string): Promise<boolean> => {
-    setProposals(prev => prev.filter(p => p.id !== proposalId));
-    return true;
+    try {
+      await deleteDoc(doc(db, 'proposals', proposalId));
+      return true;
+    } catch(e) { return false; }
   }
 
   const deleteProposalsByJobId = async (jobId: string): Promise<boolean> => {
-    setProposals(prev => prev.filter(p => p.jobId !== jobId));
-    return true;
+    try {
+      const q = query(collection(db, "proposals"), where("jobId", "==", jobId));
+      const querySnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      querySnapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      return true;
+    } catch(e) { return false; }
   }
 
   const deleteProposalsByFreelancerId = async (freelancerId: string): Promise<boolean> => {
-      setProposals(prev => prev.filter(p => p.freelancerId !== freelancerId));
+    try {
+      const q = query(collection(db, "proposals"), where("freelancerId", "==", freelancerId));
+      const querySnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      querySnapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
       return true;
+    } catch(e) { return false; }
   }
 
   const value = { proposals, addProposal, acceptProposal, updateProposal, deleteProposal, deleteProposalsByJobId, deleteProposalsByFreelancerId };

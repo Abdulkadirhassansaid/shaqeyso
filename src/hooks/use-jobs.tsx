@@ -2,8 +2,19 @@
 'use client';
 
 import * as React from 'react';
-import { useLocalStorageState } from '@/hooks/use-local-storage-state';
-import { mockJobs as initialJobs } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  deleteDoc, 
+  updateDoc, 
+  doc,
+  query,
+  where,
+  getDocs,
+  writeBatch
+} from 'firebase/firestore';
 import type { Job } from '@/lib/types';
 
 interface JobsContextType {
@@ -21,69 +32,93 @@ interface JobsContextType {
 const JobsContext = React.createContext<JobsContextType | null>(null);
 
 export function JobsProvider({ children }: { children: React.ReactNode }) {
-  const [jobs, setJobs] = useLocalStorageState('shaqo-jobs', initialJobs);
+  const [jobs, setJobs] = React.useState<Job[]>([]);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "jobs"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const jobsData: Job[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Job));
+      setJobs(jobsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>): Promise<boolean> => {
-    const newJob: Job = {
-      ...jobData,
-      id: `job-${Date.now()}`,
-      status: 'Open',
-      clientReviewed: false,
-      freelancerReviewed: false,
-      postedDate: new Date().toISOString(),
-    };
-    setJobs(prevJobs => [newJob, ...prevJobs]);
-    return true;
+    try {
+      const newJob = {
+        ...jobData,
+        status: 'Open' as const,
+        clientReviewed: false,
+        freelancerReviewed: false,
+        postedDate: new Date().toISOString(),
+      };
+      await addDoc(collection(db, 'jobs'), newJob);
+      return true;
+    } catch (error) {
+      return false;
+    }
   };
 
   const deleteJob = async (jobId: string): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-    return true;
+    try {
+      await deleteDoc(doc(db, 'jobs', jobId));
+      return true;
+    } catch (error) { return false; }
   };
 
   const updateJobStatus = async (jobId: string, status: Job['status']): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => 
-      job.id === jobId ? { ...job, status } : job
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'jobs', jobId), { status });
+      return true;
+    } catch (error) { return false; }
   };
 
   const updateJob = async (jobId: string, jobData: Partial<Omit<Job, 'id'>>): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => 
-        job.id === jobId ? { ...job, ...jobData } : job
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'jobs', jobId), jobData);
+      return true;
+    } catch (error) { return false; }
   };
   
   const hireFreelancerForJob = async (jobId: string, freelancerId: string): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => 
-      job.id === jobId ? { ...job, status: 'InProgress', hiredFreelancerId: freelancerId } : job
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'jobs', jobId), { status: 'InProgress', hiredFreelancerId: freelancerId });
+      return true;
+    } catch (error) { return false; }
   }
   
   const releasePayment = async (jobId: string): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => 
-      job.id === jobId ? { ...job, status: 'Completed' } : job
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'jobs', jobId), { status: 'Completed' });
+      return true;
+    } catch (error) { return false; }
   };
 
   const markJobAsReviewed = async (jobId: string, role: 'client' | 'freelancer'): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => {
-        if (job.id === jobId) {
-            return role === 'client' ? { ...job, clientReviewed: true } : { ...job, freelancerReviewed: true };
-        }
-        return job;
-    }));
-    return true;
+    try {
+      const fieldToUpdate = role === 'client' ? { clientReviewed: true } : { freelancerReviewed: true };
+      await updateDoc(doc(db, 'jobs', jobId), fieldToUpdate);
+      return true;
+    } catch (error) { return false; }
   };
 
   const deleteJobsByClientId = async (clientId: string): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.filter(job => job.clientId !== clientId));
-    return true;
+    try {
+      const q = query(collection(db, "jobs"), where("clientId", "==", clientId));
+      const querySnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      querySnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      return true;
+    } catch(error) {
+      return false;
+    }
   };
-
 
   const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId };
 

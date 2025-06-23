@@ -3,13 +3,27 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
 import { 
-    mockUsers as initialUsers, 
-    mockFreelancerProfiles as initialFreelancerProfiles, 
-    mockClientProfiles as initialClientProfiles
-} from '@/lib/mock-data';
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  signOut,
+  type User as AuthUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  collection, 
+  onSnapshot,
+  arrayUnion,
+  arrayRemove,
+  deleteDoc,
+  query
+} from 'firebase/firestore';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
-import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 
 interface AuthContextType {
   user: User | null;
@@ -34,236 +48,231 @@ interface AuthContextType {
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [users, setUsers] = useLocalStorageState('shaqo-users', initialUsers);
-  const [freelancerProfiles, setFreelancerProfiles] = useLocalStorageState('shaqo-freelancer-profiles', initialFreelancerProfiles);
-  const [clientProfiles, setClientProfiles] = useLocalStorageState('shaqo-client-profiles', initialClientProfiles);
-  
   const [user, setUser] = React.useState<User | null>(null);
+  const [users, setUsers] = React.useState<User[]>([]);
+  const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
+  const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
 
-
   React.useEffect(() => {
-    const adminEmail = 'abdikadirhassan2015@gmail.com';
-    const adminUserFromInitial = initialUsers.find(u => u.email === adminEmail);
-    
-    if (!adminUserFromInitial) {
-        console.error("Default admin user not found in mock data. This is a problem.");
-        return;
-    };
-
-    setUsers(currentUsers => {
-        // This logic ensures that the admin user is always present and correct,
-        // and prevents duplicates if the local storage already has an admin.
-        const usersWithoutAdmin = currentUsers.filter(u => u.role !== 'admin' && u.email !== adminEmail);
-        const adminExists = currentUsers.some(u => u.id === adminUserFromInitial.id);
-        
-        return adminExists ? currentUsers : [...usersWithoutAdmin, adminUserFromInitial];
-    });
-  }, []); // The empty dependency array is crucial. We only want to sync this once when the app loads.
-
-  React.useEffect(() => {
-    try {
-      const storedUserId = localStorage.getItem('userId');
-      if (storedUserId) {
-        const loggedInUser = users.find((u) => u.id === storedUserId);
-        if (loggedInUser) {
-          if (loggedInUser.isBlocked) {
-             localStorage.removeItem('userId');
-             setUser(null);
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      setIsLoading(true);
+      if (authUser) {
+        const userDocRef = doc(db, 'users', authUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userProfile = { id: userDoc.id, ...userDoc.data() } as User;
+          if (userProfile.isBlocked) {
+            await signOut(auth);
+            setUser(null);
           } else {
-             setUser(loggedInUser);
+            setUser(userProfile);
           }
         } else {
-            localStorage.removeItem('userId');
-            setUser(null);
+          setUser(null);
         }
       } else {
         setUser(null);
       }
-    } catch (error) {
-        console.error("Could not access local storage", error);
-    } finally {
       setIsLoading(false);
-    }
-  }, [users]);
-  
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "users"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "freelancerProfiles"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setFreelancerProfiles(snapshot.docs.map(doc => doc.data() as FreelancerProfile));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    const q = query(collection(db, "clientProfiles"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setClientProfiles(snapshot.docs.map(doc => doc.data() as ClientProfile));
+    });
+    return () => unsubscribe();
+  }, []);
+
   const login = async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === pass
-    );
-    if (foundUser) {
-      if (foundUser.isBlocked) {
-        return { success: false, message: 'blocked' };
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      if (userDoc.exists()) {
+        const userProfile = { id: userDoc.id, ...userDoc.data() } as User;
+        if (userProfile.isBlocked) {
+          await signOut(auth);
+          return { success: false, message: 'blocked' };
+        }
+        return { success: true, user: userProfile };
       }
-      setUser(foundUser);
-      localStorage.setItem('userId', foundUser.id);
-      return { success: true, user: foundUser };
+      return { success: false, message: 'invalid' };
+    } catch (error) {
+      return { success: false, message: 'invalid' };
     }
-    return { success: false, message: 'invalid' };
   };
 
   const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<boolean> => {
-    const existingUser = users.find((u) => u.email === email);
-    if (existingUser) {
-      return false; // User already exists
-    }
-    const newId = `user-${Date.now()}`;
-    
-    let initialTransactions: Transaction[] = [];
-    if (role === 'client') {
-        initialTransactions.push({ 
-            id: `txn-${Date.now()}`, 
-            date: new Date().toISOString(), 
-            description: 'Initial account funding', 
-            amount: 5000, 
-            status: 'Completed' 
-        });
-    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const authUser = userCredential.user;
 
-    const newUser: User = {
-      id: newId,
-      name,
-      email,
-      password: pass,
-      role,
-      avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
-      paymentMethods: [],
-      transactions: initialTransactions,
-      isBlocked: false,
-      verificationStatus: 'unverified',
-    };
-    
-    setUsers(prev => [...prev, newUser]);
-    
-    if (role === 'freelancer') {
-        setFreelancerProfiles(prev => [...prev, {
-            userId: newId,
+      let initialTransactions: Transaction[] = [];
+      if (role === 'client') {
+          initialTransactions.push({ 
+              id: `txn-${Date.now()}`, 
+              date: new Date().toISOString(), 
+              description: 'Initial account funding', 
+              amount: 5000, 
+              status: 'Completed' 
+          });
+      }
+      
+      const userRole = email === 'abdikadirhassan2015@gmail.com' ? 'admin' : role;
+
+      const newUser: Omit<User, 'id'> = {
+        name,
+        email,
+        role: userRole,
+        avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
+        paymentMethods: [],
+        transactions: initialTransactions,
+        isBlocked: false,
+        verificationStatus: 'unverified',
+      };
+
+      await setDoc(doc(db, 'users', authUser.uid), newUser);
+      
+      if (userRole === 'freelancer') {
+        await setDoc(doc(db, 'freelancerProfiles', authUser.uid), {
+            userId: authUser.uid,
             skills: [],
             bio: '',
             hourlyRate: 0,
             portfolio: [],
-        }]);
-    } else {
-        setClientProfiles(prev => [...prev, {
-            userId: newId,
+        });
+      } else if (userRole === 'client') {
+        await setDoc(doc(db, 'clientProfiles', authUser.uid), {
+            userId: authUser.uid,
             companyName: name,
             projectsPosted: [],
-        }]);
-    }
+        });
+      }
+      
+      return true;
 
-    setUser(newUser);
-    localStorage.setItem('userId', newUser.id);
-    return true;
+    } catch (error) {
+      console.error("Signup error:", error);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('userId');
+  const logout = async () => {
+    await signOut(auth);
     router.push('/login');
   };
   
   const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.id === userId) {
-            return { ...u, ...userData };
-        }
-        return u;
-    }));
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      await updateDoc(userDocRef, userData);
 
-    if (profileData) {
-        const targetUser = users.find(u => u.id === userId);
-        if (targetUser?.role === 'freelancer') {
-            setFreelancerProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
-        } else if (targetUser?.role === 'client') {
-            setClientProfiles(prev => prev.map(p => p.userId === userId ? { ...p, ...profileData } : p));
+      if (profileData) {
+        const userDoc = await getDoc(userDocRef);
+        const userRole = userDoc.data()?.role;
+        if (userRole === 'freelancer') {
+          await updateDoc(doc(db, 'freelancerProfiles', userId), profileData);
+        } else if (userRole === 'client') {
+          await updateDoc(doc(db, 'clientProfiles', userId), profileData);
         }
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating profile: ", error);
+      return false;
     }
-    return true;
   };
 
   const submitVerification = async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.id === userId) {
-            return { 
-                ...u, 
-                verificationStatus: 'pending',
-                passportOrIdUrl: documents.passportOrIdUrl,
-                businessCertificateUrl: documents.businessCertificateUrl,
-                verificationRejectionReason: undefined, // Clear previous rejection reason
-            };
-        }
-        return u;
-    }));
-    return true;
+    try {
+      await updateDoc(doc(db, 'users', userId), { 
+        verificationStatus: 'pending',
+        passportOrIdUrl: documents.passportOrIdUrl,
+        businessCertificateUrl: documents.businessCertificateUrl || null,
+        verificationRejectionReason: null,
+      });
+      return true;
+    } catch (error) { return false; }
   };
 
   const approveVerification = async (userId: string): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, verificationStatus: 'verified', verificationRejectionReason: undefined } : u
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'users', userId), { verificationStatus: 'verified', verificationRejectionReason: null });
+      return true;
+    } catch (error) { return false; }
   };
 
   const rejectVerification = async (userId: string, reason: string): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, verificationStatus: 'rejected', verificationRejectionReason: reason } : u
-    ));
-    return true;
+    try {
+      await updateDoc(doc(db, 'users', userId), { verificationStatus: 'rejected', verificationRejectionReason: reason });
+      return true;
+    } catch (error) { return false; }
   };
 
   const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
-    const newMethod = { ...method, id: `pm-${Date.now()}` };
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.id === userId) {
-            return { ...u, paymentMethods: [...(u.paymentMethods || []), newMethod] };
-        }
-        return u
-    }));
-    return true;
+    try {
+      const newMethod = { ...method, id: `pm-${Date.now()}` };
+      await updateDoc(doc(db, 'users', userId), { paymentMethods: arrayUnion(newMethod) });
+      return true;
+    } catch (error) { return false; }
   };
 
   const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.id === userId) {
-            return { ...u, paymentMethods: (u.paymentMethods || []).filter(pm => pm.id !== methodId) };
-        }
-        return u;
-    }));
-    return true;
+    if (!user || !user.paymentMethods) return false;
+    try {
+      const methodToRemove = user.paymentMethods.find(pm => pm.id === methodId);
+      if (methodToRemove) {
+        await updateDoc(doc(db, 'users', userId), { paymentMethods: arrayRemove(methodToRemove) });
+      }
+      return true;
+    } catch(error) { return false; }
   };
 
   const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id'>): Promise<boolean> => {
-    const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
-    setUsers(currentUsers => currentUsers.map(u => {
-        if (u.id === userId) {
-            return { ...u, transactions: [...(u.transactions || []), newTransaction] };
-        }
-        return u;
-    }));
-    return true;
+    try {
+      const newTransaction = { ...transaction, id: `txn-${Date.now()}`, date: new Date().toISOString() };
+      await updateDoc(doc(db, 'users', userId), { transactions: arrayUnion(newTransaction) });
+      return true;
+    } catch (error) { return false; }
   };
   
   const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
-    setUsers(currentUsers => currentUsers.map(u => 
-        u.id === userId ? { ...u, isBlocked: !u.isBlocked } : u
-    ));
-    return true;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const currentStatus = userDoc.data()?.isBlocked || false;
+      await updateDoc(doc(db, 'users', userId), { isBlocked: !currentStatus });
+      return true;
+    } catch (error) { return false; }
   };
 
   const deleteUser = async (userId: string): Promise<boolean> => {
-    const userToDelete = users.find(u => u.id === userId);
-    if (!userToDelete) return false;
-
-    setUsers(currentUsers => currentUsers.filter(u => u.id !== userId));
-
-    if (userToDelete.role === 'freelancer') {
-        setFreelancerProfiles(prev => prev.filter(p => p.userId !== userId));
-    } else if (userToDelete.role === 'client') {
-        setClientProfiles(prev => prev.filter(p => p.userId !== userId));
-    }
-
-    return true;
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      // Note: In a real app, you'd also delete the Firebase Auth user and handle cleanup of related data.
+      await deleteDoc(doc(db, 'freelancerProfiles', userId)).catch(() => {});
+      await deleteDoc(doc(db, 'clientProfiles', userId)).catch(() => {});
+      return true;
+    } catch(error) { return false; }
   };
 
   const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };

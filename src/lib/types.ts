@@ -5,7 +5,6 @@ export type User = {
   email: string;
   avatarUrl: string;
   role: 'client' | 'freelancer' | 'admin';
-  password?: string;
   paymentMethods?: PaymentMethod[];
   transactions?: Transaction[];
   isBlocked?: boolean;
