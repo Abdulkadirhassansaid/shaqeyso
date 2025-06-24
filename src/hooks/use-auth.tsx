@@ -172,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       const userForState: User = { id: authUser.uid, ...newUser };
+      setUser(userForState); // Manually set user state to avoid race condition with onAuthStateChanged
       return { success: true, user: userForState };
 
     } catch (error: any) {
