@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { useLocalStorageState } from './use-local-storage-state';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { Job } from '@/lib/types';
-import { mockJobs } from '@/lib/mock-data';
 
 interface JobsContextType {
   jobs: Job[];
@@ -15,74 +15,107 @@ interface JobsContextType {
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
   releasePayment: (jobId: string) => Promise<boolean>;
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
-  deleteJobsByClientId: (clientId: string) => Promise<boolean>;
+  deleteJobsByClientId: (clientId: string) => Promise<boolean>; // This would require a backend function
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
 
 export function JobsProvider({ children }: { children: React.ReactNode }) {
-  const [jobs, setJobs] = useLocalStorageState<Job[]>('all-jobs', mockJobs);
+  const [jobs, setJobs] = React.useState<Job[]>([]);
+
+  React.useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db!, 'jobs'), (snapshot) => {
+        const jobsData = snapshot.docs.map(doc => ({ 
+            ...doc.data(), 
+            id: doc.id,
+            postedDate: doc.data().postedDate?.toDate()?.toISOString() || new Date().toISOString()
+        } as Job));
+        setJobs(jobsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const addJob = async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>): Promise<boolean> => {
-    const newJob: Job = {
-      id: `job-${Date.now()}`,
-      ...jobData,
-      status: 'Open',
-      clientReviewed: false,
-      freelancerReviewed: false,
-      postedDate: new Date().toISOString(),
-    };
-    setJobs(prevJobs => [...prevJobs, newJob]);
-    return true;
+    try {
+        await addDoc(collection(db!, 'jobs'), {
+            ...jobData,
+            status: 'Open',
+            clientReviewed: false,
+            freelancerReviewed: false,
+            postedDate: serverTimestamp(),
+        });
+        return true;
+    } catch(error) {
+        console.error("Error adding job:", error);
+        return false;
+    }
   };
 
   const deleteJob = async (jobId: string): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
-    return true;
+    try {
+        await deleteDoc(doc(db!, 'jobs', jobId));
+        return true;
+    } catch (error) {
+        console.error("Error deleting job:", error);
+        return false;
+    }
   };
 
   const updateJobStatus = async (jobId: string, status: Job['status']): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job =>
-      job.id === jobId ? { ...job, status } : job
-    ));
-    return true;
+    try {
+        await updateDoc(doc(db!, 'jobs', jobId), { status });
+        return true;
+    } catch (error) {
+        console.error("Error updating job status:", error);
+        return false;
+    }
   };
 
   const updateJob = async (jobId: string, jobData: Partial<Omit<Job, 'id'>>): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job =>
-        job.id === jobId ? { ...job, ...jobData } : job
-    ));
-    return true;
+    try {
+        await updateDoc(doc(db!, 'jobs', jobId), jobData);
+        return true;
+    } catch (error) {
+        console.error("Error updating job:", error);
+        return false;
+    }
   };
   
   const hireFreelancerForJob = async (jobId: string, freelancerId: string): Promise<boolean> => {
-      setJobs(prevJobs => prevJobs.map(job => 
-          job.id === jobId ? { ...job, status: 'InProgress', hiredFreelancerId: freelancerId } : job
-      ));
-      return true;
+    try {
+        await updateDoc(doc(db!, 'jobs', jobId), { status: 'InProgress', hiredFreelancerId: freelancerId });
+        return true;
+    } catch (error) {
+        console.error("Error hiring freelancer:", error);
+        return false;
+    }
   }
   
   const releasePayment = async (jobId: string): Promise<boolean> => {
-      setJobs(prevJobs => prevJobs.map(job => 
-          job.id === jobId ? { ...job, status: 'Completed' } : job
-      ));
-      return true;
+    try {
+        await updateDoc(doc(db!, 'jobs', jobId), { status: 'Completed' });
+        return true;
+    } catch (error) {
+        console.error("Error releasing payment:", error);
+        return false;
+    }
   };
 
   const markJobAsReviewed = async (jobId: string, role: 'client' | 'freelancer'): Promise<boolean> => {
-    setJobs(prevJobs => prevJobs.map(job => {
-        if (job.id === jobId) {
-            const fieldToUpdate = role === 'client' ? { clientReviewed: true } : { freelancerReviewed: true };
-            return { ...job, ...fieldToUpdate };
-        }
-        return job;
-    }));
-    return true;
+    try {
+        const fieldToUpdate = role === 'client' ? { clientReviewed: true } : { freelancerReviewed: true };
+        await updateDoc(doc(db!, 'jobs', jobId), fieldToUpdate);
+        return true;
+    } catch (error) {
+        console.error("Error marking job as reviewed:", error);
+        return false;
+    }
   };
 
   const deleteJobsByClientId = async (clientId: string): Promise<boolean> => {
-      setJobs(prev => prev.filter(j => j.clientId !== clientId));
-      return true;
+    console.warn("Deleting jobs by client ID requires a backend function for security.");
+    // Placeholder for batch delete logic, ideally done in a Cloud Function
+    return true;
   }
 
   const value = { jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId };

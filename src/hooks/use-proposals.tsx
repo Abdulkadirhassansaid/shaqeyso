@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { useLocalStorageState } from './use-local-storage-state';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { Proposal } from '@/lib/types';
-import { mockProposals } from '@/lib/mock-data';
 
 interface ProposalsContextType {
   proposals: Proposal[];
@@ -12,52 +12,85 @@ interface ProposalsContextType {
   acceptProposal: (proposalId: string, jobId: string) => Promise<boolean>;
   updateProposal: (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>) => Promise<boolean>;
   deleteProposal: (proposalId: string) => Promise<boolean>;
-  deleteProposalsByJobId: (jobId: string) => Promise<boolean>;
-  deleteProposalsByFreelancerId: (freelancerId: string) => Promise<boolean>;
+  deleteProposalsByJobId: (jobId: string) => Promise<boolean>; // Requires backend function
+  deleteProposalsByFreelancerId: (freelancerId: string) => Promise<boolean>; // Requires backend function
 }
 
 const ProposalsContext = React.createContext<ProposalsContextType | null>(null);
 
 export function ProposalsProvider({ children }: { children: React.ReactNode }) {
-  const [proposals, setProposals] = useLocalStorageState<Proposal[]>('all-proposals', mockProposals);
+  const [proposals, setProposals] = React.useState<Proposal[]>([]);
+
+   React.useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db!, 'proposals'), (snapshot) => {
+        const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
+        setProposals(proposalsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const addProposal = async (proposalData: Omit<Proposal, 'id' | 'status'>): Promise<boolean> => {
-    const newProposal: Proposal = {
-      id: `prop-${Date.now()}`,
-      ...proposalData,
-      status: 'Pending',
-    };
-    setProposals(prev => [...prev, newProposal]);
-    return true;
+    try {
+        await addDoc(collection(db!, 'proposals'), {
+            ...proposalData,
+            status: 'Pending',
+        });
+        return true;
+    } catch(error) {
+        console.error("Error adding proposal:", error);
+        return false;
+    }
   };
   
   const acceptProposal = async (proposalId: string, jobId: string): Promise<boolean> => {
-      setProposals(prev => prev.map(p => {
-          if (p.jobId === jobId) {
-              return p.id === proposalId ? { ...p, status: 'Accepted' } : { ...p, status: 'Rejected' };
-          }
-          return p;
-      }));
-      return true;
+    try {
+        const q = query(collection(db!, 'proposals'), where('jobId', '==', jobId));
+        const snapshot = await getDocs(q);
+        
+        const batch = writeBatch(db!);
+        snapshot.forEach(doc => {
+            if (doc.id === proposalId) {
+                batch.update(doc.ref, { status: 'Accepted' });
+            } else {
+                batch.update(doc.ref, { status: 'Rejected' });
+            }
+        });
+        
+        await batch.commit();
+        return true;
+    } catch(error) {
+        console.error("Error accepting proposal:", error);
+        return false;
+    }
   }
 
   const updateProposal = async (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>): Promise<boolean> => {
-    setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, ...data } : p));
-    return true;
+    try {
+        await updateDoc(doc(db!, 'proposals', proposalId), data);
+        return true;
+    } catch(error) {
+        console.error("Error updating proposal:", error);
+        return false;
+    }
   }
 
   const deleteProposal = async (proposalId: string): Promise<boolean> => {
-      setProposals(prev => prev.filter(p => p.id !== proposalId));
-      return true;
+      try {
+          await deleteDoc(doc(db!, 'proposals', proposalId));
+          return true;
+      } catch (error) {
+          console.error("Error deleting proposal:", error);
+          return false;
+      }
   }
 
   const deleteProposalsByJobId = async (jobId: string): Promise<boolean> => {
-      setProposals(prev => prev.filter(p => p.jobId !== jobId));
+      console.warn("Deleting proposals requires a backend function for security.");
       return true;
   }
 
   const deleteProposalsByFreelancerId = async (freelancerId: string): Promise<boolean> => {
-      setProposals(prev => prev.filter(p => p.freelancerId !== freelancerId));
+      console.warn("Deleting proposals requires a backend function for security.");
       return true;
   }
 

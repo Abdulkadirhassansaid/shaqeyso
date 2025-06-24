@@ -2,36 +2,63 @@
 'use client';
 
 import * as React from 'react';
-import { useLocalStorageState } from './use-local-storage-state';
+import { collection, onSnapshot, addDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { DirectMessage } from '@/lib/types';
-import { mockDirectMessages } from '@/lib/mock-data';
+import { useAuth } from './use-auth';
 
 interface DirectMessagesContextType {
   directMessages: DirectMessage[];
   addDirectMessage: (messageData: Omit<DirectMessage, 'id' | 'timestamp'>) => Promise<boolean>;
-  deleteDirectMessagesForUser: (userId: string) => Promise<boolean>;
+  deleteDirectMessagesForUser: (userId: string) => Promise<boolean>; // This would require a backend function
 }
 
 const DirectMessagesContext = React.createContext<DirectMessagesContextType | null>(null);
 
 export function DirectMessagesProvider({ children }: { children: React.ReactNode }) {
-  const [directMessages, setDirectMessages] = useLocalStorageState<DirectMessage[]>('all-direct-messages', mockDirectMessages);
+  const { user } = useAuth();
+  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
+
+  React.useEffect(() => {
+    if (!user?.id) {
+        setDirectMessages([]);
+        return;
+    };
+
+    const q = query(collection(db!, 'directMessages'), where('participantIds', 'array-contains', user.id));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({ 
+          ...doc.data(), 
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
+      } as DirectMessage));
+      setDirectMessages(messagesData);
+    });
+
+    return () => unsubscribe();
+  }, [user?.id]);
+
 
   const addDirectMessage = async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
     if (!messageData.text?.trim()) {
-        return false; // Do not add empty messages
+        return false;
     }
-    const newMessage: DirectMessage = {
-      id: `dm-${Date.now()}`,
-      ...messageData,
-      timestamp: new Date().toISOString(),
-    };
-    setDirectMessages(prev => [...prev, newMessage]);
-    return true;
+    try {
+        await addDoc(collection(db!, 'directMessages'), {
+            ...messageData,
+            timestamp: serverTimestamp(),
+        });
+        return true;
+    } catch(error) {
+        console.error("Error adding direct message:", error);
+        return false;
+    }
   };
   
   const deleteDirectMessagesForUser = async (userId: string): Promise<boolean> => {
-      setDirectMessages(prev => prev.filter(m => !m.participantIds.includes(userId)));
+      console.warn("Deleting direct messages requires a backend function for security.");
+      // Placeholder for batch delete logic, ideally done in a Cloud Function
       return true;
   }
 

@@ -8,6 +8,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/hooks/use-language';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -25,6 +28,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  if (!isFirebaseConfigured) {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body className="min-h-screen bg-background font-body antialiased">
+            <div className="flex min-h-screen items-center justify-center p-4">
+               <Alert variant="destructive" className="max-w-lg">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Firebase Not Configured</AlertTitle>
+                  <AlertDescription>
+                    Your Firebase environment variables are missing. Please copy the
+                    configuration from your Firebase project settings into the{' '}
+                    <code>.env</code> file in the root of your project and restart the server. The application will not work correctly until this is done.
+                  </AlertDescription>
+                </Alert>
+            </div>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
