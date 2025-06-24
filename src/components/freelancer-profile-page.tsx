@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import type { User, FreelancerProfile, Review } from '@/lib/types';
+import type { User, FreelancerProfile, Review, Service } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
-import { Wand2, X, Camera, Star, BadgeCheck } from 'lucide-react';
+import { Wand2, X, Camera, Star, BadgeCheck, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateFreelancerBio } from '@/app/actions';
 import { LoadingDots } from './loading-dots';
@@ -25,6 +25,9 @@ import { StarRating } from './star-rating';
 import { collection, onSnapshot, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+
 
 interface FreelancerProfilePageProps {
   user: User;
@@ -94,10 +97,19 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [bio, setBio] = React.useState('');
   const [hourlyRate, setHourlyRate] = React.useState(0);
   const [skills, setSkills] = React.useState<string[]>([]);
+  const [services, setServices] = React.useState<Service[]>([]);
   const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
+
+  // State for Service Dialog
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = React.useState(false);
+  const [editingService, setEditingService] = React.useState<Service | null>(null);
+  const [serviceTitle, setServiceTitle] = React.useState('');
+  const [serviceDesc, setServiceDesc] = React.useState('');
+  const [servicePrice, setServicePrice] = React.useState('');
+
 
   React.useEffect(() => {
     if (freelancerProfile) {
@@ -105,6 +117,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         setBio(freelancerProfile.bio || '');
         setHourlyRate(freelancerProfile.hourlyRate || 0);
         setSkills(freelancerProfile.skills || []);
+        setServices(freelancerProfile.services || []);
     }
   }, [user, freelancerProfile]);
 
@@ -184,6 +197,46 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       setIsGeneratingBio(false);
     }
   };
+  
+  const handleEditService = (service: Service) => {
+      setEditingService(service);
+      setServiceTitle(service.title);
+      setServiceDesc(service.description);
+      setServicePrice(String(service.price));
+      setIsServiceDialogOpen(true);
+  };
+  
+  const handleSaveService = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!serviceTitle || !serviceDesc || !servicePrice) {
+          toast({ title: t.missingFieldsTitle, variant: 'destructive' });
+          return;
+      }
+      
+      const newService = {
+          id: editingService?.id || `service-${Date.now()}`,
+          title: serviceTitle,
+          description: serviceDesc,
+          price: Number(servicePrice)
+      };
+
+      if (editingService) {
+          setServices(services.map(s => s.id === editingService.id ? newService : s));
+      } else {
+          setServices([...services, newService]);
+      }
+      
+      setIsServiceDialogOpen(false);
+      setEditingService(null);
+      setServiceTitle('');
+      setServiceDesc('');
+      setServicePrice('');
+  };
+  
+  const handleDeleteService = (serviceId: string) => {
+      setServices(services.filter(s => s.id !== serviceId));
+  }
+
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +246,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         bio,
         hourlyRate,
         skills,
+        services,
     };
     
     const userData = { 
@@ -218,19 +272,18 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   };
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+    <form onSubmit={handleSave} className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
             <Card>
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <CardTitle>{t.freelancerProfileTitle}</CardTitle>
-                    {user.verificationStatus === 'verified' && (
-                        <BadgeCheck className="h-6 w-6 text-primary" />
-                    )}
-                </div>
-                <CardDescription>{t.freelancerProfileDesc}</CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSave}>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <CardTitle>{t.freelancerProfileTitle}</CardTitle>
+                        {user.verificationStatus === 'verified' && (
+                            <BadgeCheck className="h-6 w-6 text-primary" />
+                        )}
+                    </div>
+                    <CardDescription>{t.freelancerProfileDesc}</CardDescription>
+                </CardHeader>
                 <CardContent className="space-y-6">
                 <div className="flex items-center gap-4">
                     <Avatar className="h-24 w-24">
@@ -346,13 +399,102 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     )}
                 </div>
                 </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>{t.myServices}</CardTitle>
+                        <CardDescription>{t.myServicesDesc}</CardDescription>
+                    </div>
+                    <Button type="button" size="sm" onClick={() => setIsServiceDialogOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {t.addService}
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {services.length > 0 ? (
+                            services.map(service => (
+                                <div key={service.id} className="border p-4 rounded-lg flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-semibold">{service.title}</h4>
+                                        <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
+                                        <Badge className="mt-2">${service.price}</Badge>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => handleEditService(service)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>{t.deleteServiceTitle}</AlertDialogTitle>
+                                                    <AlertDialogDescription>{t.deleteServiceDesc}</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteService(service.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">{t.noServicesYet}</p>
+                        )}
+                    </div>
+                </CardContent>
                 <CardFooter>
                     <Button type="submit" disabled={isSaving || isGeneratingBio}>
                         {isSaving ? t.saving : t.saveChanges}
                     </Button>
                 </CardFooter>
-            </form>
             </Card>
+
+            <Dialog open={isServiceDialogOpen} onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setEditingService(null);
+                    setServiceTitle('');
+                    setServiceDesc('');
+                    setServicePrice('');
+                }
+                setIsServiceDialogOpen(isOpen);
+            }}>
+                <DialogContent>
+                    <form onSubmit={handleSaveService}>
+                        <DialogHeader>
+                            <DialogTitle>{editingService ? t.editService : t.addService}</DialogTitle>
+                            <DialogDescription>{editingService ? t.editServiceDesc : t.addServiceDesc}</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="service-title">{t.serviceTitle}</Label>
+                                <Input id="service-title" value={serviceTitle} onChange={e => setServiceTitle(e.target.value)} placeholder={t.serviceTitlePlaceholder} required/>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="service-desc">{t.serviceDescription}</Label>
+                                <Textarea id="service-desc" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder={t.serviceDescPlaceholder} required/>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="service-price">{t.servicePrice}</Label>
+                                <Input id="service-price" type="number" value={servicePrice} onChange={e => setServicePrice(e.target.value)} placeholder="e.g., 150" required />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild><Button type="button" variant="ghost">{t.cancel}</Button></DialogClose>
+                            <Button type="submit">{t.save}</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
         </div>
         
         <div className="md:col-span-1 space-y-6">
@@ -406,6 +548,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                 </CardContent>
             </Card>
         </div>
-    </div>
+    </form>
   );
 }

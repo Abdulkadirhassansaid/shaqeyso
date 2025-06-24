@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -402,12 +402,20 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
       </TabsList>
       <TabsContent value="my-jobs" className="mt-6">
           <Card>
-          <CardHeader>
-              <CardTitle>{t.myJobPostings}</CardTitle>
-              <CardDescription>
-              {t.clientJobDesc}
-              </CardDescription>
-          </CardHeader>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>{t.myJobPostings}</CardTitle>
+                        <CardDescription>{t.clientJobDesc}</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/find-freelancers">
+                            <Search className="mr-2 h-4 w-4" />
+                            {t.findFreelancers}
+                        </Link>
+                    </Button>
+                </div>
+            </CardHeader>
           <CardContent className="space-y-4">
               {clientJobs.map((job) => {
               const status = job.status || 'Open';

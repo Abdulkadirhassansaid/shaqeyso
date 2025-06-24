@@ -45,12 +45,20 @@ export type Proposal = {
   status: 'Pending' | 'Accepted' | 'Rejected';
 };
 
+export type Service = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+};
+
 export type FreelancerProfile = {
   userId: string;
   skills: string[];
   hourlyRate: number;
   bio: string;
   portfolio: string[]; // urls to images
+  services?: Service[];
 };
 
 export type ClientProfile = {

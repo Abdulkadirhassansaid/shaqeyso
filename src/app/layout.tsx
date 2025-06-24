@@ -14,6 +14,10 @@ import { BottomNav } from '@/components/bottom-nav';
 import { LoadingProvider } from '@/hooks/use-loading';
 import { PageLoader } from '@/components/page-loader';
 import { PageProgress } from '@/components/page-progress';
+import { UsersProvider } from '@/hooks/use-users';
+import { JobsProvider } from '@/hooks/use-jobs';
+import { ProposalsProvider } from '@/hooks/use-proposals';
+import { ReviewsProvider } from '@/hooks/use-reviews';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -76,13 +80,21 @@ export default function RootLayout({
           <LanguageProvider>
             <LoadingProvider>
               <AuthProvider>
-                <PageProgress />
-                <PageLoader />
-                <div className="relative flex min-h-screen flex-col">
-                  <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                  <BottomNav />
-                </div>
-                <Toaster />
+                <UsersProvider>
+                  <JobsProvider>
+                    <ProposalsProvider>
+                      <ReviewsProvider>
+                        <PageProgress />
+                        <PageLoader />
+                        <div className="relative flex min-h-screen flex-col">
+                          <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                          <BottomNav />
+                        </div>
+                        <Toaster />
+                      </ReviewsProvider>
+                    </ProposalsProvider>
+                  </JobsProvider>
+                </UsersProvider>
               </AuthProvider>
             </LoadingProvider>
           </LanguageProvider>

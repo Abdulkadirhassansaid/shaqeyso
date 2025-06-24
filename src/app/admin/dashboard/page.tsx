@@ -6,10 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { AdminDashboard } from '@/components/admin-dashboard';
-import { JobsProvider } from '@/hooks/use-jobs';
-import { ProposalsProvider } from '@/hooks/use-proposals';
-import { ReviewsProvider } from '@/hooks/use-reviews';
-import { UsersProvider } from '@/hooks/use-users';
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -35,15 +31,7 @@ export default function AdminPage() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <UsersProvider>
-          <JobsProvider>
-            <ProposalsProvider>
-              <ReviewsProvider>
-                <AdminDashboard />
-              </ReviewsProvider>
-            </ProposalsProvider>
-          </JobsProvider>
-        </UsersProvider>
+        <AdminDashboard />
       </main>
     </div>
   );

@@ -45,6 +45,7 @@ export const translations = {
         inEscrow: 'in Escrow',
         posted: 'Posted',
         view: 'View',
+        myAccount: "My Account",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -342,8 +343,6 @@ export const translations = {
         proposalSubmittedDesc: 'Your proposal has been successfully sent to the client.',
         submissionFailed: 'Submission Failed',
         submissionFailedDesc: 'There was an error submitting your proposal. Please try again.',
-        proposalGenFailed: 'Generation Failed',
-        proposalGenFailedDesc: 'Could not generate proposal at this time.',
         missingProposalFields: 'Please provide a cover letter and your hourly rate.',
 
         // Client Profile
@@ -470,6 +469,35 @@ export const translations = {
         verificationRejectedDesc: "The user's submission has been rejected.",
         searchUsersPlaceholder: 'Search by name or email...',
         noUsersFound: 'No users found.',
+
+        // New Freelancer Marketplace
+        findFreelancers: 'Find Freelancers',
+        findFreelancersDesc: "Browse our community of talented freelancers.",
+        searchFreelancersPlaceholder: "Search by name, skill, or title...",
+        level: "Level",
+        new: "New",
+        risingTalent: "Rising Talent",
+        topRated: "Top Rated",
+        noFreelancersFound: "No freelancers match your search.",
+        viewProfile: "View Profile",
+        contact: "Contact",
+        reviews: "reviews",
+        freelancerDetails: "Freelancer Details",
+        requestQuote: "Request a Quote",
+        myServices: "My Services",
+        myServicesDesc: "Define the specific services you offer to clients.",
+        addService: "Add Service",
+        noServicesYet: "You haven't added any services yet.",
+        editService: "Edit Service",
+        deleteServiceTitle: "Delete this service?",
+        deleteServiceDesc: "This will permanently remove the service from your profile.",
+        editServiceDesc: "Update the details of your service.",
+        addServiceDesc: "Describe the service you are offering.",
+        serviceTitle: "Service Title",
+        serviceTitlePlaceholder: "e.g., Modern Logo Design",
+        serviceDescription: "Service Description",
+        serviceDescPlaceholder: "Describe what's included in this service...",
+        servicePrice: "Service Price ($)",
     },
     so: {
         // General
@@ -516,6 +544,7 @@ export const translations = {
         inEscrow: 'Escrow ku jira',
         posted: 'La soo geliyay',
         view: 'Arag',
+        myAccount: "Akoonkayga",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -813,8 +842,6 @@ export const translations = {
         proposalSubmittedDesc: 'Codsigaaga si guul leh ayaa loogu diray macmiilka.',
         submissionFailed: 'Gudbintu Waa Fashilantay',
         submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay codsigaaga.',
-        proposalGenFailed: 'Abuuritaanku Waa Fashilmay',
-        proposalGenFailedDesc: 'Waqtigan xaadirka ah lama abuuri karin codsiga.',
         missingProposalFields: 'Fadlan bixi warqad codsi iyo qiimahaaga saacaddii.',
 
         // Client Profile
@@ -941,6 +968,35 @@ export const translations = {
         verificationRejectedDesc: "Gudbinta isticmaalaha waa la diiday.",
         searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
         noUsersFound: 'Lama helin isticmaaleyaal.',
+
+        // New Freelancer Marketplace
+        findFreelancers: 'Raadi Shaqaale Madaxbanaan',
+        findFreelancersDesc: "Dhex baadho bulshadeena shaqaalaha madaxbannaan ee kartida leh.",
+        searchFreelancersPlaceholder: "Ku raadi magac, xirfad, ama cinwaan...",
+        level: "Heerka",
+        new: "Cusub",
+        risingTalent: "Karti soo Koraysa",
+        topRated: "Heer Sare",
+        noFreelancersFound: "Ma jiraan shaqaale madaxbannaan oo u dhigma raadintaada.",
+        viewProfile: "Eeg Bogga",
+        contact: "La xiriir",
+        reviews: "faallooyin",
+        freelancerDetails: "Faahfaahinta Shaqaale Madaxbanaan",
+        requestQuote: "Codso Qiime",
+        myServices: "Adeegyadayda",
+        myServicesDesc: "Qeex adeegyada gaarka ah ee aad siiso macaamiisha.",
+        addService: "Kudar Adeeg",
+        noServicesYet: "Weli wax adeegyo ah ma aadan ku darin.",
+        editService: "Wax ka Beddel Adeegga",
+        deleteServiceTitle: "Tirtir adeeggan?",
+        deleteServiceDesc: "Tani waxay si joogto ah adeegga uga saari doontaa boggaaga.",
+        editServiceDesc: "Cusbooneysii faahfaahinta adeeggaaga.",
+        addServiceDesc: "Sharax adeegga aad bixinayso.",
+        serviceTitle: "Magaca Adeegga",
+        serviceTitlePlaceholder: "Tusaale, Naqshad Logo Casri ah",
+        serviceDescription: "Sharaxaadda Adeegga",
+        serviceDescPlaceholder: "Sharax waxa ku jira adeeggan...",
+        servicePrice: "Qiimaha Adeegga ($)",
     }
 };
 
