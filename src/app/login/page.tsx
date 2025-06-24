@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -19,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
-import { ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
@@ -129,11 +127,6 @@ export default function LoginPage() {
 
       {/* Mobile View */}
       <div className="md:hidden flex h-full w-full flex-col p-4">
-        <div className="flex-none">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </div>
         <div className="flex-grow flex flex-col justify-center">
           <h1 className="text-3xl font-bold mb-8">Email Login</h1>
           <form onSubmit={handleLogin} className="space-y-6">
