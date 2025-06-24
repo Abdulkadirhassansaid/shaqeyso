@@ -174,25 +174,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const updateUserProfile = React.useCallback(async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
         if (!db) return false;
         try {
+            const batch = writeBatch(db);
+
             // Update the main user document only if there's data for it
             if (userData && Object.keys(userData).length > 0) {
                 const userRef = doc(db, 'users', userId);
-                await updateDoc(userRef, userData);
+                batch.update(userRef, userData);
             }
 
             // Update the specific profile document (freelancer or client) if there's data for it
             if (profileData && Object.keys(profileData).length > 0) {
-                const userDoc = await getDoc(doc(db, 'users', userId));
-                if (!userDoc.exists()) {
-                    console.error("User document not found for profile update");
-                    return false;
+                const userDocSnap = await getDoc(doc(db, 'users', userId));
+                if (userDocSnap.exists()) {
+                    const user = userDocSnap.data() as User;
+                    const profileCollection = user.role === 'freelancer' ? 'freelancerProfiles' : 'clientProfiles';
+                    const profileRef = doc(db, profileCollection, userId);
+                    batch.set(profileRef, profileData, { merge: true });
                 }
-                const user = userDoc.data() as User;
-                const profileCollection = user.role === 'freelancer' ? 'freelancerProfiles' : 'clientProfiles';
-                const profileRef = doc(db, profileCollection, userId);
-                await setDoc(profileRef, profileData, { merge: true });
             }
-            
+
+            await batch.commit();
             return true;
         } catch (error) {
             console.error("Error updating profile:", error);

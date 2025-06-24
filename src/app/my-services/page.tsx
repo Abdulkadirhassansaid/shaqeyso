@@ -148,6 +148,7 @@ export default function MyServicesPage() {
     setServiceDesc(service.description);
     setServicePrice(String(service.price));
     setServiceImages(service.images || []);
+    setServiceFiles([]);
     setIsServiceDialogOpen(true);
   };
 
@@ -193,7 +194,7 @@ export default function MyServicesPage() {
 
     if (success) {
       toast({
-        title: 'Services Updated',
+        title: editingService ? 'Service Updated' : 'Service Added',
         description: 'Your list of services has been saved.',
       });
       setIsServiceDialogOpen(false);
@@ -239,6 +240,7 @@ export default function MyServicesPage() {
       setServiceImages((prev) => prev.filter((url) => url !== value));
     }
   };
+
   const resetServiceDialog = () => {
     setEditingService(null);
     setServiceTitle('');
@@ -424,6 +426,18 @@ export default function MyServicesPage() {
                       />
                     )}
                   </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="service-price">{t.servicePrice}</Label>
+                    <Input
+                      id="service-price"
+                      type="number"
+                      value={servicePrice}
+                      onChange={(e) => setServicePrice(e.target.value)}
+                      placeholder="e.g., 150"
+                      required
+                      disabled={isServiceSaving}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="service-images">{t.serviceImages}</Label>
                     <Button
@@ -484,18 +498,6 @@ export default function MyServicesPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="service-price">{t.servicePrice}</Label>
-                    <Input
-                      id="service-price"
-                      type="number"
-                      value={servicePrice}
-                      onChange={(e) => setServicePrice(e.target.value)}
-                      placeholder="e.g., 150"
-                      required
-                      disabled={isServiceSaving}
-                    />
                   </div>
                 </div>
                 <DialogFooter>

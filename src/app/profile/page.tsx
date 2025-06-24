@@ -30,7 +30,7 @@ export default function ProfilePage() {
   const menuItems = [
     { label: t.profile, href: '/profile/edit', icon: UserIcon, roles: ['client', 'freelancer', 'admin'] },
     { label: t.myServices, href: '/my-services', icon: Briefcase, roles: ['freelancer'] },
-    { label: t.billing, href: '/billing', icon: CreditCard, roles: ['client', 'freelancer', 'admin'] },
+    { label: t.billing, href: '/billing', icon: CreditCard, roles: ['client', 'freelancer'] },
     { label: t.settings, href: '/settings', icon: Settings, roles: ['client', 'freelancer', 'admin'] },
   ];
   
