@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -13,11 +14,6 @@ import { DirectChatDialog } from './direct-chat-dialog';
 
 export default function Header() {
   const { t } = useLanguage();
-  const { user, users } = useAuth();
-  const [chattingWith, setChattingWith] = React.useState<User | null>(null);
-
-  const adminUser = users.find(u => u.role === 'admin');
-  const canChat = user && user.role !== 'admin' && adminUser;
 
   return (
     <>
@@ -31,24 +27,11 @@ export default function Header() {
           </Link>
           <div className="flex flex-1 items-center justify-end space-x-2">
             <nav className="flex items-center space-x-1">
-              {canChat && (
-                <Button variant="ghost" size="icon" onClick={() => setChattingWith(adminUser)}>
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="sr-only">Chat with Admin</span>
-                </Button>
-              )}
               <UserNav />
             </nav>
           </div>
         </div>
       </header>
-      {chattingWith && (
-        <DirectChatDialog
-          otherUser={chattingWith}
-          isOpen={!!chattingWith}
-          onClose={() => setChattingWith(null)}
-        />
-      )}
     </>
   );
 }

@@ -15,6 +15,7 @@ import { MessagesProvider } from '@/hooks/use-messages';
 import { ReviewsProvider } from '@/hooks/use-reviews';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UsersProvider } from '@/hooks/use-users';
 
 export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
@@ -50,30 +51,32 @@ export default function ShaqeysoHubApp() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <JobsProvider key={`jobs-${user.id}`}>
-          <ProposalsProvider key={`proposals-${user.id}`}>
-            <MessagesProvider key={`messages-${user.id}`}>
-              <ReviewsProvider>
-                {user.role === 'client' && <ClientDashboard user={user} />}
-                {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
-                {user.role === 'admin' && (
-                  <Card className="max-w-md mx-auto mt-10">
-                    <CardHeader className="text-center">
-                      <CardTitle>Welcome, Admin!</CardTitle>
-                      <CardDescription>You have logged in to the user dashboard.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center">
-                      <p className="text-muted-foreground">Your administrative tools are in a separate dashboard.</p>
-                      <Button asChild className="mt-4">
-                        <Link href="/admin/dashboard">Go to Admin Dashboard</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </ReviewsProvider>
-            </MessagesProvider>
-          </ProposalsProvider>
-        </JobsProvider>
+        <UsersProvider>
+          <JobsProvider key={`jobs-${user.id}`}>
+            <ProposalsProvider key={`proposals-${user.id}`}>
+              <MessagesProvider key={`messages-${user.id}`}>
+                <ReviewsProvider>
+                  {user.role === 'client' && <ClientDashboard user={user} />}
+                  {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
+                  {user.role === 'admin' && (
+                    <Card className="max-w-md mx-auto mt-10">
+                      <CardHeader className="text-center">
+                        <CardTitle>Welcome, Admin!</CardTitle>
+                        <CardDescription>You have logged in to the user dashboard.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-center">
+                        <p className="text-muted-foreground">Your administrative tools are in a separate dashboard.</p>
+                        <Button asChild className="mt-4">
+                          <Link href="/admin/dashboard">Go to Admin Dashboard</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </ReviewsProvider>
+              </MessagesProvider>
+            </ProposalsProvider>
+          </JobsProvider>
+        </UsersProvider>
       </main>
     </div>
   );

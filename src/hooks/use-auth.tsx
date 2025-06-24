@@ -35,7 +35,6 @@ interface AuthContextType {
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
-  users: User[];
   addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
   removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
@@ -51,20 +50,7 @@ const AuthContext = React.createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
-    const [users, setUsers] = React.useState<User[]>([]);
     const router = useRouter();
-
-    React.useEffect(() => {
-        if (!db) return;
-        const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-            const usersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
-            setUsers(usersData);
-        });
-
-        return () => {
-            unsubUsers();
-        };
-    }, []);
 
     React.useEffect(() => {
         if (!auth || !db) {
@@ -192,7 +178,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await updateDoc(userRef, userData);
 
             if (profileData) {
-                const userToUpdate = users.find(u => u.id === userId);
+                const userDoc = await getDoc(userRef);
+                const userToUpdate = userDoc.data() as User;
                 const profileCollection = userToUpdate?.role === 'freelancer' ? 'freelancerProfiles' : 'clientProfiles';
                 if (userToUpdate) {
                      await setDoc(doc(db, profileCollection, userId), profileData, { merge: true });
@@ -324,7 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const value = { user, isLoading, login, logout, signup, updateUserProfile, users, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
+    const value = { user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

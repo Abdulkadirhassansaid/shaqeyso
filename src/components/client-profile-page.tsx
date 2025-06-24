@@ -17,22 +17,25 @@ import { useReviews } from '@/hooks/use-reviews';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { StarRating } from './star-rating';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Skeleton } from './ui/skeleton';
 
 interface ClientProfilePageProps {
   user: User;
 }
 
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
-  const { updateUserProfile, users } = useAuth();
+  const { updateUserProfile } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useLanguage();
   
   const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
-  
+  const [reviewers, setReviewers] = React.useState<User[]>([]);
+  const [isLoadingReviewers, setIsLoadingReviewers] = React.useState(true);
+
   React.useEffect(() => {
     if (!db) return;
     const unsub = onSnapshot(collection(db, 'clientProfiles'), (snapshot) => {
@@ -47,6 +50,33 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const averageRating = clientReviews.length > 0
     ? clientReviews.reduce((acc, r) => acc + r.rating, 0) / clientReviews.length
     : 0;
+
+  React.useEffect(() => {
+    const fetchReviewers = async () => {
+        if (clientReviews.length === 0 || !db) {
+            setIsLoadingReviewers(false);
+            return;
+        };
+
+        const reviewerIds = [...new Set(clientReviews.map(r => r.reviewerId))];
+        
+        if (reviewerIds.length > 0) {
+            try {
+                // Firestore 'in' query is limited to 30 items. For more, you'd need multiple queries.
+                const q = query(collection(db, "users"), where("id", "in", reviewerIds.slice(0, 30)));
+                const querySnapshot = await getDocs(q);
+                const fetchedReviewers = querySnapshot.docs.map(d => d.data() as User);
+                setReviewers(fetchedReviewers);
+            } catch (error) {
+                console.error("Error fetching reviewers:", error);
+            }
+        }
+        setIsLoadingReviewers(false);
+    };
+
+    fetchReviewers();
+  }, [clientReviews]);
+
 
   const [companyName, setCompanyName] = React.useState(user.name);
   const [avatar, setAvatar] = React.useState<string | null>(null);
@@ -164,27 +194,34 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
                               <p className="text-sm text-muted-foreground">({clientReviews.length} {t.ratingsAndReviews.toLowerCase()})</p>
                           </div>
                           <Separator />
-                          <div className="space-y-4 max-h-96 overflow-y-auto">
-                              {clientReviews.map(review => {
-                                  const reviewer = users.find(u => u.id === review.reviewerId);
-                                  return (
-                                      <div key={review.id} className="space-y-2">
-                                          <div className="flex items-center gap-2">
-                                              <Avatar className="h-8 w-8">
-                                                  <AvatarImage src={reviewer?.avatarUrl} />
-                                                  <AvatarFallback>{reviewer?.name.charAt(0)}</AvatarFallback>
-                                              </Avatar>
-                                              <div>
-                                                  <p className="text-sm font-medium">{reviewer?.name}</p>
-                                                  <StarRating rating={review.rating} />
+                           {isLoadingReviewers ? (
+                                <div className="space-y-4">
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                           ) : (
+                              <div className="space-y-4 max-h-96 overflow-y-auto">
+                                  {clientReviews.map(review => {
+                                      const reviewer = reviewers.find(u => u.id === review.reviewerId);
+                                      return (
+                                          <div key={review.id} className="space-y-2">
+                                              <div className="flex items-center gap-2">
+                                                  <Avatar className="h-8 w-8">
+                                                      <AvatarImage src={reviewer?.avatarUrl} />
+                                                      <AvatarFallback>{reviewer?.name.charAt(0)}</AvatarFallback>
+                                                  </Avatar>
+                                                  <div>
+                                                      <p className="text-sm font-medium">{reviewer?.name}</p>
+                                                      <StarRating rating={review.rating} />
+                                                  </div>
                                               </div>
+                                              <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
+                                              <p className="text-xs text-muted-foreground text-right">{format(new Date(review.date), 'dd MMM yyyy')}</p>
                                           </div>
-                                          <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
-                                          <p className="text-xs text-muted-foreground text-right">{format(new Date(review.date), 'dd MMM yyyy')}</p>
-                                      </div>
-                                  );
-                              })}
-                          </div>
+                                      );
+                                  })}
+                              </div>
+                           )}
                       </div>
                   ) : (
                       <p className="text-sm text-muted-foreground text-center">{t.noReviewsYet}</p>

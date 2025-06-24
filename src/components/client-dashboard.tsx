@@ -34,6 +34,7 @@ import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useUsers } from '@/hooks/use-users';
 
 
 interface ClientDashboardProps {
@@ -51,7 +52,8 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
-  const { users: allUsers, addTransaction } = useAuth();
+  const { users: allUsers } = useUsers();
+  const { addTransaction } = useAuth();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);

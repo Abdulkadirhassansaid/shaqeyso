@@ -20,6 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useDirectMessages } from '@/hooks/use-direct-messages';
+import { useUsers } from '@/hooks/use-users';
 
 interface DirectChatDialogProps {
   otherUser: User;
@@ -28,7 +29,8 @@ interface DirectChatDialogProps {
 }
 
 export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialogProps) {
-  const { user: currentUser, users } = useAuth();
+  const { user: currentUser } = useAuth();
+  const { users } = useUsers();
   const { directMessages, addDirectMessage } = useDirectMessages();
   const { t } = useLanguage();
 

@@ -45,6 +45,7 @@ import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useUsers } from '@/hooks/use-users';
 
 
 interface FreelancerDashboardProps {
@@ -59,7 +60,7 @@ type RecommendedJob = Job & {
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const { jobs, markJobAsReviewed } = useJobs();
   const { proposals, deleteProposal } = useProposals();
-  const { users: allUsers } = useAuth();
+  const { users: allUsers } = useUsers();
   const { toast } = useToast();
   const { addReview } = useReviews();
   

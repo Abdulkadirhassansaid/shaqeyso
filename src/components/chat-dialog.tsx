@@ -21,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send, Paperclip, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { useUsers } from '@/hooks/use-users';
 
 interface ChatDialogProps {
   job: Job;
@@ -31,7 +32,7 @@ interface ChatDialogProps {
 export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
   const { user } = useAuth();
   const { messages, addMessage } = useMessages();
-  const { users } = useAuth();
+  const { users } = useUsers();
   const { t } = useLanguage();
 
   const [newMessage, setNewMessage] = React.useState('');

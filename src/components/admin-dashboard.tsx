@@ -49,9 +49,12 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useLocalStorageState } from '@/hooks/use-local-storage-state';
 import Image from 'next/image';
 import { Textarea } from './ui/textarea';
+import { useUsers } from '@/hooks/use-users';
+import { Skeleton } from './ui/skeleton';
 
 export function AdminDashboard() {
-  const { users, toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
+  const { toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
+  const { users, isUsersLoading } = useUsers();
   const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
   const { deleteMessagesByJobId } = useMessages();
@@ -309,6 +312,21 @@ export function AdminDashboard() {
       user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
     );
+    
+  if (isUsersLoading) {
+    return (
+        <div className="space-y-4">
+            <Skeleton className="h-10 w-1/4" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+            </div>
+            <Skeleton className="h-96 w-full" />
+        </div>
+    )
+  }
 
   return (
     <div>
