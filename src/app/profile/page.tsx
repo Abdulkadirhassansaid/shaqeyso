@@ -6,12 +6,11 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Settings, CreditCard, LogOut, User as UserIcon } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
+import { PageLoader } from '@/components/page-loader';
 
 export default function ProfilePage() {
   const { user, isLoading, logout } = useAuth();
@@ -26,17 +25,7 @@ export default function ProfilePage() {
   }, [isLoading, user, router, pathname]);
 
   if (isLoading || !user) {
-    return (
-      <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-        </main>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const menuItems = [

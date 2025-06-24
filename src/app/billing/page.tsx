@@ -5,7 +5,6 @@ import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -22,6 +21,7 @@ import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { PageLoader } from '@/components/page-loader';
 
 export default function BillingPage() {
   const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } = useAuth();
@@ -48,17 +48,7 @@ export default function BillingPage() {
   }, [isLoading, user, router, pathname]);
   
   if (isLoading || !user) {
-    return (
-      <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-1/4" />
-            <Skeleton className="h-[400px] w-full" />
-          </div>
-        </main>
-      </div>
-    );
+    return <PageLoader />;
   }
   
   const balance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);

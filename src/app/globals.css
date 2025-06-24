@@ -65,3 +65,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* NProgress Customization */
+#nprogress .bar {
+  display: none;
+}
+
+#nprogress .peg {
+  display: none;
+}
+
+#nprogress .spinner {
+  display: block;
+  position: fixed;
+  z-index: 1031;
+  top: 50%;
+  left: 50%;
+  margin-top: -18px; /* half of height */
+  margin-left: -18px; /* half of width */
+}
+
+#nprogress .spinner-icon {
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+
+  border: solid 4px transparent;
+  border-top-color: hsl(var(--primary));
+  border-left-color: hsl(var(--primary));
+  border-radius: 50%;
+
+  -webkit-animation: nprogress-spinner 400ms linear infinite;
+  animation: nprogress-spinner 400ms linear infinite;
+}
+
+@-webkit-keyframes nprogress-spinner {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+@keyframes nprogress-spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

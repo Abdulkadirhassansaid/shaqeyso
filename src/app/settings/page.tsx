@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -29,6 +28,7 @@ import type { Language } from '@/lib/translations';
 import { useLanguage } from '@/hooks/use-language';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft } from 'lucide-react';
+import { PageLoader } from '@/components/page-loader';
 
 export default function SettingsPage() {
   const { user, isLoading, logout } = useAuth();
@@ -80,17 +80,7 @@ export default function SettingsPage() {
   }
 
   if (isLoading || !user) {
-    return (
-      <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-1/4" />
-            <Skeleton className="h-[500px] w-full" />
-          </div>
-        </main>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

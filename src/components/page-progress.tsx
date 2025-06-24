@@ -10,46 +10,50 @@ export function PageProgress() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // When the path changes, we're done with the navigation, so we stop the progress bar.
+    // When a new page is loaded, the navigation is done, so we stop the progress indicator.
     NProgress.done();
   }, [pathname, searchParams]);
 
   useEffect(() => {
-    // This effect runs only once on the client to set up the event listeners.
-    NProgress.configure({ showSpinner: false });
+    // This effect runs once on the client to set up event listeners for NProgress.
+    NProgress.configure({ showSpinner: true }); // The spinner is styled via globals.css
 
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    // A function to start the progress bar.
-    const handleStart = () => {
-      NProgress.start();
+    const handleAnchorClick = (event: MouseEvent) => {
+      const target = (event.target as HTMLElement).closest('a');
+      
+      // Check if the click is on a valid anchor, for an internal navigation,
+      // and not a command-click or special click.
+      if (
+        target &&
+        target.href &&
+        target.target !== '_blank' &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        new URL(target.href).origin === window.location.origin
+      ) {
+        const currentUrl = new URL(location.href);
+        const targetUrl = new URL(target.href);
+        if (targetUrl.pathname !== currentUrl.pathname) {
+          NProgress.start();
+        }
+      }
     };
 
-    // We patch the history methods to trigger the progress bar on navigation.
-    history.pushState = function (...args) {
-      handleStart();
-      originalPushState.apply(history, args);
-    };
+    // Listen for clicks on the document to capture navigation initiated by <Link> components.
+    document.addEventListener('click', handleAnchorClick);
     
-    // We don't start the progress on `replaceState` as it's often used for non-navigational URL updates.
-    history.replaceState = function(...args) {
-      originalReplaceState.apply(history, args);
-    }
-
-    // Listen for the browser's back/forward buttons.
+    // Also listen for browser back/forward button clicks
     const handlePopState = () => {
-      handleStart();
+      NProgress.start();
     };
     window.addEventListener('popstate', handlePopState);
 
-    // The cleanup function restores the original history methods when the component unmounts.
+    // Cleanup function to remove event listeners when the component unmounts.
     return () => {
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
+      document.removeEventListener('click', handleAnchorClick);
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
-  return null; // NProgress injects its own DOM elements, so this component renders nothing.
+  return null; // NProgress injects its own DOM elements into the body.
 }

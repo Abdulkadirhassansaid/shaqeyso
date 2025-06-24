@@ -12,6 +12,7 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
+import { PageProgress } from '@/components/page-progress';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <DirectMessagesProvider>
+                <PageProgress />
                 <div className="relative flex min-h-screen flex-col">
                   <main className="flex-1 pb-20 md:pb-0">{children}</main>
                   <BottomNav />
