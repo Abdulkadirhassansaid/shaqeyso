@@ -19,20 +19,27 @@ function TopProgressBar() {
     let timer: NodeJS.Timeout | null = null;
 
     const start = () => {
-      setIsVisible(true);
-      setProgress(0);
+      // Clear any existing timer to avoid race conditions on rapid navigation
       if (timer) clearInterval(timer);
-      
-      // Fake progress animation
-      timer = setInterval(() => {
-        setProgress(p => {
-          if (p >= 90) {
-            if (timer) clearInterval(timer);
-            return p;
-          }
-          return p + 5 * Math.random();
-        });
-      }, 200);
+
+      // By wrapping the state updates in a timeout, we push them to the next
+      // event loop tick. This prevents the "useInsertionEffect must not schedule updates"
+      // error that occurs when Next.js navigation triggers a synchronous state update.
+      setTimeout(() => {
+        setIsVisible(true);
+        setProgress(0);
+        
+        // Fake progress animation
+        timer = setInterval(() => {
+          setProgress(p => {
+            if (p >= 90) {
+              if (timer) clearInterval(timer);
+              return p;
+            }
+            return p + 5 * Math.random();
+          });
+        }, 200);
+      }, 0);
     };
 
     const done = () => {
