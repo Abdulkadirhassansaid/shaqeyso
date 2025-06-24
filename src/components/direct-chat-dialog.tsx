@@ -13,14 +13,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import type { User } from '@/lib/types';
+import type { User, DirectMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
-import { useDirectMessages } from '@/hooks/use-direct-messages';
 import { useUsers } from '@/hooks/use-users';
+import { collection, onSnapshot, addDoc, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface DirectChatDialogProps {
   otherUser: User;
@@ -31,17 +32,60 @@ interface DirectChatDialogProps {
 export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialogProps) {
   const { user: currentUser } = useAuth();
   const { users } = useUsers();
-  const { directMessages, addDirectMessage } = useDirectMessages();
   const { t } = useLanguage();
+  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
 
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
+  React.useEffect(() => {
+    if (!currentUser?.id || !otherUser.id || !db) {
+        setDirectMessages([]);
+        return;
+    };
+
+    const q = query(
+        collection(db, 'directMessages'), 
+        where('participantIds', 'array-contains', currentUser.id),
+        orderBy('timestamp', 'asc')
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({ 
+          ...doc.data(), 
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
+      } as DirectMessage));
+      setDirectMessages(messagesData);
+    }, (error) => {
+        console.error("Error fetching direct messages:", error);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser?.id, otherUser.id]);
+
+
+  const addDirectMessage = React.useCallback(async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
+    if (!messageData.text?.trim() || !db) {
+        return false;
+    }
+    try {
+        await addDoc(collection(db, 'directMessages'), {
+            ...messageData,
+            timestamp: serverTimestamp(),
+        });
+        return true;
+    } catch(error) {
+        console.error("Error adding direct message:", error);
+        return false;
+    }
+  }, []);
+
   if (!currentUser) return null;
 
   const conversationMessages = directMessages.filter((m) => {
-    return m.participantIds.includes(currentUser.id) && m.participantIds.includes(otherUser.id);
-  }).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    return m.participantIds.includes(otherUser.id);
+  });
 
   const dialogTitle = `${t.chatWith} ${otherUser.name}`;
   
@@ -50,7 +94,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
     if (!newMessage.trim() || !currentUser) return;
     
     addDirectMessage({
-      participantIds: [currentUser.id, otherUser.id],
+      participantIds: [currentUser.id, otherUser.id].sort(),
       senderId: currentUser.id,
       text: newMessage,
     });

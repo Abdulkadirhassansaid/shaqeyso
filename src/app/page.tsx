@@ -10,7 +10,6 @@ import { ClientDashboard } from '@/components/client-dashboard';
 import { FreelancerDashboard } from '@/components/freelancer-dashboard';
 import { JobsProvider } from '@/hooks/use-jobs';
 import { ProposalsProvider } from '@/hooks/use-proposals';
-import { MessagesProvider } from '@/hooks/use-messages';
 import { ReviewsProvider } from '@/hooks/use-reviews';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,26 +39,24 @@ export default function ShaqeysoHubApp() {
         <UsersProvider>
           <JobsProvider key={`jobs-${user.id}`}>
             <ProposalsProvider key={`proposals-${user.id}`}>
-              <MessagesProvider key={`messages-${user.id}`}>
-                <ReviewsProvider>
-                  {user.role === 'client' && <ClientDashboard user={user} />}
-                  {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
-                  {user.role === 'admin' && (
-                    <Card className="max-w-md mx-auto mt-10">
-                      <CardHeader className="text-center">
-                        <CardTitle>Welcome, Admin!</CardTitle>
-                        <CardDescription>You have logged in to the user dashboard.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="text-center">
-                        <p className="text-muted-foreground">Your administrative tools are in a separate dashboard.</p>
-                        <Button asChild className="mt-4">
-                          <Link href="/admin/dashboard">Go to Admin Dashboard</Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </ReviewsProvider>
-              </MessagesProvider>
+              <ReviewsProvider>
+                {user.role === 'client' && <ClientDashboard user={user} />}
+                {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
+                {user.role === 'admin' && (
+                  <Card className="max-w-md mx-auto mt-10">
+                    <CardHeader className="text-center">
+                      <CardTitle>Welcome, Admin!</CardTitle>
+                      <CardDescription>You have logged in to the user dashboard.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-muted-foreground">Your administrative tools are in a separate dashboard.</p>
+                      <Button asChild className="mt-4">
+                        <Link href="/admin/dashboard">Go to Admin Dashboard</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </ReviewsProvider>
             </ProposalsProvider>
           </JobsProvider>
         </UsersProvider>

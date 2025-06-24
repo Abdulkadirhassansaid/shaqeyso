@@ -13,8 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import { useMessages } from '@/hooks/use-messages';
-import type { Job, SubmittedFile } from '@/lib/types';
+import type { Job, SubmittedFile, Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,6 +21,8 @@ import { useLanguage } from './../hooks/use-language';
 import { Send, Paperclip, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { useUsers } from '@/hooks/use-users';
+import { collection, onSnapshot, addDoc, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface ChatDialogProps {
   job: Job;
@@ -31,16 +32,47 @@ interface ChatDialogProps {
 
 export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
   const { user } = useAuth();
-  const { messages, addMessage } = useMessages();
   const { users } = useUsers();
   const { t } = useLanguage();
+  const [messages, setMessages] = React.useState<Message[]>([]);
 
   const [newMessage, setNewMessage] = React.useState('');
   const [files, setFiles] = React.useState<File[]>([]);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const jobMessages = messages.filter((m) => m.jobId === job.id).sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  React.useEffect(() => {
+    if (!job.id || !db) return;
+
+    const q = query(collection(db, 'messages'), where('jobId', '==', job.id), orderBy('timestamp', 'asc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({ 
+          ...doc.data(), 
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
+      } as Message));
+      setMessages(messagesData);
+    });
+
+    return () => unsubscribe();
+  }, [job.id]);
+
+  const addMessage = React.useCallback(async (messageData: Omit<Message, 'id' | 'timestamp'>): Promise<boolean> => {
+    if ((!messageData.text?.trim() && (!messageData.files || messageData.files.length === 0)) || !db) {
+        return false;
+    }
+    try {
+        await addDoc(collection(db, 'messages'), {
+            ...messageData,
+            timestamp: serverTimestamp(),
+        });
+        return true;
+    } catch (error) {
+        console.error("Error adding message:", error);
+        return false;
+    }
+  }, []);
 
   let dialogTitle: string;
   if (user?.role === 'admin') {
@@ -94,7 +126,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [jobMessages, isOpen]);
+  }, [messages, isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,12 +137,12 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
-            {jobMessages.length === 0 ? (
+            {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>{t.noMessagesYet}</p>
                 </div>
             ) : (
-                jobMessages.map((message) => {
+                messages.map((message) => {
                     const senderDetails = users.find(u => u.id === message.senderId);
                     const isSender = message.senderId === user?.id;
                     const isAdminMessage = senderDetails?.role === 'admin';

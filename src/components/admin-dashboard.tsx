@@ -29,8 +29,6 @@ import { ChatDialog } from './chat-dialog';
 import { DirectChatDialog } from './direct-chat-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { useReviews } from '@/hooks/use-reviews';
-import { useDirectMessages } from '@/hooks/use-direct-messages';
-import { useMessages } from '@/hooks/use-messages';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
@@ -55,11 +53,9 @@ import { Skeleton } from './ui/skeleton';
 export function AdminDashboard() {
   const { toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
   const { users, isUsersLoading } = useUsers();
-  const { jobs, deleteJob, deleteJobsByClientId } = useJobs();
+  const { jobs, deleteJob, deleteJobsByClientId, deleteMessagesByJobId } = useJobs();
   const { deleteProposalsByJobId, deleteProposalsByFreelancerId } = useProposals();
-  const { deleteMessagesByJobId } = useMessages();
   const { deleteReviewsByJobId, deleteReviewsForUser } = useReviews();
-  const { deleteDirectMessagesForUser } = useDirectMessages();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
@@ -165,7 +161,7 @@ export function AdminDashboard() {
     
     await Promise.all([
         deleteReviewsForUser(userToDelete.id),
-        deleteDirectMessagesForUser(userToDelete.id),
+        // Direct messages are not deleted here to preserve admin chat history
     ]);
     
     await deleteUser(userToDelete.id);

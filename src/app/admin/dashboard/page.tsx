@@ -7,10 +7,8 @@ import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { AdminDashboard } from '@/components/admin-dashboard';
 import { JobsProvider } from '@/hooks/use-jobs';
-import { MessagesProvider } from '@/hooks/use-messages';
 import { ProposalsProvider } from '@/hooks/use-proposals';
 import { ReviewsProvider } from '@/hooks/use-reviews';
-import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 import { UsersProvider } from '@/hooks/use-users';
 
 export default function AdminPage() {
@@ -39,15 +37,11 @@ export default function AdminPage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <UsersProvider>
           <JobsProvider>
-            <MessagesProvider>
-              <ProposalsProvider>
-                <ReviewsProvider>
-                  <DirectMessagesProvider>
-                    <AdminDashboard />
-                  </DirectMessagesProvider>
-                </ReviewsProvider>
-              </ProposalsProvider>
-            </MessagesProvider>
+            <ProposalsProvider>
+              <ReviewsProvider>
+                <AdminDashboard />
+              </ReviewsProvider>
+            </ProposalsProvider>
           </JobsProvider>
         </UsersProvider>
       </main>

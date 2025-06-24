@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Job } from '@/lib/types';
 
@@ -15,7 +15,8 @@ interface JobsContextType {
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
   releasePayment: (jobId: string) => Promise<boolean>;
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
-  deleteJobsByClientId: (clientId: string) => Promise<boolean>; // This would require a backend function
+  deleteJobsByClientId: (clientId: string) => Promise<boolean>;
+  deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -63,6 +64,22 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
         console.error("Error deleting job:", error);
         return false;
+    }
+  }, []);
+  
+  const deleteMessagesByJobId = React.useCallback(async (jobId: string): Promise<boolean> => {
+    if(!db) return false;
+    console.warn("Deleting messages requires a backend function for security, performing client-side for demo.");
+    try {
+      const q = query(collection(db, "messages"), where("jobId", "==", jobId));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error("Error deleting messages by job id", error);
+      return false;
     }
   }, []);
 
@@ -123,12 +140,22 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteJobsByClientId = React.useCallback(async (clientId: string): Promise<boolean> => {
-    console.warn("Deleting jobs by client ID requires a backend function for security.");
-    // Placeholder for batch delete logic, ideally done in a Cloud Function
-    return true;
+    if(!db) return false;
+    console.warn("Deleting jobs by client ID requires a backend function for security, performing client-side for demo.");
+    try {
+      const q = query(collection(db, "jobs"), where("clientId", "==", clientId));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error("Error deleting jobs by client id", error);
+      return false;
+    }
   }, []);
 
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId]);
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }
