@@ -68,8 +68,8 @@ export default function SignupPage() {
         <CardContent>
             <div className="mx-auto max-w-sm text-center my-4">
                 <Image 
-                  data-ai-hint="woman laptop" 
-                  src="https://placehold.co/300x200.png" 
+                  data-ai-hint="workspace computer" 
+                  src="https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=300&h=200&fit=crop" 
                   alt="Choose a role" 
                   width={300} 
                   height={200}
