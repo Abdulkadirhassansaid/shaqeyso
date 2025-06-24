@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -85,7 +84,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
       console.error('Error generating job description:', error);
       toast({
         title: t.generationFailed,
-        description: t.generationFailedDesc,
+        description: (error as Error).message || t.generationFailedDesc,
         variant: 'destructive',
       });
     } finally {

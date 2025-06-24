@@ -74,7 +74,12 @@ const assistProposalGenerationFlow = ai.defineFlow(
     outputSchema: AssistProposalGenerationOutputSchema,
   },
   async input => {
-    const {output} = await assistProposalGenerationPrompt(input);
-    return output!;
+    try {
+      const {output} = await assistProposalGenerationPrompt(input);
+      return output!;
+    } catch (error) {
+      console.error("AI flow 'assistProposalGenerationFlow' failed:", error);
+      throw new Error("The AI service is currently unavailable. Please try again later.");
+    }
   }
 );

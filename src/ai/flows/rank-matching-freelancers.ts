@@ -59,7 +59,12 @@ const rankMatchingFreelancersFlow = ai.defineFlow(
     outputSchema: RankMatchingFreelancersOutputSchema,
   },
   async input => {
-    const {output} = await rankMatchingFreelancersPrompt(input);
-    return output!;
+    try {
+        const {output} = await rankMatchingFreelancersPrompt(input);
+        return output!;
+    } catch (error) {
+        console.error("AI flow 'rankMatchingFreelancersFlow' failed:", error);
+        throw new Error("The AI service is currently unavailable. Please try again later.");
+    }
   }
 );

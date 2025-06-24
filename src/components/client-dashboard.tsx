@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -206,7 +205,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
       toast({
         variant: "destructive",
         title: t.rankingFailed,
-        description: t.rankingFailedDesc,
+        description: (error as Error).message || t.rankingFailedDesc,
       });
     } finally {
       setIsRanking(false);

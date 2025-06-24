@@ -50,7 +50,12 @@ const generateServiceDescriptionFlow = ai.defineFlow(
     outputSchema: GenerateServiceDescriptionOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (error) {
+      console.error("AI flow 'generateServiceDescriptionFlow' failed:", error);
+      throw new Error("The AI service is currently unavailable. Please try again later.");
+    }
   }
 );

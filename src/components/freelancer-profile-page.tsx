@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -191,7 +190,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       console.error('Error generating freelancer bio:', error);
       toast({
         title: t.generationFailed,
-        description: t.proposalGenFailedDesc, // Re-using translation key
+        description: (error as Error).message || t.generationFailedDesc,
         variant: 'destructive',
       });
     } finally {
@@ -218,7 +217,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       console.error('Error generating service description:', error);
       toast({
         title: t.generationFailed,
-        description: t.generationFailedDesc,
+        description: (error as Error).message || t.generationFailedDesc,
         variant: 'destructive',
       });
     } finally {

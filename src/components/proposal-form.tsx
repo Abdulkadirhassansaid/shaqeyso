@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -55,7 +54,7 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
       console.error('Error generating proposal:', error);
       toast({
         title: t.proposalGenFailed,
-        description: t.proposalGenFailedDesc,
+        description: (error as Error).message || t.proposalGenFailedDesc,
         variant: 'destructive',
       });
     } finally {
