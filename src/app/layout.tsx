@@ -11,6 +11,7 @@ import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { PageProgress } from '@/components/page-progress';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -73,6 +74,7 @@ export default function RootLayout({
           <LanguageProvider>
             <AuthProvider>
               <DirectMessagesProvider>
+                <PageProgress />
                 {children}
                 <Toaster />
               </DirectMessagesProvider>
