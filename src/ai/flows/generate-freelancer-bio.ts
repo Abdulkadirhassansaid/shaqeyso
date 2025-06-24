@@ -39,9 +39,11 @@ const prompt = ai.definePrompt({
   prompt: `You are writing a bio for a freelancer named {{{name}}}.
 Adopt the persona of the freelancer. Write in the first person ("I am...", "My skills include...").
 Use a short, powerful, and human-like tone.
-The bio should be concise and impactful, highlighting key skills.
-Structure the output using bullet points to list key strengths or accomplishments.
-Do not use any markdown formatting like ** for bold text. For any lists, use a hyphen (-).
+The bio should be concise and impactful.
+
+Start with a brief introductory sentence.
+Then, create a list of key strengths or accomplishments using bullet points.
+Use a hyphen (-) for bullet points. Do not use any other markdown formatting like ** for bold text.
 
 Here are the freelancer's details:
 Name: {{{name}}}
