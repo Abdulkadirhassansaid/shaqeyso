@@ -26,8 +26,14 @@ export type GenerateServiceDescriptionOutput = z.infer<
 
 export async function generateServiceDescription(
   input: GenerateServiceDescriptionInput
-): Promise<GenerateServiceDescriptionOutput> {
-  return generateServiceDescriptionFlow(input);
+): Promise<{success: true, data: GenerateServiceDescriptionOutput } | { success: false, error: string }> {
+  try {
+    const result = await generateServiceDescriptionFlow(input);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("AI flow 'generateServiceDescriptionFlow' failed:", error);
+    return { success: false, error: 'AI generation not available now' };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -50,12 +56,7 @@ const generateServiceDescriptionFlow = ai.defineFlow(
     outputSchema: GenerateServiceDescriptionOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await prompt(input);
-      return output!;
-    } catch (error) {
-      console.error("AI flow 'generateServiceDescriptionFlow' failed:", error);
-      throw new Error('AI generation not available now');
-    }
+    const {output} = await prompt(input);
+    return output!;
   }
 );

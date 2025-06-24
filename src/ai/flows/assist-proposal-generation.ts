@@ -36,8 +36,14 @@ export type AssistProposalGenerationOutput = z.infer<
 
 export async function assistProposalGeneration(
   input: AssistProposalGenerationInput
-): Promise<AssistProposalGenerationOutput> {
-  return assistProposalGenerationFlow(input);
+): Promise<{success: true, data: AssistProposalGenerationOutput } | { success: false, error: string }> {
+  try {
+    const result = await assistProposalGenerationFlow(input);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("AI flow 'assistProposalGenerationFlow' failed:", error);
+    return { success: false, error: 'AI generation not available now' };
+  }
 }
 
 const assistProposalGenerationPrompt = ai.definePrompt({
@@ -74,12 +80,7 @@ const assistProposalGenerationFlow = ai.defineFlow(
     outputSchema: AssistProposalGenerationOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await assistProposalGenerationPrompt(input);
-      return output!;
-    } catch (error) {
-      console.error("AI flow 'assistProposalGenerationFlow' failed:", error);
-      throw new Error('AI generation not available now');
-    }
+    const {output} = await assistProposalGenerationPrompt(input);
+    return output!;
   }
 );

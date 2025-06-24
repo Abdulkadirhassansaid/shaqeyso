@@ -26,8 +26,14 @@ export type GenerateJobDescriptionOutput = z.infer<
 
 export async function generateJobDescription(
   input: GenerateJobDescriptionInput
-): Promise<GenerateJobDescriptionOutput> {
-  return generateJobDescriptionFlow(input);
+): Promise<{ success: true, data: GenerateJobDescriptionOutput } | { success: false, error: string }> {
+  try {
+    const result = await generateJobDescriptionFlow(input);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("AI flow 'generateJobDescriptionFlow' failed:", error);
+    return { success: false, error: 'AI generation not available now' };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -50,12 +56,7 @@ const generateJobDescriptionFlow = ai.defineFlow(
     outputSchema: GenerateJobDescriptionOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await prompt(input);
-      return output!;
-    } catch (error) {
-      console.error("AI flow 'generateJobDescriptionFlow' failed:", error);
-      throw new Error('AI generation not available now');
-    }
+    const {output} = await prompt(input);
+    return output!;
   }
 );

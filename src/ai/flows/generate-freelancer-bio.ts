@@ -27,8 +27,14 @@ export type GenerateFreelancerBioOutput = z.infer<
 
 export async function generateFreelancerBio(
   input: GenerateFreelancerBioInput
-): Promise<GenerateFreelancerBioOutput> {
-  return generateFreelancerBioFlow(input);
+): Promise<{ success: true, data: GenerateFreelancerBioOutput } | { success: false, error: string }> {
+  try {
+    const result = await generateFreelancerBioFlow(input);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("AI flow 'generateFreelancerBioFlow' failed:", error);
+    return { success: false, error: 'AI generation not available now' };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -67,12 +73,7 @@ const generateFreelancerBioFlow = ai.defineFlow(
     outputSchema: GenerateFreelancerBioOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await prompt(input);
-      return output!;
-    } catch (error) {
-      console.error("AI flow 'generateFreelancerBioFlow' failed:", error);
-      throw new Error('AI generation not available now');
-    }
+    const {output} = await prompt(input);
+    return output!;
   }
 );

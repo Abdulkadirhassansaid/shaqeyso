@@ -79,7 +79,15 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
       const result = await generateJobDescription({
         prompt: promptRef.current.value,
       });
-      setDescription(result.jobDescription || '');
+      if (result.success) {
+        setDescription(result.data.jobDescription || '');
+      } else {
+        toast({
+            title: t.generationFailed,
+            description: result.error,
+            variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Error generating job description:', error);
       toast({

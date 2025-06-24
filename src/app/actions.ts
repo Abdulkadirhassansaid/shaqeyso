@@ -33,36 +33,36 @@ import {
 
 export async function generateJobDescription(
   input: GenerateJobDescriptionInput
-): Promise<GenerateJobDescriptionOutput> {
+): Promise<{ success: true, data: GenerateJobDescriptionOutput } | { success: false, error: string }> {
   return await genJobDesc(input);
 }
 
 export async function assistProposalGeneration(
   input: AssistProposalGenerationInput
-): Promise<AssistProposalGenerationOutput> {
+): Promise<{ success: true, data: AssistProposalGenerationOutput } | { success: false, error: string }> {
   return await assistProp(input);
 }
 
 export async function rankMatchingFreelancers(
   input: RankMatchingFreelancersInput
-): Promise<RankMatchingFreelancersOutput> {
+): Promise<{ success: true, data: RankMatchingFreelancersOutput } | { success: false, error: string }> {
   return await rankFreelancers(input);
 }
 
 export async function generateFreelancerBio(
   input: GenerateFreelancerBioInput
-): Promise<GenerateFreelancerBioOutput> {
+): Promise<{ success: true, data: GenerateFreelancerBioOutput } | { success: false, error: string }> {
   return await genBio(input);
 }
 
 export async function recommendJobsForFreelancer(
   input: RecommendJobsForFreelancerInput
-): Promise<RecommendJobsForFreelancerOutput> {
+): Promise<{ success: true, data: RecommendJobsForFreelancerOutput } | { success: false, error: string }> {
   return await recommendJobs(input);
 }
 
 export async function generateServiceDescription(
   input: GenerateServiceDescriptionInput
-): Promise<GenerateServiceDescriptionOutput> {
+): Promise<{ success: true, data: GenerateServiceDescriptionOutput } | { success: false, error: string }> {
   return await genServiceDesc(input);
 }

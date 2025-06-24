@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -102,20 +101,25 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
       try {
           const openJobs = jobs.filter(job => job.status === 'Open');
-          const recommendations = await recommendJobsForFreelancer({
+          const result = await recommendJobsForFreelancer({
               freelancerProfile: profileString,
               jobs: openJobs
           });
-
-          const sortedRecommendedJobs = recommendations
-              .sort((a, b) => b.rank - a.rank)
-              .map(rec => {
-                  const fullJob = openJobs.find(job => job.id === rec.jobId);
-                  return fullJob ? { ...fullJob, rank: rec.rank, reason: rec.reason } : null;
-              })
-              .filter((job): job is RecommendedJob => job !== null);
           
-          setRecommendedJobs(sortedRecommendedJobs);
+          if (result.success) {
+            const sortedRecommendedJobs = result.data
+                .sort((a, b) => b.rank - a.rank)
+                .map(rec => {
+                    const fullJob = openJobs.find(job => job.id === rec.jobId);
+                    return fullJob ? { ...fullJob, rank: rec.rank, reason: rec.reason } : null;
+                })
+                .filter((job): job is RecommendedJob => job !== null);
+            
+            setRecommendedJobs(sortedRecommendedJobs);
+          } else {
+            // Silently fail for now, or show a subtle indicator
+            console.error(result.error);
+          }
 
       } catch (error) {
           console.error("Error getting recommendations:", error);

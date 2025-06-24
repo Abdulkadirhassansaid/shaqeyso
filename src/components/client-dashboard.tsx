@@ -193,13 +193,20 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
         freelancerProfiles: freelancerProfilesWithProposals,
       });
 
-      const rankedWithOriginals = result.map(ranked => {
-          const originalProposal = proposals.find(p => p.jobId === job.id && p.coverLetter === ranked.proposal);
-          return { ...ranked, originalProposal };
-      }).filter((item): item is RankedFreelancer => !!item.originalProposal);
+      if (result.success) {
+        const rankedWithOriginals = result.data.map(ranked => {
+            const originalProposal = proposals.find(p => p.jobId === job.id && p.coverLetter === ranked.proposal);
+            return { ...ranked, originalProposal };
+        }).filter((item): item is RankedFreelancer => !!item.originalProposal);
+        setRankedFreelancers(rankedWithOriginals.sort((a, b) => b.rank - a.rank));
+      } else {
+        toast({
+            variant: "destructive",
+            title: t.rankingFailed,
+            description: result.error || t.rankingFailedDesc,
+        });
+      }
 
-
-      setRankedFreelancers(rankedWithOriginals.sort((a, b) => b.rank - a.rank));
     } catch (error) {
       console.error('Error ranking freelancers:', error);
       toast({

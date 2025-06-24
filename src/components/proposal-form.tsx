@@ -49,7 +49,15 @@ export function ProposalForm({ job, freelancerProfile, onFinished, proposalToEdi
         jobDescription: job.description,
         freelancerProfile: freelancerProfile,
       });
-      setCoverLetter(result.proposal);
+      if (result.success) {
+        setCoverLetter(result.data.proposal);
+      } else {
+        toast({
+          title: t.proposalGenFailed,
+          description: result.error,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Error generating proposal:', error);
       toast({

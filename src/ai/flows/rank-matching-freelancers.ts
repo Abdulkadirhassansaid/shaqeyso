@@ -32,8 +32,14 @@ const RankMatchingFreelancersOutputSchema = z.array(
 ).describe('An array of freelancer profiles and their rankings for the job.');
 export type RankMatchingFreelancersOutput = z.infer<typeof RankMatchingFreelancersOutputSchema>;
 
-export async function rankMatchingFreelancers(input: RankMatchingFreelancersInput): Promise<RankMatchingFreelancersOutput> {
-  return rankMatchingFreelancersFlow(input);
+export async function rankMatchingFreelancers(input: RankMatchingFreelancersInput): Promise<{success: true, data: RankMatchingFreelancersOutput } | { success: false, error: string }> {
+  try {
+    const result = await rankMatchingFreelancersFlow(input);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("AI flow 'rankMatchingFreelancersFlow' failed:", error);
+    return { success: false, error: 'AI generation not available now' };
+  }
 }
 
 const rankMatchingFreelancersPrompt = ai.definePrompt({
@@ -59,12 +65,7 @@ const rankMatchingFreelancersFlow = ai.defineFlow(
     outputSchema: RankMatchingFreelancersOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await rankMatchingFreelancersPrompt(input);
-      return output!;
-    } catch (error) {
-      console.error("AI flow 'rankMatchingFreelancersFlow' failed:", error);
-      throw new Error('AI generation not available now');
-    }
+    const {output} = await rankMatchingFreelancersPrompt(input);
+    return output!;
   }
 );

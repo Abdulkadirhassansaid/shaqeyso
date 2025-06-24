@@ -189,7 +189,15 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         name: name,
         skills: skills,
       });
-      setBio(result.bio);
+      if (result.success) {
+        setBio(result.data.bio);
+      } else {
+        toast({
+          title: t.generationFailed,
+          description: result.error,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Error generating freelancer bio:', error);
       toast({
@@ -216,7 +224,15 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       const result = await generateServiceDescription({
         title: serviceTitle,
       });
-      setServiceDesc(result.description);
+      if (result.success) {
+        setServiceDesc(result.data.description);
+      } else {
+        toast({
+            title: t.generationFailed,
+            description: result.error,
+            variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Error generating service description:', error);
       toast({

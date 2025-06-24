@@ -29,19 +29,23 @@ const RecommendJobsForFreelancerOutputSchema = z.array(
 export type RecommendJobsForFreelancerOutput = z.infer<typeof RecommendJobsForFreelancerOutputSchema>;
 
 // This is the exported function that the client will call.
-export async function recommendJobsForFreelancer(input: RecommendJobsForFreelancerInput): Promise<RecommendJobsForFreelancerOutput> {
-  const leanJobs = input.jobs.map(job => ({
-      id: job.id,
-      title: job.title,
-      description: job.description
-  }));
-  
-  const result = await recommendJobsFlow({
-      freelancerProfile: input.freelancerProfile,
-      jobs: leanJobs
-  });
-
-  return result;
+export async function recommendJobsForFreelancer(input: RecommendJobsForFreelancerInput): Promise<{success: true, data: RecommendJobsForFreelancerOutput } | { success: false, error: string }> {
+  try {
+    const leanJobs = input.jobs.map(job => ({
+        id: job.id,
+        title: job.title,
+        description: job.description
+    }));
+    
+    const result = await recommendJobsFlow({
+        freelancerProfile: input.freelancerProfile,
+        jobs: leanJobs
+    });
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error in recommendJobsForFreelancer:', error);
+    return { success: false, error: "Could not get AI recommendations at this time. Please try again later." };
+  }
 }
 
 
@@ -86,15 +90,9 @@ const recommendJobsFlow = ai.defineFlow(
     outputSchema: RecommendJobsForFreelancerOutputSchema,
   },
   async input => {
-    try {
-      const {output} = await recommendJobsPrompt(input);
-      // The output can be null if the model has nothing to return.
-      // We return an empty array if output is null or undefined.
-      return output || [];
-    } catch (error) {
-      console.error('Error in recommendJobsFlow:', error);
-      // On failure (e.g., model overloaded), return an empty array to prevent crashing.
-      return [];
-    }
+    const {output} = await recommendJobsPrompt(input);
+    // The output can be null if the model has nothing to return.
+    // We return an empty array if output is null or undefined.
+    return output || [];
   }
 );
