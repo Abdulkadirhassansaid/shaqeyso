@@ -2,17 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  query,
-  where,
-  getDocs,
-  writeBatch
-} from 'firebase/firestore';
+import { useLocalStorageState } from './use-local-storage-state';
 import type { DirectMessage } from '@/lib/types';
+import { mockDirectMessages } from '@/lib/mock-data';
 
 interface DirectMessagesContextType {
   directMessages: DirectMessage[];
@@ -23,43 +15,24 @@ interface DirectMessagesContextType {
 const DirectMessagesContext = React.createContext<DirectMessagesContextType | null>(null);
 
 export function DirectMessagesProvider({ children }: { children: React.ReactNode }) {
-  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
-
-  React.useEffect(() => {
-    const q = query(collection(db, "directMessages"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData: DirectMessage[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as DirectMessage));
-      setDirectMessages(messagesData);
-    });
-    return () => unsubscribe();
-  }, []);
+  const [directMessages, setDirectMessages] = useLocalStorageState<DirectMessage[]>('all-direct-messages', mockDirectMessages);
 
   const addDirectMessage = async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
     if (!messageData.text?.trim()) {
         return false; // Do not add empty messages
     }
-    try {
-      const newMessage = {
-        ...messageData,
-        timestamp: new Date().toISOString(),
-      };
-      await addDoc(collection(db, 'directMessages'), newMessage);
-      return true;
-    } catch(e) { return false; }
+    const newMessage: DirectMessage = {
+      id: `dm-${Date.now()}`,
+      ...messageData,
+      timestamp: new Date().toISOString(),
+    };
+    setDirectMessages(prev => [...prev, newMessage]);
+    return true;
   };
-
+  
   const deleteDirectMessagesForUser = async (userId: string): Promise<boolean> => {
-    try {
-      const q = query(collection(db, 'directMessages'), where('participantIds', 'array-contains', userId));
-      const querySnapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      querySnapshot.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
+      setDirectMessages(prev => prev.filter(m => !m.participantIds.includes(userId)));
       return true;
-    } catch(e) { return false; }
   }
 
   const value = { directMessages, addDirectMessage, deleteDirectMessagesForUser };

@@ -36,14 +36,12 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
     const result = await signup(name, email, password, role);
-    if (result.success && result.user) {
+    if (result.success) {
       router.push('/onboarding');
     } else {
       let description = t.signupFailedDesc;
       if (result.message === 'email-in-use') {
         description = t.signupFailedEmailInUseDesc;
-      } else if (result.message === 'weak-password') {
-        description = t.signupFailedWeakPasswordDesc;
       }
       toast({
         title: t.signupFailed,

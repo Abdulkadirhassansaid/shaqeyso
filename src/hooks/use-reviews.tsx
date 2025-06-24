@@ -2,17 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  query,
-  where,
-  getDocs,
-  writeBatch
-} from 'firebase/firestore';
+import { useLocalStorageState } from './use-local-storage-state';
 import type { Review } from '@/lib/types';
+import { mockReviews } from '@/lib/mock-data';
 
 interface ReviewsContextType {
   reviews: Review[];
@@ -24,57 +16,26 @@ interface ReviewsContextType {
 const ReviewsContext = React.createContext<ReviewsContextType | null>(null);
 
 export function ReviewsProvider({ children }: { children: React.ReactNode }) {
-  const [reviews, setReviews] = React.useState<Review[]>([]);
-
-  React.useEffect(() => {
-    const q = query(collection(db, "reviews"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const reviewsData: Review[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Review));
-      setReviews(reviewsData);
-    });
-    return () => unsubscribe();
-  }, []);
+  const [reviews, setReviews] = useLocalStorageState<Review[]>('all-reviews', mockReviews);
 
   const addReview = async (reviewData: Omit<Review, 'id' | 'date'>): Promise<boolean> => {
-    try {
-      const newReview = {
-        ...reviewData,
-        date: new Date().toISOString(),
-      };
-      await addDoc(collection(db, 'reviews'), newReview);
-      return true;
-    } catch(e) { return false; }
+    const newReview: Review = {
+      id: `rev-${Date.now()}`,
+      ...reviewData,
+      date: new Date().toISOString(),
+    };
+    setReviews(prev => [...prev, newReview]);
+    return true;
   };
 
   const deleteReviewsByJobId = async (jobId: string): Promise<boolean> => {
-    try {
-      const q = query(collection(db, 'reviews'), where('jobId', '==', jobId));
-      const querySnapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      querySnapshot.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
+      setReviews(prev => prev.filter(r => r.jobId !== jobId));
       return true;
-    } catch(e) { return false; }
   }
 
   const deleteReviewsForUser = async (userId: string): Promise<boolean> => {
-    try {
-      const batch = writeBatch(db);
-      
-      const q1 = query(collection(db, 'reviews'), where('reviewerId', '==', userId));
-      const snap1 = await getDocs(q1);
-      snap1.forEach(doc => batch.delete(doc.ref));
-      
-      const q2 = query(collection(db, 'reviews'), where('revieweeId', '==', userId));
-      const snap2 = await getDocs(q2);
-      snap2.forEach(doc => batch.delete(doc.ref));
-
-      await batch.commit();
+      setReviews(prev => prev.filter(r => r.revieweeId !== userId && r.reviewerId !== userId));
       return true;
-    } catch(e) { return false; }
   }
 
   const value = { reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser };
