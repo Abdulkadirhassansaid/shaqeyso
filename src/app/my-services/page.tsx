@@ -57,7 +57,7 @@ import Image from 'next/image';
 import { LoadingDots } from '@/components/loading-dots';
 
 export default function MyServicesPage() {
-  const { user, isLoading, updateUserProfile } = useAuth();
+  const { user, isLoading, updateUserProfile, uploadFile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
@@ -84,7 +84,9 @@ export default function MyServicesPage() {
   const [servicePrice, setServicePrice] = React.useState('');
   const [isGeneratingServiceDesc, setIsGeneratingServiceDesc] =
     React.useState(false);
-  const [serviceImages, setServiceImages] = React.useState<string[]>([]);
+  const [serviceImages, setServiceImages] = React.useState<(string | File)[]>(
+    []
+  );
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
   const [isServiceSaving, setIsServiceSaving] = React.useState(false);
 
@@ -116,29 +118,19 @@ export default function MyServicesPage() {
       return;
     }
     setIsGeneratingServiceDesc(true);
-    try {
-      const result = await generateServiceDescription({
-        title: serviceTitle,
-      });
-      if (result.success) {
-        setServiceDesc(result.data.description);
-      } else {
-        toast({
-          title: t.generationFailed,
-          description: result.error,
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error generating service description:', error);
+    const result = await generateServiceDescription({
+      title: serviceTitle,
+    });
+    if (result.success) {
+      setServiceDesc(result.data.description);
+    } else {
       toast({
         title: t.generationFailed,
-        description: (error as Error).message || t.generationFailedDesc,
+        description: result.error,
         variant: 'destructive',
       });
-    } finally {
-      setIsGeneratingServiceDesc(false);
     }
+    setIsGeneratingServiceDesc(false);
   };
 
   const handleEditService = (service: Service) => {
@@ -152,52 +144,83 @@ export default function MyServicesPage() {
 
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !uploadFile) return;
     if (!serviceTitle || !serviceDesc || !servicePrice) {
       toast({ title: t.missingFieldsTitle, variant: 'destructive' });
       return;
     }
     setIsServiceSaving(true);
 
-    const newService = {
-      id: editingService?.id || `service-${Date.now()}`,
-      title: serviceTitle,
-      description: serviceDesc,
-      price: Number(servicePrice),
-      images: serviceImages,
-    };
+    try {
+      const serviceId = editingService?.id || `service-${Date.now()}`;
 
-    let updatedServices;
-    if (editingService) {
-      updatedServices = services.map((s) =>
-        s.id === editingService.id ? newService : s
-      );
-    } else {
-      updatedServices = [...services, newService];
-    }
+      const uploadPromises: Promise<string>[] = [];
+      const existingUrls: string[] = [];
 
-    const success = await updateUserProfile(user.id, {}, { services: updatedServices });
-
-    if (success) {
-      toast({
-        title: editingService ? 'Service Updated' : 'Service Added',
-        description: 'Your list of services has been saved.',
+      serviceImages.forEach((image) => {
+        if (typeof image === 'string') {
+          existingUrls.push(image);
+        } else {
+          const filePath = `services/${user.id}/${serviceId}/${image.name}`;
+          uploadPromises.push(uploadFile(filePath, image));
+        }
       });
-      setIsServiceDialogOpen(false);
-    } else {
+
+      const newImageUrls = await Promise.all(uploadPromises);
+      const allImageUrls = [...existingUrls, ...newImageUrls];
+
+      const newService = {
+        id: serviceId,
+        title: serviceTitle,
+        description: serviceDesc,
+        price: Number(servicePrice),
+        images: allImageUrls,
+      };
+
+      let updatedServices;
+      if (editingService) {
+        updatedServices = services.map((s) =>
+          s.id === editingService.id ? newService : s
+        );
+      } else {
+        updatedServices = [...services, newService];
+      }
+
+      const success = await updateUserProfile(
+        user.id,
+        {},
+        { services: updatedServices }
+      );
+
+      if (success) {
+        toast({
+          title: editingService ? 'Service Updated' : 'Service Added',
+          description: 'Your list of services has been saved.',
+        });
+        setIsServiceDialogOpen(false);
+      } else {
+        throw new Error('Failed to update profile.');
+      }
+    } catch (error) {
+      console.error('Error saving service:', error);
       toast({
         title: t.updateFailed,
         description: t.updateFailedDesc,
         variant: 'destructive',
       });
+    } finally {
+      setIsServiceSaving(false);
     }
-    setIsServiceSaving(false);
   };
 
   const handleDeleteService = async (serviceId: string) => {
     if (!user) return;
     const updatedServices = services.filter((s) => s.id !== serviceId);
-    const success = await updateUserProfile(user.id, {}, { services: updatedServices });
+    const success = await updateUserProfile(
+      user.id,
+      {},
+      { services: updatedServices }
+    );
 
     if (success) {
       toast({
@@ -213,15 +236,13 @@ export default function MyServicesPage() {
     }
   };
 
-  const handleServiceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleServiceImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (e.target.files) {
-      // Simulate file upload by adding placeholder URLs
-      const newPlaceholders = Array.from(e.target.files).map(
-        () => 'https://placehold.co/200x200.png'
-      );
-      setServiceImages((prev) => [...prev, ...newPlaceholders]);
+      const filesToAdd = Array.from(e.target.files);
+      setServiceImages((prev) => [...prev, ...filesToAdd]);
     }
-    // Reset the input value to allow uploading the same file again
     if (serviceImageInputRef.current) {
       serviceImageInputRef.current.value = '';
     }
@@ -316,7 +337,9 @@ export default function MyServicesPage() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                <AlertDialogCancel>
+                                  {t.cancel}
+                                </AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDeleteService(service.id)}
                                   className="bg-destructive hover:bg-destructive/90"
@@ -388,18 +411,24 @@ export default function MyServicesPage() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label htmlFor="service-desc">{t.serviceDescription}</Label>
+                      <Label htmlFor="service-desc">
+                        {t.serviceDescription}
+                      </Label>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleGenerateServiceDesc}
                         disabled={
-                          isGeneratingServiceDesc || !serviceTitle || isServiceSaving
+                          isGeneratingServiceDesc ||
+                          !serviceTitle ||
+                          isServiceSaving
                         }
                       >
                         <Wand2 className="mr-2 h-4 w-4" />
-                        {isGeneratingServiceDesc ? t.generating : t.generateWithAI}
+                        {isGeneratingServiceDesc
+                          ? t.generating
+                          : t.generateWithAI}
                       </Button>
                     </div>
                     {isGeneratingServiceDesc ? (
@@ -417,7 +446,7 @@ export default function MyServicesPage() {
                       />
                     )}
                   </div>
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label htmlFor="service-price">{t.servicePrice}</Label>
                     <Input
                       id="service-price"
@@ -450,26 +479,32 @@ export default function MyServicesPage() {
                       disabled={isServiceSaving}
                     />
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      {serviceImages.map((url, index) => (
-                        <div key={index} className="relative group">
-                          <Image
-                            data-ai-hint="portfolio image"
-                            src={url}
-                            alt="Service image"
-                            width={100}
-                            height={100}
-                            className="rounded-md object-cover aspect-square"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeServiceImage(index)}
-                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
-                            disabled={isServiceSaving}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
+                      {serviceImages.map((image, index) => {
+                        const imageUrl =
+                          typeof image === 'string'
+                            ? image
+                            : URL.createObjectURL(image);
+                        return (
+                          <div key={index} className="relative group">
+                            <Image
+                              data-ai-hint="portfolio image"
+                              src={imageUrl}
+                              alt="Service image"
+                              width={100}
+                              height={100}
+                              className="rounded-md object-cover aspect-square"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeServiceImage(index)}
+                              className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
+                              disabled={isServiceSaving}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
