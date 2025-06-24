@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -113,6 +114,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [serviceImages, setServiceImages] = React.useState<string[]>([]);
   const [serviceFiles, setServiceFiles] = React.useState<File[]>([]);
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
+  const [isServiceSaving, setIsServiceSaving] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -191,6 +193,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       });
       if (result.success) {
         setBio(result.data.bio);
+        toast({ title: "Bio Generated", description: "AI has written a bio for you. Don't forget to save changes." });
       } else {
         toast({
           title: t.generationFailed,
@@ -269,6 +272,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           toast({ title: t.missingFieldsTitle, variant: 'destructive' });
           return;
       }
+      setIsServiceSaving(true);
 
       const newImageUrls = await Promise.all(serviceFiles.map(fileToDataUrl));
       const allImageUrls = [...serviceImages, ...newImageUrls];
@@ -281,17 +285,33 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           images: allImageUrls
       };
 
+      let updatedServices;
       if (editingService) {
-          setServices(services.map(s => s.id === editingService.id ? newService : s));
+          updatedServices = services.map(s => s.id === editingService.id ? newService : s);
       } else {
-          setServices([...services, newService]);
+          updatedServices = [...services, newService];
       }
       
-      setIsServiceDialogOpen(false);
+      const success = await updateUserProfile(user.id, {}, { services: updatedServices });
+
+      if (success) {
+        toast({ title: "Services Updated", description: "Your list of services has been saved." });
+        setIsServiceDialogOpen(false);
+      } else {
+         toast({ title: t.updateFailed, description: t.updateFailedDesc, variant: 'destructive' });
+      }
+      setIsServiceSaving(false);
   };
   
-  const handleDeleteService = (serviceId: string) => {
-      setServices(services.filter(s => s.id !== serviceId));
+  const handleDeleteService = async (serviceId: string) => {
+      const updatedServices = services.filter(s => s.id !== serviceId);
+      const success = await updateUserProfile(user.id, {}, { services: updatedServices });
+
+      if (success) {
+          toast({ title: "Service Removed", description: "The service has been removed from your profile." });
+      } else {
+          toast({ title: t.updateFailed, description: t.updateFailedDesc, variant: 'destructive' });
+      }
   }
 
   const handleServiceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -479,6 +499,11 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                     )}
                 </div>
                 </CardContent>
+                <CardFooter>
+                    <Button type="submit" disabled={isSaving || isGeneratingBio}>
+                        {isSaving ? t.saving : t.saveChanges}
+                    </Button>
+                </CardFooter>
             </Card>
 
             <Card>
@@ -542,11 +567,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                         )}
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button type="submit" disabled={isSaving || isGeneratingBio}>
-                        {isSaving ? t.saving : t.saveChanges}
-                    </Button>
-                </CardFooter>
             </Card>
 
             <Dialog open={isServiceDialogOpen} onOpenChange={(isOpen) => {
@@ -562,7 +582,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                         <div className="grid gap-4 py-4">
                             <div className="space-y-2">
                                 <Label htmlFor="service-title">{t.serviceTitle}</Label>
-                                <Input id="service-title" value={serviceTitle} onChange={e => setServiceTitle(e.target.value)} placeholder={t.serviceTitlePlaceholder} required/>
+                                <Input id="service-title" value={serviceTitle} onChange={e => setServiceTitle(e.target.value)} placeholder={t.serviceTitlePlaceholder} required disabled={isServiceSaving} />
                             </div>
                              <div className="space-y-2">
                                 <div className="flex justify-between items-center">
@@ -572,7 +592,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                                         variant="outline"
                                         size="sm"
                                         onClick={handleGenerateServiceDesc}
-                                        disabled={isGeneratingServiceDesc || !serviceTitle}
+                                        disabled={isGeneratingServiceDesc || !serviceTitle || isServiceSaving}
                                     >
                                         <Wand2 className="mr-2 h-4 w-4" />
                                         {isGeneratingServiceDesc ? t.generating : t.generateWithAI}
@@ -583,12 +603,12 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                                         <LoadingDots />
                                     </div>
                                 ) : (
-                                    <Textarea id="service-desc" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder={t.serviceDescPlaceholder} required/>
+                                    <Textarea id="service-desc" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder={t.serviceDescPlaceholder} required disabled={isServiceSaving} />
                                 )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="service-images">{t.serviceImages}</Label>
-                                <Button type="button" variant="outline" onClick={() => serviceImageInputRef.current?.click()}>
+                                <Button type="button" variant="outline" onClick={() => serviceImageInputRef.current?.click()} disabled={isServiceSaving}>
                                     <UploadCloud className="mr-2 h-4 w-4" />
                                     {t.uploadImages}
                                 </Button>
@@ -599,12 +619,13 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                                     accept="image/png, image/jpeg"
                                     multiple
                                     onChange={handleServiceImageChange}
+                                    disabled={isServiceSaving}
                                 />
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                     {serviceImages.map(url => (
                                         <div key={url} className="relative group">
                                             <Image src={url} alt="Service image" width={100} height={100} className="rounded-md object-cover aspect-square"/>
-                                            <button type="button" onClick={() => removeServiceImage('url', url)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100">
+                                            <button type="button" onClick={() => removeServiceImage('url', url)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100" disabled={isServiceSaving}>
                                                 <X className="h-3 w-3" />
                                             </button>
                                         </div>
@@ -612,7 +633,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                                     {serviceFiles.map(file => (
                                         <div key={file.name} className="relative group">
                                             <Image src={URL.createObjectURL(file)} alt={file.name} width={100} height={100} className="rounded-md object-cover aspect-square"/>
-                                             <button type="button" onClick={() => removeServiceImage('file', file.name)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100">
+                                             <button type="button" onClick={() => removeServiceImage('file', file.name)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100" disabled={isServiceSaving}>
                                                 <X className="h-3 w-3" />
                                             </button>
                                         </div>
@@ -621,12 +642,12 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="service-price">{t.servicePrice}</Label>
-                                <Input id="service-price" type="number" value={servicePrice} onChange={e => setServicePrice(e.target.value)} placeholder="e.g., 150" required />
+                                <Input id="service-price" type="number" value={servicePrice} onChange={e => setServicePrice(e.target.value)} placeholder="e.g., 150" required disabled={isServiceSaving} />
                             </div>
                         </div>
                         <DialogFooter>
-                            <DialogClose asChild><Button type="button" variant="ghost">{t.cancel}</Button></DialogClose>
-                            <Button type="submit">{t.save}</Button>
+                            <DialogClose asChild><Button type="button" variant="ghost" disabled={isServiceSaving}>{t.cancel}</Button></DialogClose>
+                            <Button type="submit" disabled={isServiceSaving}>{isServiceSaving ? t.saving : t.save}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

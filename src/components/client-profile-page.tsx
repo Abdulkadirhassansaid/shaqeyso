@@ -35,6 +35,12 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
   const [reviewers, setReviewers] = React.useState<User[]>([]);
   const [isLoadingReviewers, setIsLoadingReviewers] = React.useState(true);
+  const [companyName, setCompanyName] = React.useState(user.name);
+  const [avatar, setAvatar] = React.useState<string | null>(null);
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
+  
+  const clientProfile = clientProfiles.find(p => p.userId === user.id);
 
   React.useEffect(() => {
     if (!db) return;
@@ -45,7 +51,12 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
     return () => unsub();
   }, []);
 
-  const clientProfile = clientProfiles.find(p => p.userId === user.id);
+  React.useEffect(() => {
+    if (clientProfile) {
+        setCompanyName(clientProfile.companyName || user.name);
+    }
+  }, [user.name, clientProfile]);
+
   const clientReviews = reviews.filter(r => r.revieweeId === user.id);
   const averageRating = clientReviews.length > 0
     ? clientReviews.reduce((acc, r) => acc + r.rating, 0) / clientReviews.length
@@ -77,12 +88,6 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
     fetchReviewers();
   }, [clientReviews]);
 
-
-  const [companyName, setCompanyName] = React.useState(user.name);
-  const [avatar, setAvatar] = React.useState<string | null>(null);
-  const avatarInputRef = React.useRef<HTMLInputElement>(null);
-  const [isSaving, setIsSaving] = React.useState(false);
-
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -99,11 +104,15 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
     setIsSaving(true);
     
     const userData = { 
-      name: companyName,
+      name: companyName, // Keep user.name in sync with company name
       ...(avatar && { avatarUrl: avatar })
     };
     
-    const success = await updateUserProfile(user.id, userData);
+    const profileData = {
+        companyName,
+    };
+    
+    const success = await updateUserProfile(user.id, userData, profileData);
 
     if (success) {
       toast({
