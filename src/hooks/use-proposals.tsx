@@ -22,16 +22,20 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
   const [proposals, setProposals] = React.useState<Proposal[]>([]);
 
    React.useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db!, 'proposals'), (snapshot) => {
+    if (!db) return;
+    const unsubscribe = onSnapshot(collection(db, 'proposals'), (snapshot) => {
         const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
         setProposals(proposalsData);
+    }, (error) => {
+        console.error("Error fetching proposals:", error);
     });
     return () => unsubscribe();
   }, []);
 
-  const addProposal = async (proposalData: Omit<Proposal, 'id' | 'status'>): Promise<boolean> => {
+  const addProposal = React.useCallback(async (proposalData: Omit<Proposal, 'id' | 'status'>): Promise<boolean> => {
+    if (!db) return false;
     try {
-        await addDoc(collection(db!, 'proposals'), {
+        await addDoc(collection(db, 'proposals'), {
             ...proposalData,
             status: 'Pending',
         });
@@ -40,14 +44,15 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
         console.error("Error adding proposal:", error);
         return false;
     }
-  };
+  }, []);
   
-  const acceptProposal = async (proposalId: string, jobId: string): Promise<boolean> => {
+  const acceptProposal = React.useCallback(async (proposalId: string, jobId: string): Promise<boolean> => {
+    if (!db) return false;
     try {
-        const q = query(collection(db!, 'proposals'), where('jobId', '==', jobId));
+        const q = query(collection(db, 'proposals'), where('jobId', '==', jobId));
         const snapshot = await getDocs(q);
         
-        const batch = writeBatch(db!);
+        const batch = writeBatch(db);
         snapshot.forEach(doc => {
             if (doc.id === proposalId) {
                 batch.update(doc.ref, { status: 'Accepted' });
@@ -62,39 +67,41 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
         console.error("Error accepting proposal:", error);
         return false;
     }
-  }
+  }, []);
 
-  const updateProposal = async (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>): Promise<boolean> => {
+  const updateProposal = React.useCallback(async (proposalId: string, data: Partial<Pick<Proposal, 'coverLetter' | 'proposedRate'>>): Promise<boolean> => {
+    if (!db) return false;
     try {
-        await updateDoc(doc(db!, 'proposals', proposalId), data);
+        await updateDoc(doc(db, 'proposals', proposalId), data);
         return true;
     } catch(error) {
         console.error("Error updating proposal:", error);
         return false;
     }
-  }
+  }, []);
 
-  const deleteProposal = async (proposalId: string): Promise<boolean> => {
+  const deleteProposal = React.useCallback(async (proposalId: string): Promise<boolean> => {
+      if (!db) return false;
       try {
-          await deleteDoc(doc(db!, 'proposals', proposalId));
+          await deleteDoc(doc(db, 'proposals', proposalId));
           return true;
       } catch (error) {
           console.error("Error deleting proposal:", error);
           return false;
       }
-  }
+  }, []);
 
-  const deleteProposalsByJobId = async (jobId: string): Promise<boolean> => {
+  const deleteProposalsByJobId = React.useCallback(async (jobId: string): Promise<boolean> => {
       console.warn("Deleting proposals requires a backend function for security.");
       return true;
-  }
+  }, []);
 
-  const deleteProposalsByFreelancerId = async (freelancerId: string): Promise<boolean> => {
+  const deleteProposalsByFreelancerId = React.useCallback(async (freelancerId: string): Promise<boolean> => {
       console.warn("Deleting proposals requires a backend function for security.");
       return true;
-  }
+  }, []);
 
-  const value = { proposals, addProposal, acceptProposal, updateProposal, deleteProposal, deleteProposalsByJobId, deleteProposalsByFreelancerId };
+  const value = React.useMemo(() => ({ proposals, addProposal, acceptProposal, updateProposal, deleteProposal, deleteProposalsByJobId, deleteProposalsByFreelancerId }), [proposals, addProposal, acceptProposal, updateProposal, deleteProposal, deleteProposalsByJobId, deleteProposalsByFreelancerId]);
 
   return <ProposalsContext.Provider value={value}>{children}</ProposalsContext.Provider>;
 }

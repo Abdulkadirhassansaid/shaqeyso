@@ -20,12 +20,12 @@ export function DirectMessagesProvider({ children }: { children: React.ReactNode
   const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
 
   React.useEffect(() => {
-    if (!user?.id) {
+    if (!user?.id || !db) {
         setDirectMessages([]);
         return;
     };
 
-    const q = query(collection(db!, 'directMessages'), where('participantIds', 'array-contains', user.id));
+    const q = query(collection(db, 'directMessages'), where('participantIds', 'array-contains', user.id));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({ 
@@ -34,18 +34,20 @@ export function DirectMessagesProvider({ children }: { children: React.ReactNode
           timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
       } as DirectMessage));
       setDirectMessages(messagesData);
+    }, (error) => {
+        console.error("Error fetching direct messages:", error);
     });
 
     return () => unsubscribe();
   }, [user?.id]);
 
 
-  const addDirectMessage = async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
-    if (!messageData.text?.trim()) {
+  const addDirectMessage = React.useCallback(async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
+    if (!messageData.text?.trim() || !db) {
         return false;
     }
     try {
-        await addDoc(collection(db!, 'directMessages'), {
+        await addDoc(collection(db, 'directMessages'), {
             ...messageData,
             timestamp: serverTimestamp(),
         });
@@ -54,15 +56,15 @@ export function DirectMessagesProvider({ children }: { children: React.ReactNode
         console.error("Error adding direct message:", error);
         return false;
     }
-  };
+  }, []);
   
-  const deleteDirectMessagesForUser = async (userId: string): Promise<boolean> => {
+  const deleteDirectMessagesForUser = React.useCallback(async (userId: string): Promise<boolean> => {
       console.warn("Deleting direct messages requires a backend function for security.");
       // Placeholder for batch delete logic, ideally done in a Cloud Function
       return true;
-  }
+  }, []);
 
-  const value = { directMessages, addDirectMessage, deleteDirectMessagesForUser };
+  const value = React.useMemo(() => ({ directMessages, addDirectMessage, deleteDirectMessagesForUser }), [directMessages, addDirectMessage, deleteDirectMessagesForUser]);
 
   return <DirectMessagesContext.Provider value={value}>{children}</DirectMessagesContext.Provider>;
 }

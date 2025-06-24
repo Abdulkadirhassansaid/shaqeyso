@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,15 +23,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.add(theme);
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = React.useCallback(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
+  }, [setTheme]);
 
-  const value = {
+  const value = React.useMemo(() => ({
     theme,
     setTheme,
     toggleTheme,
-  };
+  }), [theme, setTheme, toggleTheme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

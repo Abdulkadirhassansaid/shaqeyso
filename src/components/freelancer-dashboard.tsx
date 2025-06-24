@@ -88,18 +88,20 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   }, []);
 
   const freelancerProfileData = freelancerProfiles.find(p => p.userId === user.id);
-  const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
-
-  const handleGetRecommendations = React.useCallback(async () => {
-      if (!freelancerProfileData || (freelancerProfileData.skills.length === 0 && !freelancerProfileData.bio)) {
+  
+  React.useEffect(() => {
+    const getRecommendations = async () => {
+      const profile = freelancerProfiles.find(p => p.userId === user.id);
+      if (!profile || (profile.skills.length === 0 && !profile.bio)) {
           return;
       }
+      
+      const profileString = `Skills: ${profile.skills.join(', ')}. Bio: ${profile.bio || ''}`;
       
       setIsRecommending(true);
 
       try {
           const openJobs = jobs.filter(job => job.status === 'Open');
-
           const recommendations = await recommendJobsForFreelancer({
               freelancerProfile: profileString,
               jobs: openJobs
@@ -120,11 +122,10 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
       } finally {
           setIsRecommending(false);
       }
-  }, [freelancerProfileData, jobs, profileString]);
-
-  React.useEffect(() => {
-    handleGetRecommendations();
-  }, [handleGetRecommendations]);
+    };
+    
+    getRecommendations();
+  }, [jobs, freelancerProfiles, user.id]);
 
   const handleReviewSubmit = async (jobId: string, revieweeId: string, rating: number, comment: string) => {
       await addReview({
@@ -150,6 +151,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
 
   if (selectedJob) {
+    const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
     return (
       <div className="w-full h-full bg-background md:bg-transparent">
         <div className="p-4 flex items-center gap-4 md:hidden">
@@ -217,6 +219,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   if (editingProposal) {
     const jobForProposal = jobs.find(j => j.id === editingProposal.jobId);
+    const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
     if (!jobForProposal) return null;
     return (
         <ProposalForm 

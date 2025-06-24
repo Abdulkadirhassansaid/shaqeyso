@@ -35,7 +35,7 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const value = { users, isUsersLoading };
+  const value = React.useMemo(() => ({ users, isUsersLoading }), [users, isUsersLoading]);
 
   return <UsersContext.Provider value={value}>{children}</UsersContext.Provider>;
 }

@@ -18,9 +18,10 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = React.useState<Message[]>([]);
 
   React.useEffect(() => {
+    if (!db) return;
     // Note: This listens to ALL messages. In a production app with many messages,
     // you would want to scope this query, for example, to only the jobs the current user is involved in.
-    const q = query(collection(db!, 'messages'));
+    const q = query(collection(db, 'messages'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({ 
@@ -29,17 +30,19 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
           timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
       } as Message));
       setMessages(messagesData);
+    }, (error) => {
+      console.error("Error fetching messages:", error);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const addMessage = async (messageData: Omit<Message, 'id' | 'timestamp'>): Promise<boolean> => {
-    if (!messageData.text?.trim() && (!messageData.files || messageData.files.length === 0)) {
+  const addMessage = React.useCallback(async (messageData: Omit<Message, 'id' | 'timestamp'>): Promise<boolean> => {
+    if ((!messageData.text?.trim() && (!messageData.files || messageData.files.length === 0)) || !db) {
         return false;
     }
     try {
-        await addDoc(collection(db!, 'messages'), {
+        await addDoc(collection(db, 'messages'), {
             ...messageData,
             timestamp: serverTimestamp(),
         });
@@ -48,15 +51,15 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
         console.error("Error adding message:", error);
         return false;
     }
-  };
+  }, []);
   
-  const deleteMessagesByJobId = async (jobId: string): Promise<boolean> => {
+  const deleteMessagesByJobId = React.useCallback(async (jobId: string): Promise<boolean> => {
       console.warn("Deleting messages requires a backend function for security.");
       // Placeholder for batch delete logic, ideally done in a Cloud Function
       return true;
-  }
+  }, []);
 
-  const value = { messages, addMessage, deleteMessagesByJobId };
+  const value = React.useMemo(() => ({ messages, addMessage, deleteMessagesByJobId }), [messages, addMessage, deleteMessagesByJobId]);
 
   return <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>;
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,7 +23,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const value = { language, setLanguage, t };
+  const value = React.useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
 
   return (
     <LanguageContext.Provider value={value}>

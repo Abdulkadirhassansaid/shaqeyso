@@ -19,20 +19,24 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = React.useState<Review[]>([]);
 
   React.useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db!, 'reviews'), (snapshot) => {
+    if (!db) return;
+    const unsubscribe = onSnapshot(collection(db, 'reviews'), (snapshot) => {
         const reviewsData = snapshot.docs.map(doc => ({ 
             ...doc.data(), 
             id: doc.id,
             date: doc.data().date?.toDate()?.toISOString() || new Date().toISOString()
         } as Review));
         setReviews(reviewsData);
+    }, (error) => {
+        console.error("Error fetching reviews:", error);
     });
     return () => unsubscribe();
   }, []);
 
-  const addReview = async (reviewData: Omit<Review, 'id' | 'date'>): Promise<boolean> => {
+  const addReview = React.useCallback(async (reviewData: Omit<Review, 'id' | 'date'>): Promise<boolean> => {
+    if (!db) return false;
     try {
-        await addDoc(collection(db!, 'reviews'), {
+        await addDoc(collection(db, 'reviews'), {
             ...reviewData,
             date: serverTimestamp(),
         });
@@ -41,19 +45,19 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
         console.error("Error adding review:", error);
         return false;
     }
-  };
+  }, []);
 
-  const deleteReviewsByJobId = async (jobId: string): Promise<boolean> => {
+  const deleteReviewsByJobId = React.useCallback(async (jobId: string): Promise<boolean> => {
       console.warn("Deleting reviews requires a backend function for security.");
       return true;
-  }
+  }, []);
 
-  const deleteReviewsForUser = async (userId: string): Promise<boolean> => {
+  const deleteReviewsForUser = React.useCallback(async (userId: string): Promise<boolean> => {
       console.warn("Deleting reviews requires a backend function for security.");
       return true;
-  }
+  }, []);
 
-  const value = { reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser };
+  const value = React.useMemo(() => ({ reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser }), [reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser]);
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>;
 }

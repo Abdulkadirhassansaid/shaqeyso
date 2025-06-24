@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
 
-    const login = async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
+    const login = React.useCallback(async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
         if (!auth || !db) return { success: false, message: 'invalid' };
         try {
             const usersQuery = query(collection(db, "users"), where("email", "==", email));
@@ -102,9 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
             return { success: false, message: 'invalid' };
         }
-    };
+    }, []);
 
-    const signup = async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
+    const signup = React.useCallback(async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
         if (!auth || !db) return { success: false, message: 'unknown' };
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -162,16 +162,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return { success: false, message: 'unknown' };
         }
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = React.useCallback(async () => {
         if (!auth) return;
         await signOut(auth);
         setUser(null);
         router.push('/login');
-    };
+    }, [router]);
 
-    const updateUserProfile = async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
+    const updateUserProfile = React.useCallback(async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
         if (!db) return false;
         try {
             const userRef = doc(db, 'users', userId);
@@ -190,9 +190,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error updating profile:", error);
             return false;
         }
-    };
+    }, []);
     
-    const submitVerification = async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
+    const submitVerification = React.useCallback(async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
         if (!db) return false;
         try {
             const userRef = doc(db, 'users', userId);
@@ -206,9 +206,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error submitting verification:", error);
             return false;
         }
-    };
+    }, []);
 
-    const approveVerification = async (userId: string): Promise<boolean> => {
+    const approveVerification = React.useCallback(async (userId: string): Promise<boolean> => {
         if (!db) return false;
         try {
             await updateDoc(doc(db, 'users', userId), { verificationStatus: 'verified' });
@@ -217,9 +217,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
              console.error("Error approving verification:", error);
             return false;
         }
-    };
+    }, []);
 
-    const rejectVerification = async (userId: string, reason: string): Promise<boolean> => {
+    const rejectVerification = React.useCallback(async (userId: string, reason: string): Promise<boolean> => {
         if (!db) return false;
         try {
             await updateDoc(doc(db, 'users', userId), { verificationStatus: 'rejected', verificationRejectionReason: reason });
@@ -228,9 +228,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error rejecting verification:", error);
             return false;
         }
-    };
+    }, []);
 
-    const addPaymentMethod = async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
+    const addPaymentMethod = React.useCallback(async (userId: string, method: Omit<PaymentMethod, 'id'>): Promise<boolean> => {
         if (!db) return false;
         try {
             const newMethod = { ...method, id: `pm-${Date.now()}` };
@@ -242,9 +242,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error adding payment method:", error);
             return false;
         }
-    };
+    }, []);
 
-    const removePaymentMethod = async (userId: string, methodId: string): Promise<boolean> => {
+    const removePaymentMethod = React.useCallback(async (userId: string, methodId: string): Promise<boolean> => {
        if (!db) return false;
        try {
             const userDoc = await getDoc(doc(db, 'users', userId));
@@ -261,9 +261,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error removing payment method:", error);
             return false;
         }
-    };
+    }, []);
 
-    const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id' | 'date'>): Promise<boolean> => {
+    const addTransaction = React.useCallback(async (userId: string, transaction: Omit<Transaction, 'id' | 'date'>): Promise<boolean> => {
         if (!db) return false;
         try {
             const userRef = doc(db, 'users', userId);
@@ -279,9 +279,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error adding transaction:", error);
             return false;
         }
-    };
+    }, []);
 
-    const toggleUserBlockStatus = async (userId: string): Promise<boolean> => {
+    const toggleUserBlockStatus = React.useCallback(async (userId: string): Promise<boolean> => {
         if (!db) return false;
         try {
             const userDoc = await getDoc(doc(db, 'users', userId));
@@ -292,9 +292,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error toggling block status:", error);
             return false;
         }
-    };
+    }, []);
 
-    const deleteUser = async (userId: string): Promise<boolean> => {
+    const deleteUser = React.useCallback(async (userId: string): Promise<boolean> => {
         if (!db) return false;
         // NOTE: This does not delete the user from Firebase Auth, which requires admin privileges (e.g. a Cloud Function)
         try {
@@ -309,9 +309,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Error deleting user from DB:", error);
             return false;
         }
-    };
+    }, []);
 
-    const value = { user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
+    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification }), 
+    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification]);
+
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
