@@ -159,9 +159,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     return (
       <div className="w-full h-full bg-background md:bg-transparent">
         <div className="p-4 flex items-center gap-4 md:hidden">
-            <Button variant="ghost" size="icon" onClick={() => setSelectedJob(null)}>
-                <ArrowLeft />
-            </Button>
             <h1 className="text-xl font-bold">{selectedJob.title}</h1>
         </div>
         <Card className="w-full h-full md:h-auto border-0 md:border md:shadow-sm">
