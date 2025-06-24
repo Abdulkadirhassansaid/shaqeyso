@@ -1,9 +1,18 @@
-import { LoadingSpinner } from "./loading-spinner";
+'use client';
+
+import { useLoading } from '@/hooks/use-loading';
+import { LoadingSpinner } from './loading-spinner';
 
 export function PageLoader() {
-    return (
-        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
-            <LoadingSpinner />
-        </div>
-    );
+  const { isLoading } = useLoading();
+
+  if (!isLoading) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <LoadingSpinner />
+    </div>
+  );
 }

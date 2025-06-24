@@ -3,26 +3,22 @@
 
 import { useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import NProgress from 'nprogress';
+import { useLoading } from '@/hooks/use-loading';
 
 export function PageProgress() {
+  const { setIsLoading } = useLoading();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // When a new page is loaded, the navigation is done, so we stop the progress indicator.
-    NProgress.done();
-  }, [pathname, searchParams]);
+    // Hide the loader whenever the path changes.
+    setIsLoading(false);
+  }, [pathname, searchParams, setIsLoading]);
 
   useEffect(() => {
-    // This effect runs once on the client to set up event listeners for NProgress.
-    NProgress.configure({ showSpinner: true });
-
     const handleAnchorClick = (event: MouseEvent) => {
       const target = (event.target as HTMLElement).closest('a');
       
-      // Check if the click is on a valid anchor, for an internal navigation,
-      // and not a command-click or special click.
       if (
         target &&
         target.href &&
@@ -33,27 +29,21 @@ export function PageProgress() {
       ) {
         const currentUrl = new URL(location.href);
         const targetUrl = new URL(target.href);
-        if (targetUrl.pathname !== currentUrl.pathname) {
-          NProgress.start();
+        
+        // Only show loader for navigations to a different page.
+        if (targetUrl.href !== currentUrl.href) {
+            setIsLoading(true);
         }
       }
     };
-
-    // Listen for clicks on the document to capture navigation initiated by <Link> components.
+    
+    // Listen for clicks on the document to capture navigation.
     document.addEventListener('click', handleAnchorClick);
     
-    // Also listen for browser back/forward button clicks
-    const handlePopState = () => {
-      NProgress.start();
-    };
-    window.addEventListener('popstate', handlePopState);
-
-    // Cleanup function to remove event listeners when the component unmounts.
     return () => {
       document.removeEventListener('click', handleAnchorClick);
-      window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [setIsLoading]);
 
-  return null; // NProgress injects its own DOM elements into the body.
+  return null;
 }

@@ -11,6 +11,8 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { BottomNav } from '@/components/bottom-nav';
+import { LoadingProvider } from '@/hooks/use-loading';
+import { PageLoader } from '@/components/page-loader';
 import { PageProgress } from '@/components/page-progress';
 
 const ptSans = PT_Sans({
@@ -72,14 +74,17 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LanguageProvider>
-            <AuthProvider>
-              <PageProgress />
-              <div className="relative flex min-h-screen flex-col">
-                <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                <BottomNav />
-              </div>
-              <Toaster />
-            </AuthProvider>
+            <LoadingProvider>
+              <AuthProvider>
+                <PageProgress />
+                <PageLoader />
+                <div className="relative flex min-h-screen flex-col">
+                  <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                  <BottomNav />
+                </div>
+                <Toaster />
+              </AuthProvider>
+            </LoadingProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
