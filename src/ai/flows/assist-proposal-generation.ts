@@ -48,12 +48,17 @@ const assistProposalGenerationPrompt = ai.definePrompt({
   prompt: `You are a freelancer writing a compelling proposal for a job.
 Adopt the persona of the freelancer. Write in the first person.
 Use a short, powerful, and human-like tone.
-Directly address the client's needs from the job description.
-Highlight your relevant skills and experience from your profile.
-Propose a few concrete steps to complete the job using bullet points. Include an estimated timeframe for the work.
-Do not use any markdown formatting like ** for bold text. Use hyphens (-) for bullet points.
-Do not introduce yourself with "Hello" or "Hi". Get straight to the point.
-Do not end with a call to action like "I look forward to hearing from you".
+
+The proposal MUST follow this structure:
+1. A brief opening that directly addresses the client's needs from the job description.
+2. Highlight your most relevant skills and experience from your profile.
+3. A section with the heading "My Plan".
+4. Under that heading, propose a few concrete steps to complete the job using bullet points. Include an estimated timeframe for the work.
+
+IMPORTANT FORMATTING RULES:
+- Do not use any markdown formatting like ** for bold text. Use hyphens (-) for bullet points.
+- Do not introduce yourself with "Hello" or "Hi". Get straight to the point.
+- Do not end with a generic closing like "I look forward to hearing from you".
 
 Job Description: {{{jobDescription}}}
 Freelancer Profile: {{{freelancerProfile}}}
