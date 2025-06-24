@@ -15,7 +15,6 @@ import { ReviewsProvider } from '@/hooks/use-reviews';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersProvider } from '@/hooks/use-users';
-import { PageLoader } from '@/components/page-loader';
 
 export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
@@ -31,7 +30,7 @@ export default function ShaqeysoHubApp() {
   }, [isLoading, user, router]);
 
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
 
   return (

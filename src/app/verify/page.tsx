@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PageLoader } from '@/components/page-loader';
 
 export default function VerifyPage() {
   const { user, isLoading } = useAuth();
@@ -36,11 +35,11 @@ export default function VerifyPage() {
   }, [isLoading, user, router]);
 
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
 
   if (user.verificationStatus === 'verified') {
-     return <PageLoader />;
+     return null;
   }
   
   if (user.verificationStatus === 'pending') {

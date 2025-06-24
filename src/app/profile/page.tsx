@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, Settings, CreditCard, LogOut, User as UserIcon } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PageLoader } from '@/components/page-loader';
 
 export default function ProfilePage() {
   const { user, isLoading, logout } = useAuth();
@@ -25,7 +24,7 @@ export default function ProfilePage() {
   }, [isLoading, user, router, pathname]);
 
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
 
   const menuItems = [

@@ -21,7 +21,6 @@ import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PageLoader } from '@/components/page-loader';
 
 export default function BillingPage() {
   const { user, isLoading, addPaymentMethod, removePaymentMethod, addTransaction } = useAuth();
@@ -48,7 +47,7 @@ export default function BillingPage() {
   }, [isLoading, user, router, pathname]);
   
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
   
   const balance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);

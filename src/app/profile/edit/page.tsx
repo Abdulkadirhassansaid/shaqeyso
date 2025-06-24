@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { ReviewsProvider } from '@/hooks/use-reviews';
-import { PageLoader } from '@/components/page-loader';
 
 export default function ProfileEditPage() {
   const { user, isLoading } = useAuth();
@@ -27,7 +26,7 @@ export default function ProfileEditPage() {
   }, [isLoading, user, router, pathname]);
 
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
 
   return (

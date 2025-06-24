@@ -12,7 +12,6 @@ import { ProposalsProvider } from '@/hooks/use-proposals';
 import { ReviewsProvider } from '@/hooks/use-reviews';
 import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 import { UsersProvider } from '@/hooks/use-users';
-import { PageLoader } from '@/components/page-loader';
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -30,7 +29,7 @@ export default function AdminPage() {
   }, [isLoading, user, router]);
 
   if (isLoading || !user || user.role !== 'admin') {
-    return <PageLoader />;
+    return null;
   }
 
   // If we reach here, user is an admin

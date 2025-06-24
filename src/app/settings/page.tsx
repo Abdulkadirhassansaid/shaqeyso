@@ -28,7 +28,6 @@ import type { Language } from '@/lib/translations';
 import { useLanguage } from '@/hooks/use-language';
 import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft } from 'lucide-react';
-import { PageLoader } from '@/components/page-loader';
 
 export default function SettingsPage() {
   const { user, isLoading, logout } = useAuth();
@@ -80,7 +79,7 @@ export default function SettingsPage() {
   }
 
   if (isLoading || !user) {
-    return <PageLoader />;
+    return null;
   }
 
   return (
