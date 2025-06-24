@@ -36,8 +36,6 @@ interface AuthContextType {
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
   users: User[];
-  freelancerProfiles: FreelancerProfile[];
-  clientProfiles: ClientProfile[];
   addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
   removePaymentMethod: (userId: string, methodId: string) => Promise<boolean>;
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
@@ -54,8 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [users, setUsers] = React.useState<User[]>([]);
-    const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
-    const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
     const router = useRouter();
 
     React.useEffect(() => {
@@ -64,19 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const usersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
             setUsers(usersData);
         });
-        const unsubFreelancerProfiles = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
-            const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
-            setFreelancerProfiles(profilesData);
-        });
-        const unsubClientProfiles = onSnapshot(collection(db, 'clientProfiles'), (snapshot) => {
-            const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as ClientProfile));
-            setClientProfiles(profilesData);
-        });
 
         return () => {
             unsubUsers();
-            unsubFreelancerProfiles();
-            unsubClientProfiles();
         };
     }, []);
 
@@ -207,10 +193,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (profileData) {
                 const userToUpdate = users.find(u => u.id === userId);
-                if (userToUpdate?.role === 'freelancer') {
-                    await updateDoc(doc(db, 'freelancerProfiles', userId), profileData);
-                } else if (userToUpdate?.role === 'client') {
-                    await updateDoc(doc(db, 'clientProfiles', userId), profileData);
+                const profileCollection = userToUpdate?.role === 'freelancer' ? 'freelancerProfiles' : 'clientProfiles';
+                if (userToUpdate) {
+                     await setDoc(doc(db, profileCollection, userId), profileData, { merge: true });
                 }
             }
             return true;
@@ -339,7 +324,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const value = { user, isLoading, login, logout, signup, updateUserProfile, users, freelancerProfiles, clientProfiles, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
+    const value = { user, isLoading, login, logout, signup, updateUserProfile, users, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

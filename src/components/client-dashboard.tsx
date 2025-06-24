@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import type { Job, User, Proposal, RankedFreelancer } from '@/lib/types';
+import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
 import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -32,6 +32,8 @@ import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 interface ClientDashboardProps {
@@ -49,10 +51,20 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
-  const { users: allUsers, freelancerProfiles, addTransaction } = useAuth();
+  const { users: allUsers, addTransaction } = useAuth();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
+  const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
+
+  React.useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
+        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
+        setFreelancerProfiles(profilesData);
+    });
+    return () => unsub();
+  }, []);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
 

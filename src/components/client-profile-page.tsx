@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import type { User, Review } from '@/lib/types';
+import type { User, Review, ClientProfile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,18 +17,31 @@ import { useReviews } from '@/hooks/use-reviews';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { StarRating } from './star-rating';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface ClientProfilePageProps {
   user: User;
 }
 
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
-  const { updateUserProfile, clientProfiles, users } = useAuth();
+  const { updateUserProfile, users } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useLanguage();
   
+  const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
+  
+  React.useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'clientProfiles'), (snapshot) => {
+      const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as ClientProfile));
+      setClientProfiles(profilesData);
+    });
+    return () => unsub();
+  }, []);
+
   const clientProfile = clientProfiles.find(p => p.userId === user.id);
   const clientReviews = reviews.filter(r => r.revieweeId === user.id);
   const averageRating = clientReviews.length > 0

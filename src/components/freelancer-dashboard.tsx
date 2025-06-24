@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Job, User, Proposal } from '@/lib/types';
+import type { Job, User, Proposal, FreelancerProfile } from '@/lib/types';
 import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
@@ -43,6 +43,8 @@ import { Label } from './ui/label';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 interface FreelancerDashboardProps {
@@ -57,7 +59,7 @@ type RecommendedJob = Job & {
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const { jobs, markJobAsReviewed } = useJobs();
   const { proposals, deleteProposal } = useProposals();
-  const { freelancerProfiles, users: allUsers } = useAuth();
+  const { users: allUsers } = useAuth();
   const { toast } = useToast();
   const { addReview } = useReviews();
   
@@ -73,7 +75,16 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [activeTab, setActiveTab] = React.useState('find-work');
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
   const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
+  const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
 
+  React.useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
+        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
+        setFreelancerProfiles(profilesData);
+    });
+    return () => unsub();
+  }, []);
 
   const freelancerProfileData = freelancerProfiles.find(p => p.userId === user.id);
   const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import type { User } from '@/lib/types';
+import type { User, FreelancerProfile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,8 @@ import { useReviews } from '@/hooks/use-reviews';
 import { Separator } from './ui/separator';
 import { format } from 'date-fns';
 import { StarRating } from './star-rating';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface FreelancerProfilePageProps {
   user: User;
@@ -34,12 +36,23 @@ const commonSkills = [
 ];
 
 export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
-  const { updateUserProfile, freelancerProfiles, users } = useAuth();
+  const { updateUserProfile, users } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useLanguage();
   
+  const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
+  
+  React.useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
+      const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
+      setFreelancerProfiles(profilesData);
+    });
+    return () => unsub();
+  }, []);
+
   const freelancerProfile = freelancerProfiles.find(p => p.userId === user.id);
   const freelancerReviews = reviews.filter(r => r.revieweeId === user.id);
   const averageRating = freelancerReviews.length > 0
@@ -49,23 +62,22 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [name, setName] = React.useState(user.name);
   const [avatar, setAvatar] = React.useState<string | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
-  const [bio, setBio] = React.useState(freelancerProfile?.bio || '');
-  const [hourlyRate, setHourlyRate] = React.useState(freelancerProfile?.hourlyRate || 0);
-  const [skills, setSkills] = React.useState<string[]>(freelancerProfile?.skills || []);
+  const [bio, setBio] = React.useState('');
+  const [hourlyRate, setHourlyRate] = React.useState(0);
+  const [skills, setSkills] = React.useState<string[]>([]);
   const [skillInput, setSkillInput] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
 
   React.useEffect(() => {
-    const profile = freelancerProfiles.find(p => p.userId === user.id);
-    if (profile) {
+    if (freelancerProfile) {
         setName(user.name);
-        setBio(profile.bio);
-        setHourlyRate(profile.hourlyRate);
-        setSkills(profile.skills);
+        setBio(freelancerProfile.bio || '');
+        setHourlyRate(freelancerProfile.hourlyRate || 0);
+        setSkills(freelancerProfile.skills || []);
     }
-  }, [user, freelancerProfiles]);
+  }, [user, freelancerProfile]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
