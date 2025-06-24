@@ -85,7 +85,6 @@ export default function MyServicesPage() {
   const [isGeneratingServiceDesc, setIsGeneratingServiceDesc] =
     React.useState(false);
   const [serviceImages, setServiceImages] = React.useState<string[]>([]);
-  const [serviceFiles, setServiceFiles] = React.useState<File[]>([]);
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
   const [isServiceSaving, setIsServiceSaving] = React.useState(false);
 
@@ -148,17 +147,7 @@ export default function MyServicesPage() {
     setServiceDesc(service.description);
     setServicePrice(String(service.price));
     setServiceImages(service.images || []);
-    setServiceFiles([]);
     setIsServiceDialogOpen(true);
-  };
-
-  const fileToDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleSaveService = async (e: React.FormEvent) => {
@@ -170,15 +159,12 @@ export default function MyServicesPage() {
     }
     setIsServiceSaving(true);
 
-    const newImageUrls = await Promise.all(serviceFiles.map(fileToDataUrl));
-    const allImageUrls = [...serviceImages, ...newImageUrls];
-
     const newService = {
       id: editingService?.id || `service-${Date.now()}`,
       title: serviceTitle,
       description: serviceDesc,
       price: Number(servicePrice),
-      images: allImageUrls,
+      images: serviceImages,
     };
 
     let updatedServices;
@@ -229,16 +215,22 @@ export default function MyServicesPage() {
 
   const handleServiceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setServiceFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+      // Simulate file upload by adding placeholder URLs
+      const newPlaceholders = Array.from(e.target.files).map(
+        () => 'https://placehold.co/200x200.png'
+      );
+      setServiceImages((prev) => [...prev, ...newPlaceholders]);
+    }
+    // Reset the input value to allow uploading the same file again
+    if (serviceImageInputRef.current) {
+      serviceImageInputRef.current.value = '';
     }
   };
 
-  const removeServiceImage = (type: 'file' | 'url', value: string) => {
-    if (type === 'file') {
-      setServiceFiles((prev) => prev.filter((file) => file.name !== value));
-    } else {
-      setServiceImages((prev) => prev.filter((url) => url !== value));
-    }
+  const removeServiceImage = (indexToRemove: number) => {
+    setServiceImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
   };
 
   const resetServiceDialog = () => {
@@ -246,7 +238,6 @@ export default function MyServicesPage() {
     setServiceTitle('');
     setServiceDesc('');
     setServicePrice('');
-    setServiceFiles([]);
     setServiceImages([]);
   };
 
@@ -459,9 +450,10 @@ export default function MyServicesPage() {
                       disabled={isServiceSaving}
                     />
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      {serviceImages.map((url) => (
-                        <div key={url} className="relative group">
+                      {serviceImages.map((url, index) => (
+                        <div key={index} className="relative group">
                           <Image
+                            data-ai-hint="portfolio image"
                             src={url}
                             alt="Service image"
                             width={100}
@@ -470,26 +462,7 @@ export default function MyServicesPage() {
                           />
                           <button
                             type="button"
-                            onClick={() => removeServiceImage('url', url)}
-                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
-                            disabled={isServiceSaving}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                      {serviceFiles.map((file) => (
-                        <div key={file.name} className="relative group">
-                          <Image
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
-                            width={100}
-                            height={100}
-                            className="rounded-md object-cover aspect-square"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeServiceImage('file', file.name)}
+                            onClick={() => removeServiceImage(index)}
                             className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100"
                             disabled={isServiceSaving}
                           >
