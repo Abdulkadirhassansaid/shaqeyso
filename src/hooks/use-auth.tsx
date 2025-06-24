@@ -70,9 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(userProfile);
           }
         } else {
-          // This case can happen in a race condition during signup.
-          // We will let it be null for now, the signup flow will handle the redirect.
-          setUser(null);
+          // A user is authenticated, but there's no user document in Firestore.
+          // This can happen for a brief moment during signup.
+          // By NOT setting user to null here, we allow the `signup` function's
+          // `setUser` call to be the single source of truth, preventing a race condition.
+          // If a user is legitimately in this state (auth record exists, but no db doc),
+          // they are in a broken state and would need manual cleanup anyway. The login
+          // flow wouldn't work for them, so we are not breaking any valid flow.
         }
       } else {
         setUser(null);
