@@ -21,7 +21,8 @@ import {
   arrayUnion,
   arrayRemove,
   deleteDoc,
-  query
+  query,
+  type Unsubscribe
 } from 'firebase/firestore';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
 
@@ -49,42 +50,61 @@ const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
+  const [authUser, setAuthUser] = React.useState<AuthUser | null>(null);
   const [users, setUsers] = React.useState<User[]>([]);
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
   const [clientProfiles, setClientProfiles] = React.useState<ClientProfile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const router = useRouter();
-
+  
+  // Effect 1: Listen only for Firebase Auth user changes
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      setIsLoading(true);
-      if (authUser) {
-        const userDocRef = doc(db, 'users', authUser.uid);
-        const userDoc = await getDoc(userDocRef);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setAuthUser(firebaseUser); 
+      if (!firebaseUser) {
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Effect 2: Listen for Firestore document changes based on who is logged in
+  React.useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
+
+    if (authUser) {
+      const userDocRef = doc(db, 'users', authUser.uid);
+      unsubscribe = onSnapshot(userDocRef, (userDoc) => {
         if (userDoc.exists()) {
           const userProfile = { id: userDoc.id, ...userDoc.data() } as User;
           if (userProfile.isBlocked) {
-            await signOut(auth);
-            setUser(null);
+            signOut(auth); // This will trigger Effect 1, clearing authUser and thus user
           } else {
             setUser(userProfile);
           }
         } else {
-          // A user is authenticated, but there's no user document in Firestore.
-          // This can happen for a brief moment during signup.
-          // By NOT setting user to null here, we allow the `signup` function's
-          // `setUser` call to be the single source of truth, preventing a race condition.
-          // If a user is legitimately in this state (auth record exists, but no db doc),
-          // they are in a broken state and would need manual cleanup anyway. The login
-          // flow wouldn't work for them, so we are not breaking any valid flow.
+          // User exists in Auth, but not in Firestore. This is an invalid state, so sign out.
+          signOut(auth);
         }
-      } else {
-        setUser(null);
+        setIsLoading(false);
+      }, (error) => {
+          // Handle snapshot errors, e.g., permissions issues
+          console.error("Error listening to user document:", error);
+          signOut(auth);
+          setIsLoading(false);
+      });
+    } else {
+      // No authenticated user
+      setUser(null);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+  }, [authUser]);
+
 
   React.useEffect(() => {
     const q = query(collection(db, "users"));
@@ -120,8 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await signOut(auth);
           return { success: false, message: 'blocked' };
         }
+        // Success, the onSnapshot listener will handle setting the state.
         return { success: true, user: userProfile };
       }
+      // User exists in auth, but not DB. Sign out to clean up.
+      await signOut(auth);
       return { success: false, message: 'invalid' };
     } catch (error) {
       return { success: false, message: 'invalid' };
@@ -176,7 +199,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       const userForState: User = { id: authUser.uid, ...newUser };
-      setUser(userForState); // Manually set user state to avoid race condition with onAuthStateChanged
+      // The onSnapshot listener will pick up the new user doc. We return the user
+      // so the UI can navigate immediately.
       return { success: true, user: userForState };
 
     } catch (error: any) {
