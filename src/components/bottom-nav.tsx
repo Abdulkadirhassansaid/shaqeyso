@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -19,7 +18,6 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/', label: 'Jobs', icon: LayoutGrid, roles: ['freelancer', 'client', 'admin'] },
-    { href: '/billing', label: 'Billing', icon: CreditCard, roles: ['freelancer', 'client', 'admin'] },
     { href: '/profile', label: 'My Account', icon: User, roles: ['freelancer', 'client', 'admin'] },
   ];
 
