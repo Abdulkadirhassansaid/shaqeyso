@@ -503,6 +503,8 @@ export const translations = {
         servicePrice: "Service Price ($)",
         serviceImages: "Service Images",
         uploadImages: "Upload Images",
+        myServicesPageTitle: "Manage Your Services",
+        myServicesPageDesc: "Add, edit, or remove the services you offer to clients.",
     },
     so: {
         // General
@@ -1007,6 +1009,8 @@ export const translations = {
         servicePrice: "Qiimaha Adeegga ($)",
         serviceImages: "Sawirrada Adeegga",
         uploadImages: "Soo Geli Sawirro",
+        myServicesPageTitle: "Maamul Adeegyadaada",
+        myServicesPageDesc: "Kudar, wax ka beddel, ama ka saar adeegyada aad u fidinayso macaamiisha.",
     }
 };
 

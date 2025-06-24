@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Settings, CreditCard, LogOut, User as UserIcon } from 'lucide-react';
+import { ChevronRight, Settings, CreditCard, LogOut, User as UserIcon, Briefcase } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -28,10 +28,14 @@ export default function ProfilePage() {
   }
 
   const menuItems = [
-    { label: t.profile, href: '/profile/edit', icon: UserIcon },
-    { label: t.billing, href: '/billing', icon: CreditCard },
-    { label: t.settings, href: '/settings', icon: Settings },
+    { label: t.profile, href: '/profile/edit', icon: UserIcon, roles: ['client', 'freelancer', 'admin'] },
+    { label: t.myServices, href: '/my-services', icon: Briefcase, roles: ['freelancer'] },
+    { label: t.billing, href: '/billing', icon: CreditCard, roles: ['client', 'freelancer', 'admin'] },
+    { label: t.settings, href: '/settings', icon: Settings, roles: ['client', 'freelancer', 'admin'] },
   ];
+  
+  const userMenuItems = menuItems.filter(item => item.roles.includes(user.role));
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -50,7 +54,7 @@ export default function ProfilePage() {
             </div>
             <div className="mt-8">
                 <ul className="space-y-2">
-                    {menuItems.map(item => (
+                    {userMenuItems.map(item => (
                         <li key={item.label}>
                             <Link href={item.href} className="flex items-center justify-between p-4 rounded-lg hover:bg-muted border">
                                 <div className="flex items-center gap-4">
