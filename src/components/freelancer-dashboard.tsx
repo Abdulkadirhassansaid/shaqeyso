@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User, Proposal, FreelancerProfile } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck, Filter } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -238,28 +238,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const myProposals = proposals.filter(p => p.freelancerId === user.id);
   const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
 
-  const JobCard = ({ job }: { job: Job }) => {
-    const client = allUsers.find(u => u.id === job.clientId);
-    return (
-        <Card onClick={() => setSelectedJob(job)} className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <CardTitle className="text-base font-bold line-clamp-2">{job.title}</CardTitle>
-                    {client?.verificationStatus === 'verified' && (
-                        <BadgeCheck className="h-5 w-5 text-primary shrink-0"/>
-                    )}
-                </div>
-                <CardDescription className="text-xs">
-                    {job.postedDate ? formatDistanceToNow(new Date(job.postedDate), { addSuffix: true }) : '...'}
-                </CardDescription>
-            </CardHeader>
-            <CardFooter>
-                <Badge variant="outline">${job.budget}</Badge>
-            </CardFooter>
-        </Card>
-    )
-  }
-
   const renderFindWorkContent = () => {
     if (openJobs.length === 0) {
       return <p className="text-muted-foreground text-center py-8">{t.noOpenJobsAvailable}</p>;
@@ -431,81 +409,62 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   return (
     <>
-      {/* Mobile View */}
-      <div className="md:hidden">
-         <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Jobs</h1>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon"><Filter className="h-5 w-5"/></Button>
-                </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                {filteredJobs.map(job => (
-                    <JobCard key={job.id} job={job} />
-                ))}
-            </div>
-         </div>
-      </div>
-
-      {/* Desktop View */}
-      <div className="hidden md:block">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
-                <TabsTrigger value="my-proposals">{t.myProposals}</TabsTrigger>
-                <TabsTrigger value="my-projects">{t.myProjects}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="find-work" className="mt-6">
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <CardTitle>{t.findWork}</CardTitle>
-                            <CardDescription>{t.findWorkDesc}</CardDescription>
-                        </div>
-                        <div className="relative md:w-72">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                            placeholder={t.searchJobsPlaceholder}
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        </div>
-                        {isRecommending && (
-                        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-                            <Wand2 className="h-4 w-4" />
-                            <span>{t.gettingRecommendations}</span>
-                        </div>
-                        )}
-                    </CardHeader>
-                    <CardContent>{renderFindWorkContent()}</CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="my-proposals" className="mt-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t.myProposals}</CardTitle>
-                        <CardDescription>{t.myProposalsDesc}</CardDescription>
-                    </CardHeader>
-                    <CardContent>{renderMyProposalsContent()}</CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="my-projects" className="mt-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t.myProjects}</CardTitle>
-                        <CardDescription>{t.myProjectsDesc}</CardDescription>
-                    </CardHeader>
-                    <CardContent>{renderMyProjectsContent()}</CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
-      </div>
-
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-center px-0">
+          <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
+              <TabsTrigger value="my-proposals">{t.myProposals}</TabsTrigger>
+              <TabsTrigger value="my-projects">{t.myProjects}</TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="find-work" className="mt-6">
+            <Card>
+                <CardHeader>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <CardTitle>{t.findWork}</CardTitle>
+                        <CardDescription>{t.findWorkDesc}</CardDescription>
+                    </div>
+                    <div className="relative md:w-72">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                        placeholder={t.searchJobsPlaceholder}
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    </div>
+                    {isRecommending && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                        <Wand2 className="h-4 w-4" />
+                        <span>{t.gettingRecommendations}</span>
+                    </div>
+                    )}
+                </CardHeader>
+                <CardContent>{renderFindWorkContent()}</CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="my-proposals" className="mt-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.myProposals}</CardTitle>
+                    <CardDescription>{t.myProposalsDesc}</CardDescription>
+                </CardHeader>
+                <CardContent>{renderMyProposalsContent()}</CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="my-projects" className="mt-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.myProjects}</CardTitle>
+                    <CardDescription>{t.myProjectsDesc}</CardDescription>
+                </CardHeader>
+                <CardContent>{renderMyProjectsContent()}</CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
+      
       {jobToChat && (
           <ChatDialog
               job={jobToChat}
