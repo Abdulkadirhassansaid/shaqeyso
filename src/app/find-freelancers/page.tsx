@@ -143,7 +143,7 @@ export default function FindFreelancersPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-grow">
-                                        <p className="text-sm text-muted-foreground line-clamp-3 h-[60px]">{profile?.bio || 'No bio available.'}</p>
+                                        <p className="text-sm text-muted-foreground line-clamp-3 h-[60px]">{profile?.bio || t.noBio}</p>
                                     </CardContent>
                                     <CardFooter>
                                         <Button className="w-full" onClick={() => setSelectedFreelancer(f)}>

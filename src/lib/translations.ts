@@ -365,7 +365,8 @@ export const translations = {
         // Freelancer Profile
         freelancerProfileTitle: 'Your Freelancer Profile',
         freelancerProfileDesc: 'This is how clients will see you. Make it count!',
-        yourBio: 'Your Bio',
+        yourBio: 'Bio',
+        noBio: 'No bio has been provided yet.',
         uploadPhoto: 'Upload Photo',
         uploadPhotoDesc: 'Recommended: 200x200px, PNG or JPG.',
         generateBioWithAI: 'Generate with AI',
@@ -868,7 +869,8 @@ export const translations = {
         // Freelancer Profile
         freelancerProfileTitle: 'Boggaaga Shaqaale Madaxbannaan',
         freelancerProfileDesc: 'Sidan ayay macaamiishu kuu arki doonaan. Ka dhig mid qiimo leh!',
-        yourBio: 'Taariikhdaada',
+        yourBio: 'Taariikh Nololeed',
+        noBio: 'Weli taariikh nololeed lama bixin.',
         uploadPhoto: 'Soo Geli Sawir',
         uploadPhotoDesc: 'Lagu taliyay: 200x200px, PNG ama JPG.',
         generateBioWithAI: 'Ku Samee AI',
