@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import Image from 'next/image';
 
 export default function SignupPage() {
   const [name, setName] = React.useState('');
@@ -53,7 +54,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 md:bg-muted">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -62,74 +63,84 @@ export default function SignupPage() {
           <CardTitle>{t.createAccount}</CardTitle>
           <CardDescription>{t.signupPrompt}</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t.fullNameLabel}</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder={t.yourNamePlaceholder}
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isLoading}
-              />
+        <CardContent>
+            <div className="mx-auto max-w-sm text-center my-4">
+                <Image 
+                  data-ai-hint="woman laptop" 
+                  src="https://placehold.co/300x200.png" 
+                  alt="Choose a role" 
+                  width={300} 
+                  height={200}
+                  className="mx-auto rounded-lg"
+                />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{t.emailLabel}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t.passwordLabel}</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-             <div className="space-y-2">
-              <Label>{t.iAmA}</Label>
-              <RadioGroup
-                defaultValue="freelancer"
-                className="flex gap-4"
-                onValueChange={(value) => setRole(value as 'client' | 'freelancer')}
-                disabled={isLoading}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="freelancer" id="r-freelancer" />
-                  <Label htmlFor="r-freelancer">{t.freelancer}</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="client" id="r-client" />
-                  <Label htmlFor="r-client">{t.client}</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? t.creatingAccount : t.createAccount}
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              {t.alreadyHaveAccount}{' '}
-              <Link href="/login" className="font-semibold text-primary hover:underline">
-                {t.signIn}
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+            <form onSubmit={handleSignup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">{t.fullNameLabel}</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder={t.yourNamePlaceholder}
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t.emailLabel}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="user@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">{t.passwordLabel}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.iAmA}</Label>
+                <RadioGroup
+                  defaultValue="freelancer"
+                  className="flex gap-4"
+                  onValueChange={(value) => setRole(value as 'client' | 'freelancer')}
+                  disabled={isLoading}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="freelancer" id="r-freelancer" />
+                    <Label htmlFor="r-freelancer" className="font-normal">{t.freelancer}</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="client" id="r-client" />
+                    <Label htmlFor="r-client" className="font-normal">{t.client}</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+               <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? t.creatingAccount : t.createAccount}
+              </Button>
+            </form>
+        </CardContent>
+        <CardFooter className="flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t.alreadyHaveAccount}{' '}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+              {t.signIn}
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

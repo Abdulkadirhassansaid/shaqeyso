@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
@@ -43,14 +44,11 @@ export default function LoginPage() {
       
       const redirectUrl = searchParams.get('redirect');
       
-      // If the user is an admin, always send them to the homepage from this form.
-      // The homepage will show them a card with a link to their admin dashboard.
       if (result.user.role === 'admin') {
           router.push('/');
           return;
       }
       
-      // For regular users, prevent redirecting to admin pages from the general login.
       if (redirectUrl && redirectUrl.toLowerCase().startsWith('/admin')) {
           router.push('/');
       } else {
@@ -77,54 +75,106 @@ export default function LoginPage() {
   const isDisabled = isSubmitting || isAuthLoading;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-           <div className="flex justify-center mb-4">
-            <Icons.logo className="h-8 w-8 text-primary" />
-           </div>
-          <CardTitle>{t.welcomeBack}</CardTitle>
-          <CardDescription>{t.loginPrompt}</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 md:bg-muted">
+      {/* Desktop View */}
+      <div className="hidden md:block w-full max-w-sm">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Icons.logo className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle>{t.welcomeBack}</CardTitle>
+            <CardDescription>{t.loginPrompt}</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-desktop">{t.emailLabel}</Label>
+                <Input
+                  id="email-desktop"
+                  type="email"
+                  placeholder="user@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isDisabled}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password-desktop">{t.passwordLabel}</Label>
+                <Input
+                  id="password-desktop"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isDisabled}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={isDisabled}>
+                {isSubmitting ? t.signingIn : t.signIn}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                {t.noAccount}{' '}
+                <Link href="/signup" className="font-semibold text-primary hover:underline">
+                  {t.signUp}
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden flex h-full w-full flex-col p-4">
+        <div className="flex-none">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="flex-grow flex flex-col justify-center">
+          <h1 className="text-3xl font-bold mb-8">Email Login</h1>
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">{t.emailLabel}</Label>
               <Input
-                id="email"
+                id="email-mobile"
                 type="email"
-                placeholder="user@example.com"
+                placeholder="Email address"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isDisabled}
+                className="h-12 text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t.passwordLabel}</Label>
               <Input
-                id="password"
+                id="password-mobile"
                 type="password"
+                placeholder="Password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isDisabled}
+                className="h-12 text-base"
               />
             </div>
-          </CardContent>
-          <CardFooter className="flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isDisabled}>
-              {isSubmitting ? t.signingIn : t.signIn}
+            <Button type="submit" className="w-full h-12 text-base" disabled={isDisabled}>
+              {isSubmitting ? t.signingIn : 'Login'}
             </Button>
-            <p className="text-sm text-muted-foreground">
-              {t.noAccount}{' '}
-              <Link href="/signup" className="font-semibold text-primary hover:underline">
-                {t.signUp}
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+          </form>
+        </div>
+        <div className="flex-none text-center">
+          <p className="text-sm text-muted-foreground">
+            {t.noAccount}{' '}
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
+              {t.signUp}
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

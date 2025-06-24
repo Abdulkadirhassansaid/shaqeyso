@@ -28,8 +28,6 @@ export default function ShaqeysoHubApp() {
     if (!user) {
       router.replace('/login');
     }
-    // Redirect logic for verification is now handled at the point of action (e.g., posting a job)
-    // or on the /onboarding and /verify pages themselves.
   }, [isLoading, user, router]);
 
   if (isLoading || !user) {
@@ -50,7 +48,7 @@ export default function ShaqeysoHubApp() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
-      <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 container mx-auto py-4 md:py-8 px-4 sm:px-6 lg:px-8">
         <UsersProvider>
           <JobsProvider key={`jobs-${user.id}`}>
             <ProposalsProvider key={`proposals-${user.id}`}>

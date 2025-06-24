@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Job, User, Proposal, FreelancerProfile } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck, Filter } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -92,7 +92,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   const handleGetRecommendations = React.useCallback(async () => {
       if (!freelancerProfileData || (freelancerProfileData.skills.length === 0 && !freelancerProfileData.bio)) {
-          // Silently fail if profile is not complete
           return;
       }
       
@@ -118,7 +117,6 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
       } catch (error) {
           console.error("Error getting recommendations:", error);
-          // Don't show a toast for background failure, just log it.
       } finally {
           setIsRecommending(false);
       }
@@ -153,65 +151,73 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   if (selectedJob) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-           <Button variant="ghost" size="sm" onClick={() => setSelectedJob(null)} className="justify-start mb-4 w-fit px-2">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t.backToJobs}
-          </Button>
-          <CardTitle className="font-headline text-2xl md:text-3xl">{selectedJob.title}</CardTitle>
-          <div className="flex flex-wrap items-center gap-4 pt-2 text-muted-foreground">
-             <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span>{t.budget}: ${selectedJob.budget}</span>
-             </div>
-             <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                <Badge variant="secondary">{selectedJob.category}</Badge>
-             </div>
-             {selectedJob.postedDate && (
+      <div className="w-full h-full bg-background md:bg-transparent">
+        <div className="p-4 flex items-center gap-4 md:hidden">
+            <Button variant="ghost" size="icon" onClick={() => setSelectedJob(null)}>
+                <ArrowLeft />
+            </Button>
+            <h1 className="text-xl font-bold">{selectedJob.title}</h1>
+        </div>
+        <Card className="w-full h-full md:h-auto border-0 md:border md:shadow-sm">
+            <CardHeader className="hidden md:block">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedJob(null)} className="justify-start mb-4 w-fit px-2">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.backToJobs}
+            </Button>
+            <CardTitle className="font-headline text-2xl md:text-3xl">{selectedJob.title}</CardTitle>
+            <div className="flex flex-wrap items-center gap-4 pt-2 text-muted-foreground">
                 <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{t.posted} {formatDistanceToNow(new Date(selectedJob.postedDate), { addSuffix: true })}</span>
+                    <DollarSign className="h-4 w-4" />
+                    <span>{t.budget}: ${selectedJob.budget}</span>
                 </div>
-             )}
-             <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{t.deadline}: {selectedJob.deadline}</span>
-             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-            <h3 className='font-semibold mb-2'>{t.jobDescriptionTitle}</h3>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
-        </CardContent>
-        <CardFooter className='flex-col items-start gap-6'>
-          {user.verificationStatus === 'verified' ? (
-              <ProposalForm 
-                  job={selectedJob} 
-                  freelancerProfile={profileString} 
-                  onFinished={() => setSelectedJob(null)}
-              />
-          ) : (
-             <Alert variant="default" className="w-full flex flex-col items-center text-center p-6">
-              <AlertCircle className="h-6 w-6 mb-2" />
-              <AlertTitle className="text-lg font-semibold">{t.verificationRequiredTitle}</AlertTitle>
-              <AlertDescription className="mt-1">
-                {t.verificationRequiredFreelancerDesc}
-              </AlertDescription>
-              <Button asChild className="mt-4">
-                <Link href="/verify">{t.verifyNow}</Link>
-              </Button>
-            </Alert>
-          )}
-        </CardFooter>
-      </Card>
+                <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    <Badge variant="secondary">{selectedJob.category}</Badge>
+                </div>
+                {selectedJob.postedDate && (
+                    <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{t.posted} {formatDistanceToNow(new Date(selectedJob.postedDate), { addSuffix: true })}</span>
+                    </div>
+                )}
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{t.deadline}: {selectedJob.deadline}</span>
+                </div>
+            </div>
+            </CardHeader>
+            <CardContent>
+                <h3 className='font-semibold mb-2'>{t.jobDescriptionTitle}</h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
+            </CardContent>
+            <CardFooter className='flex-col items-start gap-6'>
+            {user.verificationStatus === 'verified' ? (
+                <ProposalForm 
+                    job={selectedJob} 
+                    freelancerProfile={profileString} 
+                    onFinished={() => setSelectedJob(null)}
+                />
+            ) : (
+                <Alert variant="default" className="w-full flex flex-col items-center text-center p-6">
+                <AlertCircle className="h-6 w-6 mb-2" />
+                <AlertTitle className="text-lg font-semibold">{t.verificationRequiredTitle}</AlertTitle>
+                <AlertDescription className="mt-1">
+                    {t.verificationRequiredFreelancerDesc}
+                </AlertDescription>
+                <Button asChild className="mt-4">
+                    <Link href="/verify">{t.verifyNow}</Link>
+                </Button>
+                </Alert>
+            )}
+            </CardFooter>
+        </Card>
+      </div>
     );
   }
 
   if (editingProposal) {
     const jobForProposal = jobs.find(j => j.id === editingProposal.jobId);
-    if (!jobForProposal) return null; // Or show an error state
+    if (!jobForProposal) return null;
     return (
         <ProposalForm 
             job={jobForProposal}
@@ -232,43 +238,55 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const myProposals = proposals.filter(p => p.freelancerId === user.id);
   const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
 
+  const JobCard = ({ job }: { job: Job }) => {
+    const client = allUsers.find(u => u.id === job.clientId);
+    return (
+        <Card onClick={() => setSelectedJob(job)} className="cursor-pointer hover:shadow-md transition-shadow">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <CardTitle className="text-base font-bold line-clamp-2">{job.title}</CardTitle>
+                    {client?.verificationStatus === 'verified' && (
+                        <BadgeCheck className="h-5 w-5 text-primary shrink-0"/>
+                    )}
+                </div>
+                <CardDescription className="text-xs">
+                    {job.postedDate ? formatDistanceToNow(new Date(job.postedDate), { addSuffix: true }) : '...'}
+                </CardDescription>
+            </CardHeader>
+            <CardFooter>
+                <Badge variant="outline">${job.budget}</Badge>
+            </CardFooter>
+        </Card>
+    )
+  }
 
   const renderFindWorkContent = () => {
     if (openJobs.length === 0) {
       return <p className="text-muted-foreground text-center py-8">{t.noOpenJobsAvailable}</p>;
     }
 
-    if (filteredJobs.length === 0) {
+    if (filteredJobs.length === 0 && searchQuery) {
       return <p className="text-muted-foreground text-center py-8">{t.noJobsFound}</p>;
     }
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
-        {filteredJobs.map((job) => {
+        {(searchQuery ? filteredJobs : recommendedJobs.length > 0 ? recommendedJobs : filteredJobs).map((job) => {
             const recommendation = recommendedJobs.find(rec => rec.id === job.id);
             const isRecommended = !!recommendation;
-            const client = allUsers.find(u => u.id === job.clientId);
             
             return (
-                <Card key={job.id} className={cn("flex flex-col transition-all", isRecommended && "border-primary/50 bg-primary/5")}>
+                 <Card key={job.id} className={cn("flex flex-col transition-all", isRecommended && "border-primary/50 bg-primary/5")}>
                     <CardHeader>
                         <div className="flex justify-between items-start gap-2">
                             <CardTitle className="text-lg font-headline">{job.title}</CardTitle>
-                            {isRecommended && (
+                             {isRecommended && (
                                 <Badge variant="default" className="shrink-0">
                                     <Wand2 className="mr-1.5 h-3 w-3" />
                                     {t.forYou}
                                 </Badge>
                             )}
                         </div>
-                        {client && (
-                          <div className="flex items-center gap-2 pt-1 text-sm text-muted-foreground">
-                            <span>{client.name}</span>
-                            {client.verificationStatus === 'verified' && (
-                              <BadgeCheck className="h-4 w-4 text-primary" />
-                            )}
-                          </div>
-                        )}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                               <Tag className="h-4 w-4" />
@@ -413,6 +431,26 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
 
   return (
     <>
+      {/* Mobile View */}
+      <div className="md:hidden">
+         <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Jobs</h1>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button>
+                    <Button variant="ghost" size="icon"><Filter className="h-5 w-5"/></Button>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                {filteredJobs.map(job => (
+                    <JobCard key={job.id} job={job} />
+                ))}
+            </div>
+         </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:block">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="find-work">{t.findWork}</TabsTrigger>
@@ -466,83 +504,84 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 </Card>
             </TabsContent>
         </Tabs>
+      </div>
 
-        {jobToChat && (
-            <ChatDialog
-                job={jobToChat}
-                isOpen={!!jobToChat}
-                onClose={() => setJobToChat(null)}
-            />
-        )}
-        {jobToReview && (
-            <ReviewFormDialog
-                isOpen={!!jobToReview}
-                onClose={() => setJobToReview(null)}
-                reviewee={allUsers.find(u => u.id === jobToReview.clientId)}
-                job={jobToReview}
-                onSubmit={handleReviewSubmit}
-            />
-        )}
-        {viewingProposal && (
-            <Dialog open={!!viewingProposal} onOpenChange={(isOpen) => !isOpen && setViewingProposal(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{jobs.find(j => j.id === viewingProposal.jobId)?.title}</DialogTitle>
-                        <DialogDescription>
-                            {t.yourProposal}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div>
-                            <Label className="font-semibold">{t.coverLetter}</Label>
-                            <div className="mt-2 rounded-md border p-4 text-sm text-muted-foreground max-h-60 overflow-y-auto">
-                                <p className="whitespace-pre-wrap">{viewingProposal.coverLetter}</p>
-                            </div>
-                        </div>
-                        <p className="font-semibold text-sm">{t.proposedRate}: <span className="font-normal">${viewingProposal.proposedRate}/hr</span></p>
-                    </div>
-                    <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between items-center">
-                         <Badge variant={viewingProposal.status === 'Accepted' ? 'default' : viewingProposal.status === 'Rejected' ? 'destructive' : 'secondary'}>
-                            {t.status}: {t[viewingProposal.status.toLowerCase() as keyof typeof t] || viewingProposal.status}
-                        </Badge>
-                        {viewingProposal.status === 'Pending' ? (
-                            <div className="flex justify-end gap-2">
-                                <Button variant="destructive" onClick={() => {
-                                    setDeletingProposal(viewingProposal);
-                                    setViewingProposal(null);
-                                }}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    {t.delete}
-                                </Button>
-                                <Button variant="outline" onClick={() => {
-                                    setEditingProposal(viewingProposal);
-                                    setViewingProposal(null);
-                                }}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    {t.edit}
-                                </Button>
-                            </div>
-                        ) : (
-                           <DialogClose asChild>
-                             <Button type="button" variant="secondary" onClick={() => setViewingProposal(null)}>{t.closed}</Button>
-                           </DialogClose>
-                        )}
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        )}
-        <AlertDialog open={!!deletingProposal} onOpenChange={(isOpen) => !isOpen && setDeletingProposal(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{t.deleteProposalConfirmTitle}</AlertDialogTitle>
-                    <AlertDialogDescription>{t.deleteProposalConfirmDesc}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setDeletingProposal(null)}>{t.cancel}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteProposal} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+      {jobToChat && (
+          <ChatDialog
+              job={jobToChat}
+              isOpen={!!jobToChat}
+              onClose={() => setJobToChat(null)}
+          />
+      )}
+      {jobToReview && (
+          <ReviewFormDialog
+              isOpen={!!jobToReview}
+              onClose={() => setJobToReview(null)}
+              reviewee={allUsers.find(u => u.id === jobToReview.clientId)}
+              job={jobToReview}
+              onSubmit={handleReviewSubmit}
+          />
+      )}
+      {viewingProposal && (
+          <Dialog open={!!viewingProposal} onOpenChange={(isOpen) => !isOpen && setViewingProposal(null)}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>{jobs.find(j => j.id === viewingProposal.jobId)?.title}</DialogTitle>
+                      <DialogDescription>
+                          {t.yourProposal}
+                      </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                      <div>
+                          <Label className="font-semibold">{t.coverLetter}</Label>
+                          <div className="mt-2 rounded-md border p-4 text-sm text-muted-foreground max-h-60 overflow-y-auto">
+                              <p className="whitespace-pre-wrap">{viewingProposal.coverLetter}</p>
+                          </div>
+                      </div>
+                      <p className="font-semibold text-sm">{t.proposedRate}: <span className="font-normal">${viewingProposal.proposedRate}/hr</span></p>
+                  </div>
+                  <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between items-center">
+                        <Badge variant={viewingProposal.status === 'Accepted' ? 'default' : viewingProposal.status === 'Rejected' ? 'destructive' : 'secondary'}>
+                          {t.status}: {t[viewingProposal.status.toLowerCase() as keyof typeof t] || viewingProposal.status}
+                      </Badge>
+                      {viewingProposal.status === 'Pending' ? (
+                          <div className="flex justify-end gap-2">
+                              <Button variant="destructive" onClick={() => {
+                                  setDeletingProposal(viewingProposal);
+                                  setViewingProposal(null);
+                              }}>
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {t.delete}
+                              </Button>
+                              <Button variant="outline" onClick={() => {
+                                  setEditingProposal(viewingProposal);
+                                  setViewingProposal(null);
+                              }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  {t.edit}
+                              </Button>
+                          </div>
+                      ) : (
+                          <DialogClose asChild>
+                            <Button type="button" variant="secondary" onClick={() => setViewingProposal(null)}>{t.closed}</Button>
+                          </DialogClose>
+                      )}
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+      )}
+      <AlertDialog open={!!deletingProposal} onOpenChange={(isOpen) => !isOpen && setDeletingProposal(null)}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>{t.deleteProposalConfirmTitle}</AlertDialogTitle>
+                  <AlertDialogDescription>{t.deleteProposalConfirmDesc}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeletingProposal(null)}>{t.cancel}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteProposal} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
