@@ -54,11 +54,8 @@ const generateJobDescriptionFlow = ai.defineFlow(
       const {output} = await prompt(input);
       return output!;
     } catch (error) {
-        console.error("AI flow 'generateJobDescriptionFlow' failed:", error);
-        if (error instanceof Error && error.message.includes('429')) {
-            throw new Error("You've exceeded the daily limit for AI requests on the free plan. Please try again tomorrow.");
-        }
-        throw new Error("The AI service is currently unavailable. Please try again later.");
+      console.error("AI flow 'generateJobDescriptionFlow' failed:", error);
+      throw new Error('AI generation not available now');
     }
   }
 );

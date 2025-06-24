@@ -50,6 +50,7 @@ export type Service = {
   title: string;
   description: string;
   price: number;
+  images?: string[];
 };
 
 export type FreelancerProfile = {

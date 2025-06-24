@@ -276,7 +276,7 @@ export const translations = {
         promptEmpty: 'Prompt is empty',
         promptEmptyDesc: 'Please provide a short description of the job.',
         generationFailed: 'Generation Failed',
-        generationFailedDesc: 'Could not generate job description at this time.',
+        generationFailedDesc: 'AI generation not available now',
         jobPostedTitle: 'Job Posted!',
         jobPostedDesc: 'Your job has been successfully posted.',
         jobPostFailedTitle: 'Error',
@@ -344,6 +344,8 @@ export const translations = {
         submissionFailed: 'Submission Failed',
         submissionFailedDesc: 'There was an error submitting your proposal. Please try again.',
         missingProposalFields: 'Please provide a cover letter and your hourly rate.',
+        proposalGenFailed: 'Generation Failed',
+        proposalGenFailedDesc: 'AI generation not available now',
 
         // Client Profile
         companyProfile: 'Company Profile',
@@ -498,6 +500,8 @@ export const translations = {
         serviceDescription: "Service Description",
         serviceDescPlaceholder: "Describe what's included in this service...",
         servicePrice: "Service Price ($)",
+        serviceImages: "Service Images",
+        uploadImages: "Upload Images",
     },
     so: {
         // General
@@ -775,7 +779,7 @@ export const translations = {
         promptEmpty: 'Dariiqa waa madhan yahay',
         promptEmptyDesc: 'Fadlan bixi sharaxaad kooban oo shaqada ku saabsan.',
         generationFailed: 'Abuuritaanku Waa Fashilmay',
-        generationFailedDesc: 'Waqtigan xaadirka ah lama abuuri karin sharaxaadda shaqada.',
+        generationFailedDesc: 'Soo saarista AI hadda diyaar maaha',
         jobPostedTitle: 'Shaqada Waa La Geliyay!',
         jobPostedDesc: 'Shaqadaada si guul leh ayaa loo geliyay.',
         jobPostFailedTitle: 'Cilad',
@@ -843,6 +847,8 @@ export const translations = {
         submissionFailed: 'Gudbintu Waa Fashilantay',
         submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay codsigaaga.',
         missingProposalFields: 'Fadlan bixi warqad codsi iyo qiimahaaga saacaddii.',
+        proposalGenFailed: 'Soosaarista way fashilantay',
+        proposalGenFailedDesc: 'Soo saarista AI hadda diyaar maaha',
 
         // Client Profile
         companyProfile: 'Bogga Shirkadda',
@@ -997,6 +1003,8 @@ export const translations = {
         serviceDescription: "Sharaxaadda Adeegga",
         serviceDescPlaceholder: "Sharax waxa ku jira adeeggan...",
         servicePrice: "Qiimaha Adeegga ($)",
+        serviceImages: "Sawirrada Adeegga",
+        uploadImages: "Soo Geli Sawirro",
     }
 };
 

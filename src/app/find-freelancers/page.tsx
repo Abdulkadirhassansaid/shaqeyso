@@ -22,6 +22,7 @@ import { StarRating } from '@/components/star-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
+import Image from 'next/image';
 
 type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 
@@ -200,6 +201,13 @@ export default function FindFreelancersPage() {
                                                 </div>
                                                 <Button size="sm" variant="outline" onClick={() => setChattingWith(selectedFreelancer)}>{t.requestQuote}</Button>
                                             </div>
+                                             {service.images && service.images.length > 0 && (
+                                                <div className="mt-2 grid grid-cols-4 gap-2">
+                                                    {service.images.map((img, index) => (
+                                                        <Image data-ai-hint="portfolio image" key={index} src={img} alt={`${service.title} image ${index + 1}`} width={100} height={100} className="rounded-md object-cover aspect-square" />
+                                                    ))}
+                                                </div>
+                                            )}
                                              <div className="text-right font-bold text-primary mt-2">${service.price.toFixed(2)}</div>
                                         </div>
                                     ))}
