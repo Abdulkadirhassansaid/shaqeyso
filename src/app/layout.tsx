@@ -11,7 +11,6 @@ import { DirectMessagesProvider } from '@/hooks/use-direct-messages';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { PageProgress } from '@/components/page-progress';
 import { BottomNav } from '@/components/bottom-nav';
 
 const ptSans = PT_Sans({
@@ -76,7 +75,6 @@ export default function RootLayout({
             <AuthProvider>
               <DirectMessagesProvider>
                 <div className="relative flex min-h-screen flex-col">
-                  <PageProgress />
                   <main className="flex-1 pb-20 md:pb-0">{children}</main>
                   <BottomNav />
                 </div>
