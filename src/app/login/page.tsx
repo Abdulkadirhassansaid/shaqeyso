@@ -18,12 +18,14 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { useLoading } from '@/hooks/use-loading';
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { login, isLoading: isAuthLoading } = useAuth();
+  const { setIsLoading } = useLoading();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -36,6 +38,7 @@ export default function LoginPage() {
 
     if (result.success && result.user) {
       if (result.user.verificationStatus === 'unverified' && result.user.role !== 'admin') {
+        setIsLoading(true);
         router.push('/onboarding');
         return;
       }
@@ -43,13 +46,16 @@ export default function LoginPage() {
       const redirectUrl = searchParams.get('redirect');
       
       if (result.user.role === 'admin') {
+          setIsLoading(true);
           router.push('/');
           return;
       }
       
       if (redirectUrl && redirectUrl.toLowerCase().startsWith('/admin')) {
+          setIsLoading(true);
           router.push('/');
       } else {
+          setIsLoading(true);
           router.push(redirectUrl || '/');
       }
     } else {

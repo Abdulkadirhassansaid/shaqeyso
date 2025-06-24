@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { useLoading } from '@/hooks/use-loading';
 import Image from 'next/image';
 
 export default function SignupPage() {
@@ -27,17 +27,19 @@ export default function SignupPage() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<'client' | 'freelancer'>('freelancer');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { signup } = useAuth();
+  const { setIsLoading } = useLoading();
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useLanguage();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     const result = await signup(name, email, password, role);
     if (result.success) {
+      setIsLoading(true);
       router.push('/onboarding');
     } else {
       let description = t.signupFailedDesc;
@@ -49,7 +51,7 @@ export default function SignupPage() {
         description: description,
         variant: 'destructive',
       });
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -84,7 +86,7 @@ export default function SignupPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -96,7 +98,7 @@ export default function SignupPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -107,7 +109,7 @@ export default function SignupPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -116,7 +118,7 @@ export default function SignupPage() {
                   defaultValue="freelancer"
                   className="flex gap-4"
                   onValueChange={(value) => setRole(value as 'client' | 'freelancer')}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="freelancer" id="r-freelancer" />
@@ -128,8 +130,8 @@ export default function SignupPage() {
                   </div>
                 </RadioGroup>
               </div>
-               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? t.creatingAccount : t.createAccount}
+               <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? t.creatingAccount : t.createAccount}
               </Button>
             </form>
         </CardContent>
