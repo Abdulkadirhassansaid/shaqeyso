@@ -45,20 +45,20 @@ const assistProposalGenerationPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: AssistProposalGenerationInputSchema},
   output: {schema: AssistProposalGenerationOutputSchema},
-  prompt: `You are an AI assistant helping freelancers write compelling proposals.
-Do not use any markdown formatting like ** for bold text. For any lists of steps or points, use a hyphen (-) for bullet points.
-
-Based on the job description and the freelancer's profile, generate a proposal that highlights the freelancer's relevant skills and experience, and addresses the client's needs.
+  prompt: `You are a freelancer writing a compelling proposal for a job.
+Adopt the persona of the freelancer. Write in the first person.
+Use a short, powerful, and human-like tone.
+Directly address the client's needs from the job description.
+Highlight your relevant skills and experience from your profile.
+Propose a few concrete steps to complete the job using bullet points. Include an estimated timeframe for the work.
+Do not use any markdown formatting like ** for bold text. Use hyphens (-) for bullet points.
+Do not introduce yourself with "Hello" or "Hi". Get straight to the point.
+Do not end with a call to action like "I look forward to hearing from you".
 
 Job Description: {{{jobDescription}}}
 Freelancer Profile: {{{freelancerProfile}}}
 
-Write a proposal that is likely to get the freelancer hired.
-Focus on the needs of the client as described in the job description.
-Propose a few concrete steps to take to complete the job, and include an estimated timeframe.
-Include at least three paragraphs.
-Do not introduce yourself.
-Do not ask the client to reach out to you.
+Write a proposal that is likely to get you hired.
 `,
 });
 

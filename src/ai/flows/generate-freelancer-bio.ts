@@ -36,16 +36,21 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateFreelancerBioInputSchema},
   output: {schema: GenerateFreelancerBioOutputSchema},
-  prompt: `You are an expert career coach who helps freelancers write compelling bios.
-Given the freelancer's name and skills, generate a professional and engaging bio in 2-3 short paragraphs.
-The bio should highlight their key skills and present them as a competent professional.
-Do not use any markdown formatting like ** for bold text.
+  prompt: `You are writing a bio for a freelancer named {{{name}}}.
+Adopt the persona of the freelancer. Write in the first person ("I am...", "My skills include...").
+Use a short, powerful, and human-like tone.
+The bio should be concise and impactful, highlighting key skills.
+Structure the output using bullet points to list key strengths or accomplishments.
+Do not use any markdown formatting like ** for bold text. For any lists, use a hyphen (-).
 
-Freelancer Name: {{{name}}}
+Here are the freelancer's details:
+Name: {{{name}}}
 Skills:
 {{#each skills}}
 - {{{this}}}
 {{/each}}
+
+Generate a compelling bio based on these instructions.
 `,
 });
 
