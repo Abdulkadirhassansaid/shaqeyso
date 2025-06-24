@@ -25,6 +25,11 @@ import {
   type RecommendJobsForFreelancerInput,
   type RecommendJobsForFreelancerOutput,
 } from '@/ai/flows/recommend-jobs-for-freelancer';
+import {
+  generateServiceDescription as genServiceDesc,
+  type GenerateServiceDescriptionInput,
+  type GenerateServiceDescriptionOutput,
+} from '@/ai/flows/generate-service-description';
 
 export async function generateJobDescription(
   input: GenerateJobDescriptionInput
@@ -54,4 +59,10 @@ export async function recommendJobsForFreelancer(
   input: RecommendJobsForFreelancerInput
 ): Promise<RecommendJobsForFreelancerOutput> {
   return await recommendJobs(input);
+}
+
+export async function generateServiceDescription(
+  input: GenerateServiceDescriptionInput
+): Promise<GenerateServiceDescriptionOutput> {
+  return await genServiceDesc(input);
 }

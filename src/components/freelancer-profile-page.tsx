@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Wand2, X, Camera, Star, BadgeCheck, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { generateFreelancerBio } from '@/app/actions';
+import { generateFreelancerBio, generateServiceDescription } from '@/app/actions';
 import { LoadingDots } from './loading-dots';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -109,6 +109,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [serviceTitle, setServiceTitle] = React.useState('');
   const [serviceDesc, setServiceDesc] = React.useState('');
   const [servicePrice, setServicePrice] = React.useState('');
+  const [isGeneratingServiceDesc, setIsGeneratingServiceDesc] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -195,6 +196,33 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       });
     } finally {
       setIsGeneratingBio(false);
+    }
+  };
+
+  const handleGenerateServiceDesc = async () => {
+    if (!serviceTitle) {
+      toast({
+        title: "Service Title Required",
+        description: "Please enter a title for your service first.",
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsGeneratingServiceDesc(true);
+    try {
+      const result = await generateServiceDescription({
+        title: serviceTitle,
+      });
+      setServiceDesc(result.description);
+    } catch (error) {
+      console.error('Error generating service description:', error);
+      toast({
+        title: t.generationFailed,
+        description: t.generationFailedDesc,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingServiceDesc(false);
     }
   };
   
@@ -479,8 +507,26 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
                                 <Input id="service-title" value={serviceTitle} onChange={e => setServiceTitle(e.target.value)} placeholder={t.serviceTitlePlaceholder} required/>
                             </div>
                              <div className="space-y-2">
-                                <Label htmlFor="service-desc">{t.serviceDescription}</Label>
-                                <Textarea id="service-desc" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder={t.serviceDescPlaceholder} required/>
+                                <div className="flex justify-between items-center">
+                                    <Label htmlFor="service-desc">{t.serviceDescription}</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleGenerateServiceDesc}
+                                        disabled={isGeneratingServiceDesc || !serviceTitle}
+                                    >
+                                        <Wand2 className="mr-2 h-4 w-4" />
+                                        {isGeneratingServiceDesc ? t.generating : t.generateWithAI}
+                                    </Button>
+                                </div>
+                                {isGeneratingServiceDesc ? (
+                                    <div className="flex items-center justify-center rounded-md border border-dashed min-h-[96px]">
+                                        <LoadingDots />
+                                    </div>
+                                ) : (
+                                    <Textarea id="service-desc" value={serviceDesc} onChange={e => setServiceDesc(e.target.value)} placeholder={t.serviceDescPlaceholder} required/>
+                                )}
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="service-price">{t.servicePrice}</Label>
