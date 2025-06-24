@@ -55,6 +55,9 @@ const generateServiceDescriptionFlow = ai.defineFlow(
       return output!;
     } catch (error) {
       console.error("AI flow 'generateServiceDescriptionFlow' failed:", error);
+      if (error instanceof Error && error.message.includes('429')) {
+        throw new Error("You've exceeded the daily limit for AI requests on the free plan. Please try again tomorrow.");
+      }
       throw new Error("The AI service is currently unavailable. Please try again later.");
     }
   }
