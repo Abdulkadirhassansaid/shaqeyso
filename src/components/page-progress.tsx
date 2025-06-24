@@ -16,7 +16,7 @@ export function PageProgress() {
 
   useEffect(() => {
     // This effect runs once on the client to set up event listeners for NProgress.
-    NProgress.configure({ showSpinner: false });
+    NProgress.configure({ showSpinner: true });
 
     const handleAnchorClick = (event: MouseEvent) => {
       const target = (event.target as HTMLElement).closest('a');
