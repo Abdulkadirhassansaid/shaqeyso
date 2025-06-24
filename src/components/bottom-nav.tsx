@@ -20,7 +20,7 @@ export function BottomNav() {
   const navItems = [
     { href: '/', label: 'Jobs', icon: LayoutGrid, roles: ['freelancer', 'client', 'admin'] },
     { href: '/billing', label: 'Billing', icon: CreditCard, roles: ['freelancer', 'client', 'admin'] },
-    { href: '/profile', label: 'Profile', icon: User, roles: ['freelancer', 'client', 'admin'] },
+    { href: '/profile', label: 'My Account', icon: User, roles: ['freelancer', 'client', 'admin'] },
   ];
 
   const userNavItems = navItems.filter(item => item.roles.includes(user.role));
