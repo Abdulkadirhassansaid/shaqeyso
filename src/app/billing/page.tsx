@@ -176,9 +176,9 @@ export default function BillingPage() {
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
             <Button asChild variant="outline" size="sm">
-                <Link href={user.role === 'admin' ? '/admin/dashboard' : '/'}>
+                <Link href="/profile">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    {user.role === 'admin' ? t.adminDashboard : t.backToHome}
+                    {t.profile}
                 </Link>
             </Button>
           </div>
