@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
@@ -74,18 +74,26 @@ export function AdminDashboard() {
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
 
-  // This is the true, total withdrawable balance from the admin account.
-  const platformBalance = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
+  // This is the true, total cash in the platform account.
+  const platformBalance = adminTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
 
   // Total fees collected by the platform.
   const totalFeesCollected = adminTransactions
     .filter(tx => tx.description.startsWith('Platform Fee'))
-    .reduce((acc, tx) => acc + tx.amount, 0);
+    .reduce((acc, tx) => acc + (tx.amount || 0), 0);
+
+  // Total funds withdrawn by the admin.
+  const totalWithdrawals = adminTransactions
+    .filter(tx => tx.amount < 0 && !tx.description.startsWith('Release escrow for'))
+    .reduce((acc, tx) => acc + Math.abs(tx.amount || 0), 0);
+
+  // This is the actual withdrawable balance for the admin (earnings - withdrawals).
+  const withdrawableBalance = totalFeesCollected - totalWithdrawals;
 
   // Total value of all successfully completed jobs.
   const totalValueProcessed = jobs
-    .filter(j => j.status === 'Completed')
-    .reduce((acc, job) => acc + job.budget, 0);
+    .filter(j => j.status === 'Completed' && j.budget)
+    .reduce((acc, job) => acc + (job.budget || 0), 0);
   
   const pendingVerifications = users.filter(u => u.verificationStatus === 'pending');
   
@@ -114,7 +122,7 @@ export function AdminDashboard() {
       toast({ title: t.invalidWithdrawalAmount, variant: 'destructive' });
       return;
     }
-    if (amount > platformBalance) {
+    if (amount > withdrawableBalance) {
       toast({ title: t.amountExceedsBalance, variant: 'destructive' });
       return;
     }
@@ -248,7 +256,7 @@ export function AdminDashboard() {
           
           if (dataMap.has(key)) {
             const existing = dataMap.get(key)!;
-            dataMap.set(key, { ...existing, total: existing.total + tx.amount });
+            dataMap.set(key, { ...existing, total: existing.total + (tx.amount || 0) });
           }
       }
     });
@@ -361,12 +369,12 @@ export function AdminDashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${platformBalance.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Total withdrawable funds (incl. escrow).</p>
+                            <p className="text-xs text-muted-foreground">Total cash in platform account (incl. escrow).</p>
                         </CardContent>
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button disabled={platformBalance <= 0}>
+                                    <Button disabled={withdrawableBalance <= 0}>
                                       <Banknote className="mr-2 h-4 w-4" />
                                       {t.withdrawFunds}
                                     </Button>
@@ -375,7 +383,7 @@ export function AdminDashboard() {
                                     <DialogHeader>
                                         <DialogTitle>{t.withdrawDialogTitle}</DialogTitle>
                                         <DialogDescription>
-                                            Your current withdrawable balance is ${platformBalance.toFixed(2)}. {t.withdrawDialogDesc}
+                                            Your current available balance for withdrawal (earned fees) is ${withdrawableBalance.toFixed(2)}. {t.withdrawDialogDesc}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <form onSubmit={handleConfirmWithdrawal}>
@@ -959,4 +967,5 @@ export function AdminDashboard() {
   );
 }
 
+    
     
