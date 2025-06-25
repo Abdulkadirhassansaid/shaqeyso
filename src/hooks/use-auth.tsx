@@ -156,27 +156,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Handle Admin Login separately
         if (isPotentialAdminLogin) {
           try {
-            // Attempt to sign in as admin
             const creds = await signInWithEmailAndPassword(auth, email, pass);
-            const userDocSnap = await getDoc(doc(db, 'users', creds.user.uid));
-            if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
-              return { success: true, user: userDocSnap.data() as User };
+            const userDocRef = doc(db, 'users', creds.user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data() as User;
+                if (userData.role !== 'admin') {
+                    // This user exists but is not an admin. Let's promote them.
+                    await updateDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' });
+                    const updatedUserSnap = await getDoc(userDocRef); // Re-fetch to get the updated data
+                    return { success: true, user: updatedUserSnap.data() as User };
+                }
+                // User is already an admin, login successful.
+                return { success: true, user: userData };
             } else {
-              // This case is unlikely but handles if auth user exists but firestore doc is wrong/missing
-              await signOut(auth); // Sign out the wrongly configured user
-              return { success: false, message: 'invalid' };
+              // This case shouldn't happen if signup is robust, but we can handle it.
+              // Auth user exists, but no firestore doc. Create it.
+              const adminUser: User = {
+                id: creds.user.uid, name: 'Admin', email, role: 'admin',
+                avatarUrl: `https://placehold.co/100x100.png?text=A`, isBlocked: false, verificationStatus: 'verified',
+              };
+              await setDoc(userDocRef, adminUser);
+              return { success: true, user: adminUser };
             }
           } catch (error: any) {
-            // If admin account doesn't exist in Firebase Auth, create it
+            // If admin account doesn't exist in Firebase Auth at all, create it.
             if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
               const signupResult = await signup('Admin', email, pass, 'admin');
-              if (signupResult.success && signupResult.user) {
-                // We need to sign in again after signup to establish the session
-                await signInWithEmailAndPassword(auth, email, pass);
-                return { success: true, user: signupResult.user };
-              }
+              // The signup function handles setting the user state and logging in.
+              return signupResult;
             }
-            // Any other error also results in failure.
+            // Any other error (like wrong password if user exists) results in failure.
             return { success: false, message: 'invalid' };
           }
         }
