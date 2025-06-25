@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -41,7 +42,7 @@ export default function SignupPage() {
     const result = await signup(name, email, password, role);
     if (result.success) {
       setIsLoading(true);
-      router.push('/onboarding');
+      router.push('/');
     } else {
       let description = t.signupFailedDesc;
       if (result.message === 'email-in-use') {
