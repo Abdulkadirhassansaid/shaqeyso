@@ -110,7 +110,7 @@ export const translations = {
         onboardingNextStep: 'To get started, you just need to complete a quick identity check.',
         startVerification: 'Start Verification',
         clientVerificationTitle: 'Client Identity Verification',
-        clientVerificationDesc: 'Please upload your personal ID and business certificate to start posting jobs.',
+        clientVerificationDesc: 'Please upload your personal ID or business certificate to start posting jobs.',
         freelancerVerificationTitle: 'Freelancer Identity Verification',
         freelancerVerificationDesc: 'Please upload your passport or national ID to start applying for jobs.',
         idUploadTitle: 'Passport or National ID',
@@ -122,7 +122,7 @@ export const translations = {
         verificationSubmitted: 'Verification Submitted',
         verificationSubmittedDesc: "Your documents are now pending review by our team.",
         missingDocuments: 'Missing Documents',
-        missingDocumentsDescClient: 'Please upload both your ID and business certificate.',
+        missingDocumentsDescClient: 'Please upload your ID or business certificate.',
         missingDocumentsDescFreelancer: 'Please upload your ID document.',
         verificationPendingTitle: 'Verification Pending',
         verificationPendingDesc: 'Your documents are currently under review. This usually takes 24-48 hours.',
@@ -414,6 +414,8 @@ export const translations = {
         typeYourMessage: 'Type your message...',
         noMessagesYet: 'No messages yet. Start the conversation!',
         chatArchived: 'This chat is archived because the project is complete.',
+        newMessageFromAdminTitle: 'New Message from Admin',
+        newMessageFromAdminDesc: 'You have a new message from a site administrator.',
 
         // Reviews
         leaveReview: "Leave a Review",
@@ -507,6 +509,7 @@ export const translations = {
         verificationRejectedDesc: "The user's submission has been rejected.",
         searchUsersPlaceholder: 'Search by name or email...',
         noUsersFound: 'No users found.',
+        reasoning: 'Reasoning',
         reportProblem: 'Report a Problem',
 
         // New Freelancer Marketplace & Services
@@ -670,7 +673,7 @@ export const translations = {
         onboardingNextStep: 'Si aad u bilowdo, waxaad u baahan tahay oo kaliya inaad sameyso hubin aqoonsi oo degdeg ah.',
         startVerification: 'Bilow Xaqiijinta',
         clientVerificationTitle: 'Xaqiijinta Aqoonsiga Macmiilka',
-        clientVerificationDesc: 'Fadlan dooro oo soo geli mid ka mid ah dukumeentiyada soo socda si aad u bilowdo soo gelinta shaqooyinka.',
+        clientVerificationDesc: 'Fadlan soo geli aqoonsigaaga shakhsiga ah ama shahaadada ganacsiga si aad u bilowdo soo gelinta shaqooyinka.',
         freelancerVerificationTitle: 'Xaqiijinta Aqoonsiga Shaqaale Madaxbannaan',
         freelancerVerificationDesc: 'Fadlan soo geli baasaboorkaaga ama aqoonsigaaga qaran si aad u bilowdo codsashada shaqooyinka.',
         idUploadTitle: 'Baasaboor ama Aqoonsi Qaran',
@@ -682,7 +685,7 @@ export const translations = {
         verificationSubmitted: 'Xaqiijinta Waa La Gudbiyey',
         verificationSubmittedDesc: "Dukumentiyadaada hadda kooxdayadu way eegayaan.",
         missingDocuments: 'Dukumentiyo Maqan',
-        missingDocumentsDescClient: 'Fadlan soo geli aqoonsigaaga iyo shahaadada ganacsiga labadaba.',
+        missingDocumentsDescClient: 'Fadlan soo geli aqoonsigaaga ama shahaadada ganacsiga.',
         missingDocumentsDescFreelancer: 'Fadlan soo geli dukumentigaaga aqoonsiga.',
         verificationPendingTitle: 'Xaqiijinta Waa La Sugayaa',
         verificationPendingDesc: 'Dukumentiyadaada hadda waa la eegayaa. Tani waxay caadi ahaan qaadataa 24-48 saacadood.',
@@ -835,8 +838,8 @@ export const translations = {
         insufficientFundsTitle: 'Dhaqaale Kugu Filan Majiro',
         insufficientFundsDesc: 'Akoonkaaga kuma jiraan dhaqaale kugu filan oo aad ku shaqaaleysiin karto shaqadan. Fadlan ku shubo hadhaagaaga.',
         myServiceOrders: "Dalabyada Adeegyadayda",
-        myServiceOrdersDesc: "Track the status of services you have ordered from freelancers.",
-        noServiceOrders: "You haven't ordered any services yet.",
+        myServiceOrdersDesc: "La soco heerka adeegyada aad ka dalbatay xirfadlayaasha madaxbannaan.",
+        noServiceOrders: "Weli wax adeeg ah kama aadan dalban.",
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',
@@ -905,8 +908,8 @@ export const translations = {
         noActiveProjects: "You don't have any active projects yet.",
         chatWithClient: 'La sheekeyso Macmiilka',
         myProposals: "Codsiyadayda",
-        myProposalsDesc: "View and manage all your submitted job proposals.",
-        noProposalsSubmitted: "You have not submitted any proposals yet.",
+        myProposalsDesc: "Eeg oo maamul dhammaan codsiyadaada shaqo ee aad gudbisay.",
+        noProposalsSubmitted: "Wali wax codsiyo ah ma aadan gudbin.",
         yourProposal: "Codsigaaga",
         editProposal: "Wax ka Beddel Codsiga",
         deleteProposal: "Tirtir Codsiga",
@@ -973,6 +976,8 @@ export const translations = {
         typeYourMessage: 'Qor fariintaada...',
         noMessagesYet: 'Wali fariimo ma jiraan. Bilaab wada hadalka!',
         chatArchived: 'Wadahadalkan waa la keydiyay maadaama mashruuca la dhameeyay.',
+        newMessageFromAdminTitle: 'Fariin Cusub oo ka timid Maamulka',
+        newMessageFromAdminDesc: 'Waxaad haysaa fariin cusub oo ka timid maamulaha goobta.',
 
         // Reviews
         leaveReview: "Ka tag Qiimeyn",

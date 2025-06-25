@@ -18,6 +18,7 @@ import { UsersProvider } from '@/hooks/use-users';
 import { JobsProvider } from '@/hooks/use-jobs';
 import { ProposalsProvider } from '@/hooks/use-proposals';
 import { ReviewsProvider } from '@/hooks/use-reviews';
+import { NotificationHandler } from '@/components/notification-handler';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default function RootLayout({
                   <JobsProvider>
                     <ProposalsProvider>
                       <ReviewsProvider>
+                        <NotificationHandler />
                         <PageProgress />
                         <PageLoader />
                         <div className="relative flex min-h-screen flex-col">
