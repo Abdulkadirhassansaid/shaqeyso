@@ -48,10 +48,6 @@ import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 
 
-interface FreelancerDashboardProps {
-  user: User;
-}
-
 type RecommendedJob = Job & {
     rank: number;
     reason: string;
@@ -77,28 +73,26 @@ export function FreelancerDashboard() {
   const [activeTab, setActiveTab] = React.useState('find-work');
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
   const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
-  const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
+  const [freelancerProfile, setFreelancerProfile] = React.useState<FreelancerProfile | null>(null);
 
   React.useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
-        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
-        setFreelancerProfiles(profilesData);
+    if (!user || !db) return;
+    const unsub = onSnapshot(doc(db, 'freelancerProfiles', user.id), (doc) => {
+        if (doc.exists()) {
+            setFreelancerProfile({ ...doc.data(), userId: doc.id } as FreelancerProfile);
+        }
     });
     return () => unsub();
-  }, []);
-
-  const freelancerProfileData = freelancerProfiles.find(p => p.userId === user?.id);
+  }, [user]);
   
   React.useEffect(() => {
     const getRecommendations = async () => {
-      if (!user) return;
-      const profile = freelancerProfiles.find(p => p.userId === user.id);
-      if (!profile || (profile.skills.length === 0 && !profile.bio)) {
+      if (!user || !freelancerProfile) return;
+      if (!freelancerProfile.skills?.length && !freelancerProfile.bio) {
           return;
       }
       
-      const profileString = `Skills: ${profile.skills.join(', ')}. Bio: ${profile.bio || ''}`;
+      const profileString = `Skills: ${freelancerProfile.skills.join(', ')}. Bio: ${freelancerProfile.bio || ''}`;
       
       setIsRecommending(true);
 
@@ -120,7 +114,6 @@ export function FreelancerDashboard() {
             
             setRecommendedJobs(sortedRecommendedJobs);
           } else {
-            // Silently fail for now, or show a subtle indicator
             console.error(result.error);
           }
 
@@ -132,10 +125,10 @@ export function FreelancerDashboard() {
     };
     
     getRecommendations();
-  }, [jobs, freelancerProfiles, user]);
+  }, [jobs, freelancerProfile, user]);
 
   if (!user) {
-    return null; // or a loading skeleton
+    return null; 
   }
 
   const handleReviewSubmit = async (jobId: string, revieweeId: string, rating: number, comment: string) => {
@@ -160,8 +153,9 @@ export function FreelancerDashboard() {
     setDeletingProposal(null);
   };
 
+  const profileString = `Skills: ${freelancerProfile?.skills?.join(', ') ?? ''}. Bio: ${freelancerProfile?.bio ?? ''}`;
+  
   if (selectedJob) {
-    const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
     return (
       <div className="w-full h-full bg-background md:bg-transparent">
         <div className="p-4 flex items-center gap-4 md:hidden">
@@ -226,7 +220,6 @@ export function FreelancerDashboard() {
 
   if (editingProposal) {
     const jobForProposal = jobs.find(j => j.id === editingProposal.jobId);
-    const profileString = `Skills: ${freelancerProfileData?.skills.join(', ')}. Bio: ${freelancerProfileData?.bio || ''}`;
     if (!jobForProposal) return null;
     return (
         <ProposalForm 
@@ -269,7 +262,7 @@ export function FreelancerDashboard() {
                         <div className="flex justify-between items-start gap-2">
                             <CardTitle className="text-lg font-headline">{job.title}</CardTitle>
                              {isRecommended && (
-                                <Badge variant="accent" className="shrink-0">
+                                <Badge variant="default" className="shrink-0">
                                     <Wand2 className="mr-1.5 h-3 w-3" />
                                     {t.forYou}
                                 </Badge>
@@ -324,6 +317,7 @@ export function FreelancerDashboard() {
         <div className="grid gap-4 md:grid-cols-2">
             {myProjects.map(job => {
                 const client = allUsers.find(u => u.id === job.clientId);
+                if (!client) return null;
                 const status = job.status as Job['status'];
                 const statusVariant = status === 'Completed' ? 'default' : 'secondary';
                 
@@ -343,7 +337,7 @@ export function FreelancerDashboard() {
                         <CardContent>
                             <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
                             <div className="mt-4 space-y-2 text-sm">
-                                {client && <p className="font-medium">{t.client}: {client.name}</p>}
+                                <p className="font-medium">{t.client}: {client.name}</p>
                                 {(status === 'InProgress') && (
                                     <div className="flex items-center text-success gap-2 font-medium">
                                         <ShieldCheck className="h-4 w-4"/>

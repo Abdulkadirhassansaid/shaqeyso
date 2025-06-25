@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search, Wand2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -35,6 +35,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { collection, onSnapshot, doc, query, where, getDocs, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
+import { LoadingDots } from './loading-dots';
 
 
 export function ClientDashboard() {
@@ -261,7 +262,7 @@ export function ClientDashboard() {
       const freelancerProfilesWithProposals = jobProposals.map(proposal => {
         const profile = freelancerProfiles.find(p => p.userId === proposal.freelancerId);
         return {
-            profile: `Skills: ${profile?.skills.join(', ')}. Bio: ${profile?.bio}`,
+            profile: `Skills: ${profile?.skills?.join(', ') ?? ''}. Bio: ${profile?.bio ?? ''}`,
             proposal: proposal.coverLetter,
         }
       });
@@ -274,8 +275,8 @@ export function ClientDashboard() {
       if (result.success) {
         const rankedWithOriginals = result.data.map(ranked => {
             const originalProposal = proposals.find(p => p.jobId === job.id && p.coverLetter === ranked.proposal);
-            return { ...ranked, originalProposal };
-        }).filter((item): item is RankedFreelancer => !!item.originalProposal);
+            return originalProposal ? { ...ranked, originalProposal } : null;
+        }).filter((item): item is RankedFreelancer => !!item);
         setRankedFreelancers(rankedWithOriginals.sort((a, b) => b.rank - a.rank));
       } else {
         toast({
@@ -361,7 +362,7 @@ export function ClientDashboard() {
         const statusVariant = proposalStatus === 'Accepted' ? 'default' : proposalStatus === 'Rejected' ? 'destructive' : 'secondary';
         
         return (
-            <Card className={isRanked ? "bg-secondary" : ""}>
+            <Card className={isRanked ? "bg-primary/5" : ""}>
                 <CardHeader className='flex-row items-start gap-4'>
                     {isRanked && rank && (
                         <Badge variant="default" className="text-lg h-8 w-8 flex items-center justify-center rounded-full shrink-0">
@@ -416,29 +417,32 @@ export function ClientDashboard() {
                       <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
                       {selectedJob.status === 'Open' && (
                            <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
+                              <Wand2 className='mr-2 h-4 w-4' />
                               {isRanking ? t.ranking : t.findBestMatches}
                           </Button>
                       )}
                   </div>
                   
                   {isRanking && (
-                      <div className="space-y-4">
-                          <Skeleton className="h-24 w-full" />
-                          <Skeleton className="h-24 w-full" />
+                      <div className="flex justify-center items-center py-8">
+                          <LoadingDots />
                       </div>
                   )}
                   
                   {rankedFreelancers.length > 0 ? (
                       <div className="space-y-4">
-                          {rankedFreelancers.map((freelancer) => (
-                              <ProposalCard 
-                                  key={freelancer.originalProposal.id} 
-                                  proposal={freelancer.originalProposal}
-                                  isRanked={true}
-                                  rank={freelancer.rank}
-                                  reason={freelancer.reason}
-                              />
-                          ))}
+                          {rankedFreelancers.map((freelancer) => {
+                              if (!freelancer.originalProposal) return null;
+                              return (
+                                <ProposalCard 
+                                    key={freelancer.originalProposal.id} 
+                                    proposal={freelancer.originalProposal}
+                                    isRanked={true}
+                                    rank={freelancer.rank}
+                                    reason={freelancer.reason}
+                                />
+                            )
+                          })}
                       </div>
                   ) : (
                       jobProposals.length > 0 ? (
@@ -527,7 +531,7 @@ export function ClientDashboard() {
                       <div>
                           <CardTitle className="text-lg">{job.title}</CardTitle>
                           <CardDescription>
-                          {t.budget}: ${job.budget}
+                          {t.budget}: ${job.budget ? job.budget.toFixed(2) : '0.00'}
                           </CardDescription>
                       </div>
                       <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
@@ -641,6 +645,8 @@ export function ClientDashboard() {
                         const status = job.status || 'Open';
                         const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
                         
+                        if (!hiredFreelancer) return null;
+
                         const hasUnreadMessages = 
                             !!job.lastMessageTimestamp &&
                             job.lastMessageSenderId !== user.id &&
@@ -652,21 +658,21 @@ export function ClientDashboard() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <CardTitle className="text-lg">{job.title}</CardTitle>
-                                            <CardDescription>{t.budget}: ${job.budget}</CardDescription>
+                                            <CardDescription>{t.budget}: ${job.budget.toFixed(2)}</CardDescription>
                                         </div>
                                         <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                     </div>
                                 </CardHeader>
                                 <CardFooter className="flex justify-between items-center">
                                     <div className="flex items-center gap-4 flex-wrap">
-                                        {(job.status === 'InProgress') && hiredFreelancer && (
+                                        {(job.status === 'InProgress') && (
                                             <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 {t.chatWith} {hiredFreelancer.name}
                                                 {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                             </Button>
                                         )}
-                                        {status === 'InProgress' && hiredFreelancer && (
+                                        {status === 'InProgress' && (
                                             <>
                                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                   <ShieldCheck className="h-5 w-5 text-success" />
@@ -681,7 +687,7 @@ export function ClientDashboard() {
                                               </ApprovePaymentDialog>
                                             </>
                                         )}
-                                        {status === 'Completed' && hiredFreelancer && (
+                                        {status === 'Completed' && (
                                             <div className="flex items-center gap-4">
                                                 <div className="flex items-center text-sm text-success gap-2">
                                                     <CheckCircle className="h-5 w-5"/>
