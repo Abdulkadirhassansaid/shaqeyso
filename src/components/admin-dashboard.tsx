@@ -462,8 +462,8 @@ export function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
-
-                <div className="grid gap-6 lg:grid-cols-2">
+                
+                <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle>Revenue Overview</CardTitle>
@@ -526,13 +526,50 @@ export function AdminDashboard() {
                             </ChartContainer>
                         </CardContent>
                     </Card>
-                     <Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t.recentPlatformTransactions}</CardTitle>
+                            <CardDescription>{t.recentPlatformTransactionsDesc}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-6">
+                                {recentTransactionsWithUsers.length > 0 ? recentTransactionsWithUsers.map((tx) => (
+                                    <div key={tx.id} className="flex items-center">
+                                        <Avatar className="h-9 w-9 flex-shrink-0">
+                                            {tx.user ? (
+                                                <>
+                                                    <AvatarImage src={tx.user?.avatarUrl} alt={tx.user?.name} />
+                                                    <AvatarFallback>{tx.user?.name?.charAt(0)}</AvatarFallback>
+                                                </>
+                                            ) : (
+                                                <AvatarFallback><Banknote className="h-4 w-4 text-muted-foreground"/></AvatarFallback>
+                                            )}
+                                        </Avatar>
+                                        <div className="ml-4 space-y-1">
+                                            <p className="text-sm font-medium leading-none truncate">{tx.description}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {format(new Date(tx.date), 'MMM d, yyyy')}
+                                            </p>
+                                        </div>
+                                        <div className={`ml-auto whitespace-nowrap font-medium ${tx.amount > 0 ? 'text-success' : 'text-destructive'}`}>
+                                            {tx.amount > 0 ? `+$${tx.amount.toFixed(2)}` : `-$${Math.abs(tx.amount).toFixed(2)}`}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">{t.noTransactions}</p>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="grid grid-cols-1">
+                    <Card>
                         <CardHeader>
                             <CardTitle>{t.currentEscrowHoldings}</CardTitle>
                             <CardDescription>{t.currentEscrowHoldingsDesc}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <Table>
+                            <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>{t.jobTitle}</TableHead>
