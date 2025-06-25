@@ -52,7 +52,6 @@ import { Skeleton } from './ui/skeleton';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
     if (!dataUrl) return 'bin';
-    // Improved regex to handle various MIME types, including PDFs
     const mimeMatch = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+)/);
     if (!mimeMatch) return 'bin';
     
@@ -119,7 +118,7 @@ export function AdminDashboard() {
   const pendingVerifications = users.filter(u => u.verificationStatus === 'pending');
   
   const verificationSubmissions = users
-    .filter(u => u.passportOrIdUrl && u.role !== 'admin')
+    .filter(u => u.passportOrIdUrl || u.businessCertificateUrl)
     .sort((a, b) => {
         const order = { pending: 1, rejected: 2, verified: 3, unverified: 99 };
         return (order[a.verificationStatus] || 99) - (order[b.verificationStatus] || 99);
@@ -362,6 +361,46 @@ export function AdminDashboard() {
         </div>
     )
   }
+
+  const renderVerificationDocument = (user: User) => {
+    const docType = user.verificationDocumentType;
+    if (!docType) return null;
+
+    const docUrl = docType === 'personalId' ? user.passportOrIdUrl : user.businessCertificateUrl;
+    if (!docUrl) return <p className='text-sm text-muted-foreground'>{t.missingDocuments}</p>;
+
+    const docLabel = docType === 'personalId' ? t.idUploadTitle : t.certUploadTitle;
+
+    return (
+      <div className="space-y-2">
+        <Label>{docLabel}</Label>
+        <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
+            {isPdf(docUrl) ? (
+                <div className="p-4 flex items-center gap-2 text-foreground">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
+                    <span className="font-medium">PDF Document</span>
+                </div>
+            ) : (
+                <Image 
+                    src={docUrl} 
+                    alt={docLabel}
+                    width={500} 
+                    height={300} 
+                    className="object-contain w-full h-auto rounded-md"
+                />
+            )}
+            <div className="flex justify-end gap-2 pt-1">
+                <Button asChild size="sm">
+                   <a href={docUrl} download={`${docType}-${user.id}.${getFileExtensionFromDataUrl(docUrl)}`}>
+                       <Download className="mr-2 h-4 w-4" />
+                       {t.download}
+                   </a>
+                </Button>
+            </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -938,65 +977,7 @@ export function AdminDashboard() {
                     </DialogHeader>
                     <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
                         <h3 className="font-semibold">{t.submittedDocs}</h3>
-                        {reviewingUser.passportOrIdUrl && (
-                             <div className="space-y-2">
-                                <Label>{t.idUploadTitle}</Label>
-                                <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                    {isPdf(reviewingUser.passportOrIdUrl) ? (
-                                        <div className="p-4 flex items-center gap-2 text-foreground">
-                                            <FileText className="h-6 w-6 text-muted-foreground" />
-                                            <span className="font-medium">PDF Document</span>
-                                        </div>
-                                    ) : (
-                                        <Image 
-                                            src={reviewingUser.passportOrIdUrl} 
-                                            alt="ID Document" 
-                                            width={500} 
-                                            height={300} 
-                                            className="object-contain w-full h-auto rounded-md"
-                                        />
-                                    )}
-                                    <div className="flex justify-end gap-2 pt-1">
-                                        <Button asChild size="sm">
-                                           <a href={reviewingUser.passportOrIdUrl} download={`id-document-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.passportOrIdUrl)}`}>
-                                               <Download className="mr-2 h-4 w-4" />
-                                               {t.download}
-                                           </a>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                       
-                        {reviewingUser.role === 'client' && reviewingUser.businessCertificateUrl && (
-                            <div className="space-y-2">
-                                <Label>{t.certUploadTitle}</Label>
-                                <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                     {isPdf(reviewingUser.businessCertificateUrl) ? (
-                                        <div className="p-4 flex items-center gap-2 text-foreground">
-                                            <FileText className="h-6 w-6 text-muted-foreground" />
-                                            <span className="font-medium">PDF Document</span>
-                                        </div>
-                                    ) : (
-                                        <Image 
-                                            src={reviewingUser.businessCertificateUrl} 
-                                            alt="Business Certificate" 
-                                            width={500} 
-                                            height={300} 
-                                            className="object-contain w-full h-auto rounded-md"
-                                        />
-                                    )}
-                                    <div className="flex justify-end gap-2 pt-1">
-                                        <Button asChild size="sm">
-                                           <a href={reviewingUser.businessCertificateUrl} download={`business-certificate-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.businessCertificateUrl)}`}>
-                                               <Download className="mr-2 h-4 w-4" />
-                                               {t.download}
-                                           </a>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {renderVerificationDocument(reviewingUser)}
                     </div>
                     <DialogFooter>
                         {reviewingUser.verificationStatus === 'pending' ? (
@@ -1036,7 +1017,3 @@ export function AdminDashboard() {
     </div>
   );
 }
-
-    
-    
-

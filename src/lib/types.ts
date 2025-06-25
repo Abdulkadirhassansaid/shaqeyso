@@ -10,8 +10,9 @@ export type User = {
   isBlocked?: boolean;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationRejectionReason?: string;
-  passportOrIdUrl?: string;
-  businessCertificateUrl?: string;
+  verificationDocumentType?: 'personalId' | 'businessCertificate';
+  passportOrIdUrl?: string; // This will hold the data URL
+  businessCertificateUrl?: string; // This will hold the data URL
 };
 
 export type Job = {

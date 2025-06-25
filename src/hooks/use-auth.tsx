@@ -41,7 +41,7 @@ interface AuthContextType {
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
-  submitVerification: (userId: string, documents: { idDocUrl: string, certDocUrl?: string }) => Promise<boolean>;
+  submitVerification: (userId: string, document: { type: 'personalId' | 'businessCertificate'; url: string; }) => Promise<boolean>;
   approveVerification: (userId: string) => Promise<boolean>;
   rejectVerification: (userId: string, reason: string) => Promise<boolean>;
 }
@@ -248,17 +248,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const submitVerification = React.useCallback(async (userId: string, documents: { idDocUrl: string, certDocUrl?: string }): Promise<boolean> => {
+    const submitVerification = React.useCallback(async (userId: string, document: { type: 'personalId' | 'businessCertificate', url: string }): Promise<boolean> => {
         if (!db) return false;
         try {
             const docUpdates: { [key: string]: any } = {
-                passportOrIdUrl: documents.idDocUrl,
                 verificationStatus: 'pending',
-                verificationRejectionReason: '', // Clear any previous rejection reason
+                verificationRejectionReason: '',
+                verificationDocumentType: document.type,
+                passportOrIdUrl: null,
+                businessCertificateUrl: null,
             };
 
-            if (documents.certDocUrl) {
-                docUpdates.businessCertificateUrl = documents.certDocUrl;
+            if (document.type === 'personalId') {
+                docUpdates.passportOrIdUrl = document.url;
+            } else {
+                docUpdates.businessCertificateUrl = document.url;
             }
 
             await updateDoc(doc(db, 'users', userId), docUpdates);
@@ -268,6 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return false;
         }
     }, []);
+
 
     const approveVerification = React.useCallback(async (userId: string): Promise<boolean> => {
         if (!db) return false;

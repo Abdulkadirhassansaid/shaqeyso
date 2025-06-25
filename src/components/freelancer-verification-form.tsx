@@ -73,7 +73,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
     setIsSubmitting(true);
     
     try {
-        const success = await submitVerification(user.id, { idDocUrl });
+        const success = await submitVerification(user.id, { type: 'personalId', url: idDocUrl });
 
         if (success) {
             toast({

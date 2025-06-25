@@ -137,7 +137,10 @@ export const translations = {
         mustBeVerifiedToApply: 'You must be verified to apply for a job.',
         submissionFailed: 'Submission Failed',
         submissionFailedDesc: 'There was an error submitting your verification documents. Please try again.',
-
+        selectVerificationDoc: 'Select Document Type for Verification',
+        personalId: 'Personal ID',
+        businessCertificate: 'Business Certificate',
+        missingDocumentDesc: 'Please choose a document type and upload the corresponding file.',
 
         // Settings Page
         settingsTitle: 'Settings',
@@ -665,7 +668,7 @@ export const translations = {
         onboardingNextStep: 'Si aad u bilowdo, waxaad u baahan tahay oo kaliya inaad sameyso hubin aqoonsi oo degdeg ah.',
         startVerification: 'Bilow Xaqiijinta',
         clientVerificationTitle: 'Xaqiijinta Aqoonsiga Macmiilka',
-        clientVerificationDesc: 'Fadlan soo geli aqoonsigaaga shaqsiga ah iyo shahaadada ganacsiga si aad u bilowdo soo gelinta shaqooyinka.',
+        clientVerificationDesc: 'Fadlan dooro oo soo geli mid ka mid ah dukumeentiyada soo socda si aad u bilowdo soo gelinta shaqooyinka.',
         freelancerVerificationTitle: 'Xaqiijinta Aqoonsiga Shaqaale Madaxbannaan',
         freelancerVerificationDesc: 'Fadlan soo geli baasaboorkaaga ama aqoonsigaaga qaran si aad u bilowdo codsashada shaqooyinka.',
         idUploadTitle: 'Baasaboor ama Aqoonsi Qaran',
@@ -692,6 +695,10 @@ export const translations = {
         mustBeVerifiedToApply: 'Waa inaad ahaataa mid la xaqiijiyay si aad shaqo u codsato.',
         submissionFailed: 'Gudbintu Waa Fashilantay',
         submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay dukumentiyadaada xaqiijinta. Fadlan isku day mar kale.',
+        selectVerificationDoc: 'Dooro Nooca Dukumeentiga Xaqiijinta',
+        personalId: 'Aqoonsi Shakhsi',
+        businessCertificate: 'Shahaadada Ganacsiga',
+        missingDocumentDesc: 'Fadlan dooro nooca dukumeentiga oo soo geli feylka u dhigma.',
 
         // Settings Page
         settingsTitle: 'Dejinta',
