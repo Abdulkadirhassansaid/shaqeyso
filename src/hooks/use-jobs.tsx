@@ -61,7 +61,14 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     if (!db) return { success: false };
     try {
         const deadline = new Date();
-        deadline.setDate(deadline.getDate() + selectedTier.deliveryTime);
+        const deliveryDays = Number(selectedTier.deliveryTime);
+
+        if (isNaN(deliveryDays)) {
+          console.error("Invalid delivery time provided:", selectedTier.deliveryTime);
+          return { success: false };
+        }
+        
+        deadline.setDate(deadline.getDate() + deliveryDays);
 
         const newJobData: Omit<Job, 'id' | 'postedDate'> = {
             title: `Service: ${service.title}`,
