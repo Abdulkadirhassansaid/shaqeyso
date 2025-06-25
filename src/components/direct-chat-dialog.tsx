@@ -20,7 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useUsers } from '@/hooks/use-users';
-import { collection, onSnapshot, addDoc, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface DirectChatDialogProps {
@@ -51,10 +51,11 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
         return;
     };
 
+    const sortedIds = [currentUser.id, otherUser.id].sort();
+
     const q = query(
         collection(db, 'directMessages'), 
-        where('participantIds', 'array-contains', currentUser.id),
-        orderBy('timestamp', 'asc')
+        where('participantIds', '==', sortedIds)
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -63,6 +64,10 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
           id: doc.id,
           timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
       } as DirectMessage));
+      
+      // Sort messages client-side to avoid needing an index
+      messagesData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
       setDirectMessages(messagesData);
     }, (error) => {
         console.error("Error fetching direct messages:", error);
@@ -90,9 +95,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
 
   if (!currentUser) return null;
 
-  const conversationMessages = directMessages.filter((m) => {
-    return m.participantIds.includes(otherUser.id);
-  });
+  const conversationMessages = directMessages;
 
   const dialogTitle = `${t.chatWith} ${otherUser.name}`;
   

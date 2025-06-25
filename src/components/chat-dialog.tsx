@@ -21,7 +21,7 @@ import { useLanguage } from './../hooks/use-language';
 import { Send, Paperclip, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { useUsers } from '@/hooks/use-users';
-import { collection, onSnapshot, addDoc, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, query, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ChatDialogProps {
@@ -44,7 +44,8 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
   React.useEffect(() => {
     if (!job.id || !db) return;
 
-    const q = query(collection(db, 'messages'), where('jobId', '==', job.id), orderBy('timestamp', 'asc'));
+    const messagesRef = collection(db, 'jobs', job.id, 'messages');
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({ 
@@ -63,7 +64,8 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
         return false;
     }
     try {
-        await addDoc(collection(db, 'messages'), {
+        const messagesRef = collection(db, 'jobs', job.id, 'messages');
+        await addDoc(messagesRef, {
             ...messageData,
             timestamp: serverTimestamp(),
         });
@@ -72,7 +74,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
         console.error("Error adding message:", error);
         return false;
     }
-  }, []);
+  }, [job.id]);
 
   let dialogTitle: string;
   if (user?.role === 'admin') {
@@ -110,7 +112,6 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
     }));
     
     addMessage({
-      jobId: job.id,
       senderId: user.id,
       text: newMessage,
       files: fileData.length > 0 ? fileData : undefined,

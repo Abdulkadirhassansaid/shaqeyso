@@ -94,17 +94,18 @@ export type Transaction = {
   status: 'Completed' | 'Pending' | 'Failed';
 };
 
+export type SubmittedFile = {
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+}
+
 export type Message = {
     id: string;
-    jobId: string;
     senderId: string;
     text?: string;
-    files?: {
-      name: string;
-      url: string;
-      type: string;
-      size: number;
-    }[];
+    files?: SubmittedFile[];
     timestamp: string; // ISO date string
 };
 

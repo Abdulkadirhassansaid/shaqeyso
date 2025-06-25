@@ -71,9 +71,10 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
   
   const deleteMessagesByJobId = React.useCallback(async (jobId: string): Promise<boolean> => {
     if(!db) return false;
-    console.warn("Deleting messages requires a backend function for security, performing client-side for demo.");
+    console.warn("Deleting subcollections client-side is not recommended for production. Use a Cloud Function. This is a demo implementation.");
     try {
-      const q = query(collection(db, "messages"), where("jobId", "==", jobId));
+      const messagesRef = collection(db, 'jobs', jobId, 'messages');
+      const q = query(messagesRef);
       const snapshot = await getDocs(q);
       const batch = writeBatch(db);
       snapshot.docs.forEach(doc => batch.delete(doc.ref));
