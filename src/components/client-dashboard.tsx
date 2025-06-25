@@ -100,14 +100,12 @@ export function ClientDashboard() {
       return;
     }
   
-    // Find admin user to handle escrow
-    const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
-    const adminSnapshot = await getDocs(adminQuery);
-    if (adminSnapshot.empty) {
-      toast({ title: "Error", description: "Admin account not found. Cannot process payment.", variant: "destructive" });
-      return;
+    const adminUser = allUsers.find(u => u.role === 'admin');
+    if (!adminUser) {
+        toast({ title: "Error", description: "Admin account not found. Cannot process payment.", variant: "destructive" });
+        return;
     }
-    const adminUserRef = adminSnapshot.docs[0].ref;
+    const adminUserRef = doc(db, 'users', adminUser.id);
   
     try {
       const batch = writeBatch(db);
@@ -197,18 +195,25 @@ export function ClientDashboard() {
       const jobRef = doc(db, 'jobs', jobToApprove.id);
       batch.update(jobRef, { status: 'Completed' });
   
-      // 2. Debit admin account to release escrow
-      batch.update(adminUserRef, {
-        transactions: arrayUnion({
-          id: `txn-release-${Date.now()}`,
+      // 2. Atomically update admin and freelancer transactions
+      const releaseTx = {
+        id: `txn-release-${Date.now()}`,
+        date: new Date().toISOString(),
+        description: `Release escrow for "${jobToApprove.title}"`,
+        amount: -jobToApprove.budget,
+        status: 'Completed' as const,
+      };
+      const feeTx = {
+          id: `txn-fee-${Date.now()}`,
           date: new Date().toISOString(),
-          description: `Release escrow for "${jobToApprove.title}"`,
-          amount: -jobToApprove.budget,
-          status: 'Completed',
-        })
+          description: `${t.platformFee} for "${jobToApprove.title}"`,
+          amount: platformFee,
+          status: 'Completed' as const,
+      };
+      batch.update(adminUserRef, {
+        transactions: arrayUnion(releaseTx, feeTx)
       });
   
-      // 3. Credit freelancer account
       const freelancerRef = doc(db, 'users', jobToApprove.hiredFreelancerId);
       batch.update(freelancerRef, {
         transactions: arrayUnion({
@@ -216,18 +221,7 @@ export function ClientDashboard() {
           date: new Date().toISOString(),
           description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
           amount: freelancerPayout,
-          status: 'Completed',
-        })
-      });
-  
-      // 4. Credit admin account with the platform fee
-      batch.update(adminUserRef, {
-        transactions: arrayUnion({
-          id: `txn-fee-${Date.now()}`,
-          date: new Date().toISOString(),
-          description: `${t.platformFee} for "${jobToApprove.title}"`,
-          amount: platformFee,
-          status: 'Completed',
+          status: 'Completed' as const,
         })
       });
   
