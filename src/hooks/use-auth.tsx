@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -149,6 +150,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = React.useCallback(async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
         if (!auth || !db) return { success: false, message: 'invalid' };
+
+        const isPotentialAdminLogin = email.toLowerCase() === 'mahiryare@gmail.com' && pass === 'Mahir4422';
+
+        // Handle Admin Login separately
+        if (isPotentialAdminLogin) {
+          try {
+            // Attempt to sign in as admin
+            const creds = await signInWithEmailAndPassword(auth, email, pass);
+            const userDocSnap = await getDoc(doc(db, 'users', creds.user.uid));
+            if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
+              return { success: true, user: userDocSnap.data() as User };
+            } else {
+              // This case is unlikely but handles if auth user exists but firestore doc is wrong/missing
+              await signOut(auth); // Sign out the wrongly configured user
+              return { success: false, message: 'invalid' };
+            }
+          } catch (error: any) {
+            // If admin account doesn't exist in Firebase Auth, create it
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+              const signupResult = await signup('Admin', email, pass, 'admin');
+              if (signupResult.success && signupResult.user) {
+                // We need to sign in again after signup to establish the session
+                await signInWithEmailAndPassword(auth, email, pass);
+                return { success: true, user: signupResult.user };
+              }
+            }
+            // Any other error also results in failure.
+            return { success: false, message: 'invalid' };
+          }
+        }
+
+        // Normal User Login
         try {
             const usersQuery = query(collection(db, "users"), where("email", "==", email));
             const querySnapshot = await getDocs(usersQuery);
@@ -162,15 +195,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const creds = await signInWithEmailAndPassword(auth, email, pass);
             const userDocSnap = await getDoc(doc(db, 'users', creds.user.uid));
-            return { success: true, user: userDocSnap.data() as User };
-        } catch (error: any) {
-             // If login failed because the user doesn't exist, and it's the special admin user, create them.
-            if (error.code === 'auth/user-not-found' && email.toLowerCase() === 'mahiryare@gmail.com' && pass === 'Mahir4422') {
-                const signupResult = await signup('Admin', email, pass, 'admin');
-                if (signupResult.success && signupResult.user) {
-                    return { success: true, user: signupResult.user };
-                }
+            if (userDocSnap.exists()) {
+                 return { success: true, user: userDocSnap.data() as User };
             }
+            return { success: false, message: 'invalid' };
+           
+        } catch (error) {
             return { success: false, message: 'invalid' };
         }
     }, [signup]);
