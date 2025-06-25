@@ -192,7 +192,7 @@ export function AdminDashboard() {
   };
 
   const thisMonthRevenue = adminTransactions
-    .filter(tx => isThisMonth(parseISO(tx.date)))
+    .filter(tx => isThisMonth(parseISO(tx.date)) && tx.amount > 0)
     .reduce((acc, tx) => acc + tx.amount, 0);
 
   const revenueChartData = React.useMemo(() => {
@@ -232,13 +232,15 @@ export function AdminDashboard() {
     }
 
     adminTransactions.forEach(tx => {
-      const transactionDate = parseISO(tx.date);
-      const keyDate = groupingFn(transactionDate);
-      const key = format(keyDate, dateFormat);
-      
-      if (dataMap.has(key)) {
-        const existing = dataMap.get(key)!;
-        dataMap.set(key, { ...existing, total: existing.total + tx.amount });
+      if (tx.amount > 0) { // Only count positive transactions as revenue
+          const transactionDate = parseISO(tx.date);
+          const keyDate = groupingFn(transactionDate);
+          const key = format(keyDate, dateFormat);
+          
+          if (dataMap.has(key)) {
+            const existing = dataMap.get(key)!;
+            dataMap.set(key, { ...existing, total: existing.total + tx.amount });
+          }
       }
     });
 
