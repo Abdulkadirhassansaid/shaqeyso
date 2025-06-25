@@ -27,9 +27,10 @@ interface DirectChatDialogProps {
   otherUser: User;
   isOpen: boolean;
   onClose: () => void;
+  initialMessage?: string;
 }
 
-export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialogProps) {
+export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }: DirectChatDialogProps) {
   const { user: currentUser } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
@@ -37,6 +38,12 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
 
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen && initialMessage) {
+        setNewMessage(initialMessage);
+    }
+  }, [isOpen, initialMessage]);
 
   React.useEffect(() => {
     if (!currentUser?.id || !otherUser.id || !db) {

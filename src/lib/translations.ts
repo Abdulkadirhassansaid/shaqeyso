@@ -517,13 +517,7 @@ export const translations = {
         servicePrice: 'Service Price ($)',
         serviceImages: 'Portfolio Images',
         uploadImages: 'Upload Images',
-        requestService: "Request Service",
-        confirmServiceRequest: "Confirm Service Request",
-        confirmServiceRequestDesc: "You are about to order '{serviceTitle}' for {price}. The funds will be held in escrow. Please confirm.",
-        serviceRequested: "Service Requested!",
-        serviceRequestedDesc: "A new job has been created and the freelancer has been notified. You can track it in your dashboard.",
-        serviceRequestFailed: "Service Request Failed",
-        serviceRequestFailedDesc: "There was an error creating the job for this service.",
+        contactAboutService: "Contact About Service",
         deliveryTime: 'Delivery Time',
         days: 'days',
         standardDelivery: 'Standard Delivery',
@@ -534,8 +528,6 @@ export const translations = {
         standardDeliveryTime: 'Standard Delivery Time (days)',
         standardPrice: 'Standard Price ($)',
         fastDeliveryOption: 'Fast Delivery Option',
-        chooseDeliveryOption: 'Choose a delivery option',
-        selectDeliveryOption: 'Please select a delivery option.',
     },
     so: {
         // General
@@ -1054,13 +1046,7 @@ export const translations = {
         servicePrice: 'Qiimaha Adeegga ($)',
         serviceImages: 'Sawirrada Portfolio',
         uploadImages: 'Soo Geli Sawirro',
-        requestService: "Codso Adeegga",
-        confirmServiceRequest: "Xaqiiji Codsiga Adeegga",
-        confirmServiceRequestDesc: "Waxaad ku dhowdahay inaad dalbato adeegga '{serviceTitle}' oo qiimihiisu yahay {price}. Lacagtan waxaa laga jari doonaa hadhaagaaga oo lagu hayn doonaa escrow. Fadlan xaqiiji.",
-        serviceRequested: "Adeegga Waa La Codsaday!",
-        serviceRequestedDesc: "Shaqo cusub ayaa la sameeyay oo xirfadlaha waa la ogeysiiyay. Waxaad kala socon kartaa dashboard-kaaga.",
-        serviceRequestFailed: "Codsiga Adeegga Waa Fashilmay",
-        serviceRequestFailedDesc: "Cilad ayaa dhacday markii la abuurayay shaqada adeeggan.",
+        contactAboutService: "Adeegan kala xiriir",
         deliveryTime: 'Wakhtiga Gudbinta',
         days: 'maalmood',
         standardDelivery: 'Gudbin Caadi ah',
@@ -1071,8 +1057,6 @@ export const translations = {
         standardDeliveryTime: 'Wakhtiga Gudbinta Caadiga ah (maalmo)',
         standardPrice: 'Qiimaha Caadiga ah ($)',
         fastDeliveryOption: 'Ikhtiyaarka Gudbinta Degdegga ah',
-        chooseDeliveryOption: 'Dooro ikhtiyaar gudbin',
-        selectDeliveryOption: 'Fadlan dooro ikhtiyaar gudbin.',
     }
 };
 

@@ -17,7 +17,6 @@ interface JobsContextType {
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
-  createJobFromService: (service: Service, freelancerId: string, clientId: string, selectedTier: { price: number; deliveryTime: number }) => Promise<{ success: boolean; jobId?: string }>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -54,44 +53,6 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     } catch(error) {
         console.error("Error adding job:", error);
         return false;
-    }
-  }, []);
-
-  const createJobFromService = React.useCallback(async (service: Service, freelancerId: string, clientId: string, selectedTier: { price: number; deliveryTime: number }): Promise<{ success: boolean; jobId?: string }> => {
-    if (!db) return { success: false };
-    try {
-        const deadline = new Date();
-        const deliveryDays = Number(selectedTier.deliveryTime);
-
-        if (isNaN(deliveryDays)) {
-          console.error("Invalid delivery time provided:", selectedTier.deliveryTime);
-          return { success: false };
-        }
-        
-        deadline.setDate(deadline.getDate() + deliveryDays);
-
-        const newJobData: Omit<Job, 'id' | 'postedDate'> = {
-            title: `Service: ${service.title}`,
-            description: `This job was automatically created from a service request.\n\nOriginal Service Description:\n${service.description}`,
-            category: 'Service Request', // Generic category
-            budget: selectedTier.price,
-            deadline: deadline.toISOString().split('T')[0],
-            clientId: clientId,
-            status: 'InProgress',
-            hiredFreelancerId: freelancerId,
-            clientReviewed: false,
-            freelancerReviewed: false,
-            sourceServiceId: service.id,
-        };
-        
-        const docRef = await addDoc(collection(db, 'jobs'), {
-            ...newJobData,
-            postedDate: serverTimestamp(),
-        });
-        return { success: true, jobId: docRef.id };
-    } catch(error) {
-        console.error("Error creating job from service:", error);
-        return { success: false };
     }
   }, []);
 
@@ -194,7 +155,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

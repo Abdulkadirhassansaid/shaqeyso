@@ -34,7 +34,6 @@ export type Job = {
   clientReviewed?: boolean;
   freelancerReviewed?: boolean;
   postedDate: string;
-  sourceServiceId?: string;
 };
 
 export type Proposal = {

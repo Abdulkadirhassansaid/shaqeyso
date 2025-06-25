@@ -24,16 +24,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { cn } from '@/lib/utils';
 
 type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 
 export default function FindFreelancersPage() {
-  const { user, isLoading: isAuthLoading, addTransaction } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { users, isUsersLoading } = useUsers();
-  const { jobs, isJobsLoading, createJobFromService } = useJobs();
+  const { jobs, isJobsLoading } = useJobs();
   const { reviews, isReviewsLoading } = useReviews();
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
   const [profilesLoading, setProfilesLoading] = React.useState(true);
@@ -44,12 +41,8 @@ export default function FindFreelancersPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
   const [chattingWith, setChattingWith] = React.useState<User | null>(null);
+  const [initialChatMessage, setInitialChatMessage] = React.useState('');
   
-  // State for service request dialog
-  const [requestingService, setRequestingService] = React.useState<Service | null>(null);
-  const [selectedDeliveryTier, setSelectedDeliveryTier] = React.useState<{ price: number; deliveryTime: number } | null>(null);
-
-
   React.useEffect(() => {
     if (!isAuthLoading && user?.role === 'freelancer') {
       router.replace('/');
@@ -95,63 +88,12 @@ export default function FindFreelancersPage() {
         const nameMatch = f.name.toLowerCase().includes(searchLower);
         const bioMatch = profile?.bio?.toLowerCase().includes(searchLower);
         const skillMatch = profile?.skills?.some(s => s.toLowerCase().includes(searchLower));
+        const hourlyRateMatch = profile?.hourlyRate?.toString().includes(searchLower);
+        const levelMatch = getFreelancerLevel(f.id).toLowerCase().includes(searchLower);
 
-        return nameMatch || bioMatch || skillMatch;
+        return nameMatch || bioMatch || skillMatch || hourlyRateMatch || levelMatch;
     });
-  }, [freelancers, freelancerProfiles, searchQuery]);
-  
-  // Effect to reset dialog state when it closes
-  React.useEffect(() => {
-      if (!requestingService) {
-          setSelectedDeliveryTier(null);
-      } else {
-          // Pre-select standard delivery
-          setSelectedDeliveryTier({ price: requestingService.price, deliveryTime: requestingService.deliveryTime });
-      }
-  }, [requestingService]);
-
-  const handleRequestService = async () => {
-    if (!requestingService || !user || !selectedFreelancer || !selectedDeliveryTier) {
-        toast({ title: t.selectDeliveryOption, variant: 'destructive' });
-        return;
-    }
-
-    const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
-    const servicePrice = selectedDeliveryTier.price;
-
-    if (clientBalance < servicePrice) {
-        toast({
-            title: t.insufficientFundsTitle,
-            description: t.insufficientFundsDesc,
-            variant: 'destructive',
-        });
-        setRequestingService(null);
-        return;
-    }
-
-    const jobResult = await createJobFromService(requestingService, selectedFreelancer.id, user.id, selectedDeliveryTier);
-
-    if (jobResult.success && jobResult.jobId) {
-        await addTransaction(user.id, {
-            description: `${t.escrowFunding} for service "${requestingService.title}"`,
-            amount: -servicePrice,
-            status: 'Completed',
-        });
-
-        toast({
-            title: t.serviceRequested,
-            description: t.serviceRequestedDesc,
-        });
-        setRequestingService(null);
-        setSelectedFreelancer(null);
-    } else {
-        toast({
-            title: t.serviceRequestFailed,
-            description: t.serviceRequestFailedDesc,
-            variant: 'destructive',
-        });
-    }
-  };
+  }, [freelancers, freelancerProfiles, searchQuery, getFreelancerLevel]);
   
   const isLoading = isAuthLoading || isUsersLoading || isJobsLoading || isReviewsLoading || profilesLoading;
   
@@ -160,27 +102,15 @@ export default function FindFreelancersPage() {
   if (!user || user.role === 'freelancer') {
       return null;
   }
-
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="space-y-6">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">{t.findFreelancers}</h1>
-                    <p className="text-muted-foreground">{t.findFreelancersDesc}</p>
-                </div>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input 
-                        placeholder={t.searchFreelancersPlaceholder} 
-                        className="pl-10 text-base h-12"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                    />
-                </div>
-                
-                {isLoading ? (
+  
+  if (isLoading) {
+    return (
+        <div className="flex min-h-screen w-full flex-col bg-background">
+            <Header />
+            <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <div className="space-y-6">
+                    <Skeleton className="h-10 w-1/3" />
+                    <Skeleton className="h-12 w-full" />
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[...Array(6)].map((_, i) => (
                            <Card key={i} className="flex flex-col">
@@ -210,67 +140,90 @@ export default function FindFreelancersPage() {
                             </Card>
                         ))}
                     </div>
-                ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredFreelancers.length > 0 ? filteredFreelancers.map(f => {
-                            const level = getFreelancerLevel(f.id);
-                            const { rating, count } = getFreelancerRating(f.id);
-                            const profile = freelancerProfiles.find(p => p.userId === f.id);
+                </div>
+            </main>
+        </div>
+    );
+  }
 
-                            return (
-                               <Card key={f.id} className="flex flex-col transition-shadow hover:shadow-lg">
-                                    <CardContent className="p-6 flex-grow flex flex-col">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <Avatar className="h-16 w-16 border">
-                                                <AvatarImage src={f.avatarUrl} alt={f.name} />
-                                                <AvatarFallback>{f.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-grow">
-                                                <div className="flex justify-between items-start">
-                                                    <CardTitle className="text-lg">{f.name}</CardTitle>
-                                                    {profile?.hourlyRate && profile.hourlyRate > 0 ? (
-                                                        <div className="text-right shrink-0">
-                                                            <span className="font-bold text-lg">${profile.hourlyRate.toFixed(2)}</span>
-                                                            <span className="text-xs text-muted-foreground">/hr</span>
-                                                        </div>
-                                                    ) : null}
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <StarRating rating={rating} />
-                                                    <span className="text-sm text-muted-foreground">({count} {t.reviews.toLowerCase()})</span>
-                                                </div>
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-background">
+        <Header />
+        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">{t.findFreelancers}</h1>
+                    <p className="text-muted-foreground">{t.findFreelancersDesc}</p>
+                </div>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder={t.searchFreelancersPlaceholder} 
+                        className="pl-10 text-base h-12"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredFreelancers.length > 0 ? filteredFreelancers.map(f => {
+                        const level = getFreelancerLevel(f.id);
+                        const { rating, count } = getFreelancerRating(f.id);
+                        const profile = freelancerProfiles.find(p => p.userId === f.id);
+
+                        return (
+                           <Card key={f.id} className="flex flex-col transition-shadow hover:shadow-lg">
+                                <CardContent className="p-6 flex-grow flex flex-col">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <Avatar className="h-16 w-16 border">
+                                            <AvatarImage src={f.avatarUrl} alt={f.name} />
+                                            <AvatarFallback>{f.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-start">
+                                                <CardTitle className="text-lg">{f.name}</CardTitle>
+                                                {profile?.hourlyRate && profile.hourlyRate > 0 ? (
+                                                    <div className="text-right shrink-0">
+                                                        <span className="font-bold text-lg">${profile.hourlyRate.toFixed(2)}</span>
+                                                        <span className="text-xs text-muted-foreground">/hr</span>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <StarRating rating={rating} />
+                                                <span className="text-sm text-muted-foreground">({count} {t.reviews.toLowerCase()})</span>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'} className="w-fit mb-4">
-                                            {t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}
-                                        </Badge>
-                                        
-                                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-grow">{profile?.bio || t.noBio}</p>
-                                        
-                                        {profile?.skills && profile.skills.length > 0 && (
-                                            <div className="flex flex-wrap gap-2">
-                                                {profile.skills.slice(0, 3).map(skill => (
-                                                    <Badge key={skill} variant="outline">{skill}</Badge>
-                                                ))}
-                                                {profile.skills.length > 3 && (
-                                                    <Badge variant="outline">+{profile.skills.length - 3}</Badge>
-                                                )}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button className="w-full" onClick={() => setSelectedFreelancer(f)}>
-                                            {t.viewProfile}
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                            )
-                        }) : (
-                            <p className="text-muted-foreground text-center py-8 col-span-full">{t.noFreelancersFound}</p>
-                        )}
-                    </div>
-                )}
+                                    <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'} className="w-fit mb-4">
+                                        {t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}
+                                    </Badge>
+                                    
+                                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-grow">{profile?.bio || t.noBio}</p>
+                                    
+                                    {profile?.skills && profile.skills.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {profile.skills.slice(0, 3).map(skill => (
+                                                <Badge key={skill} variant="outline">{skill}</Badge>
+                                            ))}
+                                            {profile.skills.length > 3 && (
+                                                <Badge variant="outline">+{profile.skills.length - 3}</Badge>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardContent>
+                                <CardFooter>
+                                    <Button className="w-full" onClick={() => setSelectedFreelancer(f)}>
+                                        {t.viewProfile}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        )
+                    }) : (
+                        <p className="text-muted-foreground text-center py-8 col-span-full">{t.noFreelancersFound}</p>
+                    )}
+                </div>
             </div>
             {selectedFreelancer && selectedProfile && (
                 <Dialog open={!!selectedFreelancer} onOpenChange={(isOpen) => !isOpen && setSelectedFreelancer(null)}>
@@ -334,8 +287,11 @@ export default function FindFreelancersPage() {
                                                 </div>
                                                 <CardFooter className="flex-col items-stretch">
                                                     <div className="text-right font-bold text-lg mb-2">${service.price.toFixed(2)}+</div>
-                                                    <Button size="sm" className="w-full" onClick={() => setRequestingService(service)}>
-                                                        {t.requestService}
+                                                    <Button size="sm" className="w-full" onClick={() => {
+                                                        setInitialChatMessage(`Hi, I'm interested in your "${service.title}" service.`);
+                                                        setChattingWith(selectedFreelancer);
+                                                    }}>
+                                                        {t.contactAboutService}
                                                     </Button>
                                                 </CardFooter>
                                             </Card>
@@ -359,47 +315,12 @@ export default function FindFreelancersPage() {
                 <DirectChatDialog
                     otherUser={chattingWith}
                     isOpen={!!chattingWith}
-                    onClose={() => setChattingWith(null)}
+                    onClose={() => {
+                        setChattingWith(null);
+                        setInitialChatMessage('');
+                    }}
+                    initialMessage={initialChatMessage}
                 />
-            )}
-            {requestingService && (
-                <Dialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{t.confirmServiceRequest}</DialogTitle>
-                            <DialogDescription>{t.chooseDeliveryOption}</DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                          <RadioGroup 
-                            value={JSON.stringify(selectedDeliveryTier)} 
-                            onValueChange={(value) => setSelectedDeliveryTier(JSON.parse(value))}
-                          >
-                            <Label htmlFor="standard-delivery" className={cn("flex items-center justify-between rounded-lg border p-4 cursor-pointer", selectedDeliveryTier?.price === requestingService.price && "border-primary")}>
-                              <div>
-                                <div className="font-semibold">{t.standardDelivery}</div>
-                                <div className="text-sm text-muted-foreground">{requestingService.deliveryTime} {t.days}</div>
-                              </div>
-                              <div className="text-lg font-bold">${requestingService.price.toFixed(2)}</div>
-                              <RadioGroupItem value={JSON.stringify({ price: requestingService.price, deliveryTime: requestingService.deliveryTime })} id="standard-delivery" />
-                            </Label>
-                            {requestingService.fastDelivery && (
-                              <Label htmlFor="fast-delivery" className={cn("flex items-center justify-between rounded-lg border p-4 cursor-pointer", selectedDeliveryTier?.price === requestingService.fastDelivery.price && "border-primary")}>
-                                <div>
-                                    <div className="font-semibold">{t.fastDelivery}</div>
-                                    <div className="text-sm text-muted-foreground">{requestingService.fastDelivery.days} {t.days}</div>
-                                </div>
-                                <div className="text-lg font-bold">${requestingService.fastDelivery.price.toFixed(2)}</div>
-                                <RadioGroupItem value={JSON.stringify({ price: requestingService.fastDelivery.price, deliveryTime: requestingService.fastDelivery.days })} id="fast-delivery" />
-                              </Label>
-                            )}
-                          </RadioGroup>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => setRequestingService(null)}>{t.cancel}</Button>
-                            <Button onClick={handleRequestService} disabled={!selectedDeliveryTier}>{t.confirm}</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
             )}
         </main>
     </div>
