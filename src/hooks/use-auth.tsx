@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -113,12 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
             const authUser = userCredential.user;
 
-            let initialTransactions: Omit<Transaction, 'id' | 'date'>[] = [];
+            let initialTransactions: Transaction[] = [];
             if (role === 'client') {
                 initialTransactions.push({
+                    id: `txn-${Date.now()}`,
                     description: 'Initial account funding',
                     amount: 5000,
-                    status: 'Completed'
+                    status: 'Completed',
+                    date: new Date().toISOString()
                 });
             }
 
@@ -130,15 +133,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role,
                 isBlocked: false,
                 verificationStatus: 'unverified',
+                transactions: initialTransactions.length > 0 ? initialTransactions : undefined,
             };
             
             const batch = writeBatch(db);
             batch.set(doc(db, 'users', authUser.uid), newUser);
-            
-            initialTransactions.forEach(tx => {
-                const txRef = doc(collection(db, `users/${authUser.uid}/transactions`));
-                batch.set(txRef, {...tx, date: new Date().toISOString() });
-            });
 
             if (role === 'freelancer') {
                 batch.set(doc(db, 'freelancerProfiles', authUser.uid), {
