@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
 import { useJobs } from '@/hooks/use-jobs';
@@ -66,7 +65,7 @@ export function ClientDashboard() {
   }, []);
 
   if (!user) {
-    return null; // Or a loading skeleton
+    return null;
   }
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
@@ -79,20 +78,22 @@ export function ClientDashboard() {
     const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
     if (!jobToHire) return;
   
-    const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+    const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + (tx.amount || 0), 0);
   
-    if (clientBalance < jobToHire.budget) {
+    if (clientBalance < (jobToHire.budget || 0)) {
       toast({
         title: t.insufficientFundsTitle,
         description: t.insufficientFundsDesc,
         variant: "destructive",
       });
+      setProposalToHire(null);
       return;
     }
   
     const adminUser = allUsers.find(u => u.role === 'admin');
     if (!adminUser) {
         toast({ title: "Error", description: "Admin account not found. Cannot process payment.", variant: "destructive" });
+        setProposalToHire(null);
         return;
     }
 
@@ -105,7 +106,7 @@ export function ClientDashboard() {
         const adminDoc = await transaction.get(adminRef);
 
         if (!clientDoc.exists() || !adminDoc.exists()) {
-          throw "User or admin document not found!";
+          throw new Error("User or admin document not found!");
         }
 
         // Debit client
@@ -114,7 +115,7 @@ export function ClientDashboard() {
           id: `txn-client-${Date.now()}`,
           date: new Date().toISOString(),
           description: `${t.escrowFunding} "${jobToHire.title}"`,
-          amount: -jobToHire.budget,
+          amount: -(jobToHire.budget || 0),
           status: 'Completed',
         }];
         transaction.update(clientRef, { transactions: newClientTransactions });
@@ -125,7 +126,7 @@ export function ClientDashboard() {
           id: `txn-escrow-${Date.now()}`,
           date: new Date().toISOString(),
           description: `Escrow for job: "${jobToHire.title}"`,
-          amount: jobToHire.budget,
+          amount: (jobToHire.budget || 0),
           status: 'Completed'
         }];
         transaction.update(adminRef, { transactions: newAdminTransactions });
@@ -150,6 +151,7 @@ export function ClientDashboard() {
         description: "An error occurred while trying to hire the freelancer.",
         variant: "destructive"
       });
+      setProposalToHire(null);
     }
   };
 
@@ -184,18 +186,17 @@ export function ClientDashboard() {
         const freelancerRef = doc(db, 'users', jobToApprove.hiredFreelancerId!);
         const adminRef = doc(db, 'users', adminUser.id);
   
-        // We must read all documents inside the transaction before writing
         const freelancerDoc = await transaction.get(freelancerRef);
         const adminDoc = await transaction.get(adminRef);
   
         if (!freelancerDoc.exists() || !adminDoc.exists()) {
-          throw "User or Admin document not found!";
+          throw new Error("User or Admin document not found!");
         }
   
-        const platformFee = jobToApprove.budget * 0.05;
-        const freelancerPayout = jobToApprove.budget - platformFee;
+        const budget = jobToApprove.budget || 0;
+        const platformFee = budget * 0.05;
+        const freelancerPayout = budget - platformFee;
   
-        // Prepare new transactions for freelancer
         const currentFreelancerTransactions = freelancerDoc.data().transactions || [];
         const payoutTx = {
             id: `txn-payout-${Date.now()}`,
@@ -205,13 +206,12 @@ export function ClientDashboard() {
             status: 'Completed' as const,
         };
   
-        // Prepare new transactions for admin
         const currentAdminTransactions = adminDoc.data().transactions || [];
         const releaseTx = {
             id: `txn-release-${Date.now()}`,
             date: new Date().toISOString(),
             description: `Release escrow for "${jobToApprove.title}"`,
-            amount: -jobToApprove.budget,
+            amount: -budget,
             status: 'Completed' as const,
         };
         const feeTx = {
@@ -221,13 +221,10 @@ export function ClientDashboard() {
             amount: platformFee,
             status: 'Completed' as const,
         };
-        const newFreelancerTransactions = [...currentFreelancerTransactions, payoutTx];
-        const newAdminTransactions = [...currentAdminTransactions, releaseTx, feeTx];
-  
-        // Perform all writes
+        
         transaction.update(jobRef, { status: 'Completed' });
-        transaction.update(freelancerRef, { transactions: newFreelancerTransactions });
-        transaction.update(adminRef, { transactions: newAdminTransactions });
+        transaction.update(freelancerRef, { transactions: [...currentFreelancerTransactions, payoutTx] });
+        transaction.update(adminRef, { transactions: [...currentAdminTransactions, releaseTx, feeTx] });
       });
   
       toast({
@@ -244,7 +241,6 @@ export function ClientDashboard() {
     }
   };
 
-
   const handleRankFreelancers = async (job: Job) => {
     setIsRanking(true);
     setRankedFreelancers([]);
@@ -256,6 +252,7 @@ export function ClientDashboard() {
             title: t.noProposalsToRank,
             description: t.noProposalsToRankDesc,
         });
+        setIsRanking(false);
         return;
       }
       
@@ -265,7 +262,13 @@ export function ClientDashboard() {
             profile: `Skills: ${profile?.skills?.join(', ') ?? ''}. Bio: ${profile?.bio ?? ''}`,
             proposal: proposal.coverLetter,
         }
-      });
+      }).filter(p => p.profile && p.proposal);
+
+      if (freelancerProfilesWithProposals.length === 0) {
+          toast({ variant: "destructive", title: "Cannot Rank", description: "Not enough profile information from applicants to rank."});
+          setIsRanking(false);
+          return;
+      }
 
       const result = await rankMatchingFreelancers({
         jobDescription: job.description,
@@ -327,11 +330,11 @@ export function ClientDashboard() {
       setJobToReview(null);
   };
 
-
-  const getStatusVariant = (status: Job['status']) => {
+  const getStatusVariant = (status?: Job['status']) => {
     switch (status) {
         case 'Open': return 'default';
         case 'Completed': return 'default';
+        case 'InProgress': return 'secondary';
         default: return 'secondary';
     }
   };
@@ -345,8 +348,9 @@ export function ClientDashboard() {
       );
   }
   
-  const selectedJob = selectedJobId ? jobs.find((job) => job.id === selectedJobId) : null;
+  const selectedJob = selectedJobId ? clientJobs.find((job) => job.id === selectedJobId) : null;
   
+  // Single Job View
   if (selectedJob) {
     const jobProposals = proposals.filter(p => p.jobId === selectedJob.id);
     const hiredFreelancer = allUsers.find(u => u.id === selectedJob.hiredFreelancerId);
@@ -355,7 +359,7 @@ export function ClientDashboard() {
         const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
         
         if (!freelancerUser) {
-            return null; // Don't render if the freelancer account was deleted
+            return null;
         }
 
         const proposalStatus = proposal.status || 'Pending';
@@ -383,7 +387,7 @@ export function ClientDashboard() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground italic">"{proposal.coverLetter}"</p>
+                    <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">"{proposal.coverLetter}"</p>
                 </CardContent>
                 {(selectedJob?.status === 'Open' || selectedJob?.status === 'Interviewing') && (
                     <CardFooter>
@@ -488,6 +492,7 @@ export function ClientDashboard() {
     );
   }
 
+  // Main Dashboard View
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -514,56 +519,46 @@ export function ClientDashboard() {
             </CardHeader>
           <CardContent className="space-y-4">
               {manualJobs.map((job) => {
-              const status = job.status || 'Open';
-              const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
-              const canEdit = status === 'Open' || status === 'Interviewing';
-              
-              const hasUnreadMessages = 
-                !!job.lastMessageTimestamp &&
-                job.lastMessageSenderId !== user.id &&
-                (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
+                  const status = job.status || 'Open';
+                  const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+                  const canEdit = status === 'Open' || status === 'Interviewing';
+                  
+                  const hasUnreadMessages = user && job.lastMessageTimestamp &&
+                    job.lastMessageSenderId !== user.id &&
+                    (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
 
+                  return (
+                      <Card key={job.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                          <div className="flex justify-between items-start">
+                          <div>
+                              <CardTitle className="text-lg">{job.title}</CardTitle>
+                              <CardDescription>
+                              {t.budget}: ${job.budget ? job.budget.toFixed(2) : '0.00'}
+                              </CardDescription>
+                          </div>
+                          <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
+                          </div>
+                      </CardHeader>
+                      <CardFooter className="flex justify-between items-center">
+                          <div className="flex items-center gap-4 flex-wrap">
+                             <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
+                             {status === 'InProgress' && hiredFreelancer && (
+                                  <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
+                                      <MessageSquare className="mr-2 h-4 w-4" />
+                                      {t.chatWith} {hiredFreelancer.name}
+                                      {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
+                                  </Button>
+                              )}
 
-              return (
-                  <Card key={job.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                      <div className="flex justify-between items-start">
-                      <div>
-                          <CardTitle className="text-lg">{job.title}</CardTitle>
-                          <CardDescription>
-                          {t.budget}: ${job.budget ? job.budget.toFixed(2) : '0.00'}
-                          </CardDescription>
-                      </div>
-                      <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
-                      </div>
-                  </CardHeader>
-                  <CardFooter className="flex justify-between items-center">
-                      <div className="flex items-center gap-4 flex-wrap">
-                         <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
-                         {(job.status === 'InProgress') && hiredFreelancer && (
-                              <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
-                                  <MessageSquare className="mr-2 h-4 w-4" />
-                                  {t.chatWith} {hiredFreelancer.name}
-                                  {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
-                              </Button>
-                          )}
+                               {status === 'InProgress' && hiredFreelancer && (
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                      <ShieldCheck className="h-5 w-5 text-success" />
+                                      <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
+                                  </div>
+                              )}
 
-                           {status === 'InProgress' && hiredFreelancer && (
-                              <>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                    <ShieldCheck className="h-5 w-5 text-success" />
-                                    <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
-                                </div>
-                                <ApprovePaymentDialog
-                                    job={job}
-                                    freelancer={hiredFreelancer}
-                                    onConfirm={() => handleApproveAndPay(job.id)}
-                                >
-                                    <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
-                                </ApprovePaymentDialog>
-                              </>
-                          )}
-                          {status === 'Completed' && hiredFreelancer && (
+                              {status === 'Completed' && hiredFreelancer && (
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center text-sm text-success gap-2">
                                         <CheckCircle className="h-5 w-5"/>
@@ -580,53 +575,53 @@ export function ClientDashboard() {
                                     </Button>
                                 </div>
                             )}
-                      </div>
+                          </div>
 
-                      <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">{t.actions}</span>
-                          </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>{t.editJob}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSub>
-                              <DropdownMenuSubTrigger disabled={status === 'Completed'}>{t.changeStatus}</DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                  <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
-                                  <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
-                                  {t.deleteJob}
-                                  </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
-                                      <AlertDialogDescription>{t.deleteJobConfirmDesc}</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.deleteJob}</AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
-                          </DropdownMenuContent>
-                      </DropdownMenu>
-                  </CardFooter>
-                  </Card>
-              );
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">{t.actions}</span>
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  <span>{t.editJob}</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSub>
+                                  <DropdownMenuSubTrigger disabled={status === 'Completed' || status === 'InProgress'}>{t.changeStatus}</DropdownMenuSubTrigger>
+                                  <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                      <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
+                                      <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                                  </DropdownMenuPortal>
+                              </DropdownMenuSub>
+                              <DropdownMenuSeparator />
+                              <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
+                                      {t.deleteJob}
+                                      </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                          <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                                          <AlertDialogDescription>{t.deleteJobConfirmDesc}</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.deleteJob}</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                      </CardFooter>
+                      </Card>
+                  );
               })}
               {manualJobs.length === 0 && (
               <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
@@ -647,8 +642,7 @@ export function ClientDashboard() {
                         
                         if (!hiredFreelancer) return null;
 
-                        const hasUnreadMessages = 
-                            !!job.lastMessageTimestamp &&
+                        const hasUnreadMessages = user && job.lastMessageTimestamp &&
                             job.lastMessageSenderId !== user.id &&
                             (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
                         
@@ -658,14 +652,14 @@ export function ClientDashboard() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <CardTitle className="text-lg">{job.title}</CardTitle>
-                                            <CardDescription>{t.budget}: ${job.budget.toFixed(2)}</CardDescription>
+                                            <CardDescription>{t.budget}: ${(job.budget || 0).toFixed(2)}</CardDescription>
                                         </div>
                                         <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                     </div>
                                 </CardHeader>
                                 <CardFooter className="flex justify-between items-center">
                                     <div className="flex items-center gap-4 flex-wrap">
-                                        {(job.status === 'InProgress') && (
+                                        {status === 'InProgress' && (
                                             <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 {t.chatWith} {hiredFreelancer.name}
@@ -676,7 +670,7 @@ export function ClientDashboard() {
                                             <>
                                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                   <ShieldCheck className="h-5 w-5 text-success" />
-                                                  <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
+                                                  <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
                                               </div>
                                                <ApprovePaymentDialog
                                                   job={job}
@@ -759,3 +753,5 @@ export function ClientDashboard() {
     </>
   );
 }
+
+    

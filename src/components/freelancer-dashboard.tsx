@@ -21,7 +21,6 @@ import { Input } from './ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { recommendJobsForFreelancer } from '@/app/actions';
-import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { LoadingDots } from './loading-dots';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -43,7 +42,7 @@ import { Label } from './ui/label';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 
@@ -124,7 +123,9 @@ export function FreelancerDashboard() {
       }
     };
     
-    getRecommendations();
+    if (jobs.length > 0 && freelancerProfile) {
+      getRecommendations();
+    }
   }, [jobs, freelancerProfile, user]);
 
   if (!user) {
@@ -242,6 +243,14 @@ export function FreelancerDashboard() {
   const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
 
   const renderFindWorkContent = () => {
+    if (isRecommending) {
+      return (
+        <div className="flex justify-center items-center py-8">
+            <LoadingDots />
+        </div>
+      );
+    }
+    
     if (openJobs.length === 0) {
       return <p className="text-muted-foreground text-center py-8">{t.noOpenJobsAvailable}</p>;
     }
@@ -250,9 +259,11 @@ export function FreelancerDashboard() {
       return <p className="text-muted-foreground text-center py-8">{t.noJobsFound}</p>;
     }
 
+    const jobsToDisplay = searchQuery ? filteredJobs : (recommendedJobs.length > 0 ? recommendedJobs : filteredJobs);
+
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-start">
-        {(searchQuery ? filteredJobs : recommendedJobs.length > 0 ? recommendedJobs : filteredJobs).map((job) => {
+        {jobsToDisplay.map((job) => {
             const recommendation = recommendedJobs.find(rec => rec.id === job.id);
             const isRecommended = !!recommendation;
             
@@ -297,7 +308,7 @@ export function FreelancerDashboard() {
                     <CardFooter className='flex-col items-stretch gap-4'>
                         <div className="flex items-center gap-2 text-base font-semibold">
                             <DollarSign className="h-5 w-5 text-success" />
-                            <span>${job.budget.toFixed(2)}</span>
+                            <span>${(job.budget || 0).toFixed(2)}</span>
                         </div>
                         <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
                     </CardFooter>
@@ -321,8 +332,7 @@ export function FreelancerDashboard() {
                 const status = job.status as Job['status'];
                 const statusVariant = status === 'Completed' ? 'default' : 'secondary';
                 
-                const hasUnreadMessages = 
-                    !!job.lastMessageTimestamp &&
+                const hasUnreadMessages = user && job.lastMessageTimestamp &&
                     job.lastMessageSenderId !== user.id &&
                     (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
                 
@@ -341,7 +351,7 @@ export function FreelancerDashboard() {
                                 {(status === 'InProgress') && (
                                     <div className="flex items-center text-success gap-2 font-medium">
                                         <ShieldCheck className="h-4 w-4"/>
-                                        <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
+                                        <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
                                     </div>
                                 )}
                             </div>
@@ -390,8 +400,8 @@ export function FreelancerDashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {myProposals.map(proposal => {
                 const job = jobs.find(j => j.id === proposal.jobId);
-                const status = proposal.status || 'Pending';
                 if (!job) return null;
+                const status = proposal.status || 'Pending';
                 
                 return (
                     <Card 
@@ -406,7 +416,7 @@ export function FreelancerDashboard() {
                                     {t[status.toLowerCase() as keyof typeof t] || status}
                                 </Badge>
                             </div>
-                            <CardDescription>{t.budget}: ${job.budget.toFixed(2)}</CardDescription>
+                            <CardDescription>{t.budget}: ${(job.budget || 0).toFixed(2)}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow">
                              <p className="text-sm text-muted-foreground line-clamp-3 italic">
@@ -451,12 +461,6 @@ export function FreelancerDashboard() {
                         />
                     </div>
                     </div>
-                    {isRecommending && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-                        <Wand2 className="h-4 w-4" />
-                        <span>{t.gettingRecommendations}</span>
-                    </div>
-                    )}
                 </CardHeader>
                 <CardContent>{renderFindWorkContent()}</CardContent>
             </Card>

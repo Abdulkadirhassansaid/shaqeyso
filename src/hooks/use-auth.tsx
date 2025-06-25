@@ -64,21 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          let initialLoadComplete = false;
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
               const userData = { ...userDocSnap.data(), id: userDocSnap.id } as User;
               setUser(userData);
             } else {
-              // This can happen right after signup if the doc creation is slightly delayed
-              // or if a user was deleted from DB but not Auth. Treat as logged out.
               setUser(null);
             }
-             if (!initialLoadComplete) {
-                initialLoadComplete = true;
-                setIsLoading(false);
-            }
+            setIsLoading(false);
           }, (error) => {
             console.error("Error listening to user document:", error);
             setUser(null);
@@ -140,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             await batch.commit();
 
-            // By setting the user manually here, we avoid race conditions with onAuthStateChanged
             setUser(newUser);
             return { success: true, user: newUser };
 
@@ -160,7 +153,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const isPotentialAdminLogin = email.toLowerCase() === 'mahiryare@gmail.com' && pass === 'Mahir4422';
 
-        // Handle Admin Login separately
         if (isPotentialAdminLogin) {
           try {
             const creds = await signInWithEmailAndPassword(auth, email, pass);
@@ -170,16 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data() as User;
                 if (userData.role !== 'admin') {
-                    // This user exists but is not an admin. Let's promote them.
                     await updateDoc(userDocRef, { role: 'admin', verificationStatus: 'verified' });
-                    const updatedUserSnap = await getDoc(userDocRef); // Re-fetch to get the updated data
+                    const updatedUserSnap = await getDoc(userDocRef);
                     return { success: true, user: updatedUserSnap.data() as User };
                 }
-                // User is already an admin, login successful.
                 return { success: true, user: userData };
             } else {
-              // This case shouldn't happen if signup is robust, but we can handle it.
-              // Auth user exists, but no firestore doc. Create it.
               const adminUser: User = {
                 id: creds.user.uid, name: 'Admin', email, role: 'admin',
                 avatarUrl: `https://placehold.co/100x100.png?text=A`, isBlocked: false, verificationStatus: 'verified',
@@ -188,18 +176,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return { success: true, user: adminUser };
             }
           } catch (error: any) {
-            // If admin account doesn't exist in Firebase Auth at all, create it.
             if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
               const signupResult = await signup('Admin', email, pass, 'admin');
-              // The signup function handles setting the user state and logging in.
               return signupResult;
             }
-            // Any other error (like wrong password if user exists) results in failure.
             return { success: false, message: 'invalid' };
           }
         }
 
-        // Normal User Login
         try {
             const usersQuery = query(collection(db, "users"), where("email", "==", email));
             const querySnapshot = await getDocs(usersQuery);
@@ -236,13 +220,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const batch = writeBatch(db);
 
-            // Update the main user document only if there's data for it
             if (userData && Object.keys(userData).length > 0) {
                 const userRef = doc(db, 'users', userId);
                 batch.update(userRef, userData);
             }
 
-            // Update the specific profile document (freelancer or client) if there's data for it
             if (profileData && Object.keys(profileData).length > 0) {
                 const userDocSnap = await getDoc(doc(db, 'users', userId));
                 if (userDocSnap.exists()) {
@@ -268,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await updateDoc(userRef, {
                 verificationStatus: 'pending',
                 ...documents,
-                verificationRejectionReason: '', // Clear previous reason
+                verificationRejectionReason: '',
             });
             return true;
         } catch (error) {
@@ -365,13 +347,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const deleteUser = React.useCallback(async (userId: string): Promise<boolean> => {
         if (!db) return false;
-        // NOTE: This does not delete the user from Firebase Auth, which requires admin privileges (e.g. a Cloud Function)
         try {
             const batch = writeBatch(db);
             batch.delete(doc(db, 'users', userId));
             batch.delete(doc(db, 'freelancerProfiles', userId));
             batch.delete(doc(db, 'clientProfiles', userId));
-            // In a real app, you would also delete all their subcollections, jobs, proposals etc.
             await batch.commit();
             return true;
         } catch (error) {
@@ -381,8 +361,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
     const uploadFile = React.useCallback(async (path: string, file: File): Promise<string> => {
-        // This is a mocked upload since storage is not enabled.
-        // It returns a data URL for immediate local preview.
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -412,3 +390,5 @@ export const useAuth = () => {
     }
     return context;
 };
+
+    
