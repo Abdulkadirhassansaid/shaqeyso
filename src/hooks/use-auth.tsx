@@ -28,7 +28,6 @@ import {
 import { auth, db } from '@/lib/firebase';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
 import { useLoading } from './use-loading';
-import { fileToDataUrl } from '@/lib/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +41,7 @@ interface AuthContextType {
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
-  submitVerification: (userId: string, documents: { idDoc: File, certDoc?: File }) => Promise<boolean>;
+  submitVerification: (userId: string, documents: { idDocUrl: string, certDocUrl?: string }) => Promise<boolean>;
   approveVerification: (userId: string) => Promise<boolean>;
   rejectVerification: (userId: string, reason: string) => Promise<boolean>;
 }
@@ -249,18 +248,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const submitVerification = React.useCallback(async (userId: string, documents: { idDoc: File, certDoc?: File }): Promise<boolean> => {
+    const submitVerification = React.useCallback(async (userId: string, documents: { idDocUrl: string, certDocUrl?: string }): Promise<boolean> => {
         if (!db) return false;
         try {
-            const idDocUrl = await fileToDataUrl(documents.idDoc);
             const docUpdates: { [key: string]: any } = {
-                passportOrIdUrl: idDocUrl,
+                passportOrIdUrl: documents.idDocUrl,
                 verificationStatus: 'pending',
-                verificationRejectionReason: '',
+                verificationRejectionReason: '', // Clear any previous rejection reason
             };
 
-            if (documents.certDoc) {
-                docUpdates.businessCertificateUrl = await fileToDataUrl(documents.certDoc);
+            if (documents.certDocUrl) {
+                docUpdates.businessCertificateUrl = documents.certDocUrl;
             }
 
             await updateDoc(doc(db, 'users', userId), docUpdates);

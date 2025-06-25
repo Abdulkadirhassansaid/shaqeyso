@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
-import { FileUp, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileUp, CheckCircle2, AlertTriangle, File as FileIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
@@ -28,7 +28,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [idDoc, setIdDoc] = React.useState<File | null>(null);
-  const [idDocPreview, setIdDocPreview] = React.useState<string | null>(null);
+  const [idDocUrl, setIdDocUrl] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
@@ -38,9 +38,13 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
       const file = e.target.files[0];
       if (file.type.startsWith('image/')) {
         fileToDataUrl(file).then(dataUrl => setImageToCrop(dataUrl));
-      } else { // Handle PDFs and other files
-        setIdDoc(file);
-        setIdDocPreview(null); // No preview for non-images
+      } else if (file.type === 'application/pdf') {
+        fileToDataUrl(file).then(dataUrl => {
+            setIdDoc(file);
+            setIdDocUrl(dataUrl);
+        });
+      } else {
+        toast({ title: 'Unsupported File Type', description: 'Please upload a PNG, JPG, or PDF file.', variant: 'destructive'});
       }
     }
     // Reset input value to allow re-uploading the same file
@@ -48,14 +52,16 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
   };
   
   const handleCropComplete = (croppedImage: File) => {
-    setIdDoc(croppedImage);
-    setIdDocPreview(URL.createObjectURL(croppedImage));
-    setImageToCrop(null);
+    fileToDataUrl(croppedImage).then(dataUrl => {
+        setIdDoc(croppedImage);
+        setIdDocUrl(dataUrl);
+        setImageToCrop(null);
+    });
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!idDoc) {
+    if (!idDocUrl) {
       toast({
         title: t.missingDocuments,
         description: t.missingDocumentsDescFreelancer,
@@ -67,7 +73,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
     setIsSubmitting(true);
     
     try {
-        const success = await submitVerification(user.id, { idDoc });
+        const success = await submitVerification(user.id, { idDocUrl });
 
         if (success) {
             toast({
@@ -110,9 +116,9 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
             <div className="space-y-2">
                 <h3 className="font-medium">{t.idUploadTitle}</h3>
                 <div className="flex items-center gap-4 rounded-lg border p-4">
-                    {idDocPreview ? (
+                    {idDocUrl && idDoc?.type.startsWith('image/') ? (
                     <div className="relative h-24 w-24 flex-shrink-0">
-                        <Image src={idDocPreview} alt="ID Preview" layout="fill" objectFit="cover" className="rounded-md" />
+                        <Image src={idDocUrl} alt="ID Preview" layout="fill" objectFit="cover" className="rounded-md" />
                     </div>
                     ) : (
                     <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-md bg-muted">
@@ -124,8 +130,8 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
                         {t.uploadFile}
                     </Button>
                     {idDoc ? (
-                        <div className="mt-2 flex items-center text-sm text-success">
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                         <div className="mt-2 flex items-center text-sm text-success gap-2">
+                            {idDoc.type.startsWith('image/') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <FileIcon className="mr-2 h-4 w-4 text-muted-foreground" />}
                             <span className="truncate max-w-[200px]">{idDoc.name}</span>
                         </div>
                     ) : (
@@ -146,7 +152,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
           <Button type="button" variant="outline" asChild>
             <Link href="/">{t.backToHome}</Link>
           </Button>
-          <Button type="submit" disabled={isSubmitting || !idDoc}>
+          <Button type="submit" disabled={isSubmitting || !idDocUrl}>
             {isSubmitting ? t.submitting : t.submitForVerification}
           </Button>
         </CardFooter>

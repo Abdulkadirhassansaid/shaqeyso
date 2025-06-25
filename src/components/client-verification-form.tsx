@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
-import { FileUp, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileUp, CheckCircle2, AlertTriangle, File as FileIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
@@ -31,11 +31,11 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
 
   const [idDoc, setIdDoc] = React.useState<File | null>(null);
   const [certDoc, setCertDoc] = React.useState<File | null>(null);
+  const [idDocUrl, setIdDocUrl] = React.useState<string | null>(null);
+  const [certDocUrl, setCertDocUrl] = React.useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  const [idDocPreview, setIdDocPreview] = React.useState<string | null>(null);
-  const [certDocPreview, setCertDocPreview] = React.useState<string | null>(null);
-
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
   const [cropTarget, setCropTarget] = React.useState<'id' | 'cert' | null>(null);
 
@@ -45,14 +45,18 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
       if (file.type.startsWith('image/')) {
         setCropTarget(target);
         fileToDataUrl(file).then(dataUrl => setImageToCrop(dataUrl));
-      } else { // Handle PDFs and other files
-        if (target === 'id') {
-          setIdDoc(file);
-          setIdDocPreview(null); // No preview for non-images
-        } else {
-          setCertDoc(file);
-          setCertDocPreview(null);
-        }
+      } else if (file.type === 'application/pdf') {
+          fileToDataUrl(file).then(dataUrl => {
+            if (target === 'id') {
+                setIdDoc(file);
+                setIdDocUrl(dataUrl);
+            } else {
+                setCertDoc(file);
+                setCertDocUrl(dataUrl);
+            }
+          })
+      } else {
+          toast({ title: 'Unsupported File Type', description: 'Please upload a PNG, JPG, or PDF file.', variant: 'destructive'});
       }
     }
      // Reset input value to allow re-uploading the same file
@@ -60,20 +64,22 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
   };
   
   const handleCropComplete = (croppedImage: File) => {
-    if (cropTarget === 'id') {
-      setIdDoc(croppedImage);
-      setIdDocPreview(URL.createObjectURL(croppedImage));
-    } else if (cropTarget === 'cert') {
-      setCertDoc(croppedImage);
-      setCertDocPreview(URL.createObjectURL(croppedImage));
-    }
-    setImageToCrop(null);
-    setCropTarget(null);
+    fileToDataUrl(croppedImage).then(dataUrl => {
+        if (cropTarget === 'id') {
+            setIdDoc(croppedImage);
+            setIdDocUrl(dataUrl);
+        } else if (cropTarget === 'cert') {
+            setCertDoc(croppedImage);
+            setCertDocUrl(dataUrl);
+        }
+        setImageToCrop(null);
+        setCropTarget(null);
+    });
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!idDoc || !certDoc) {
+    if (!idDocUrl || !certDocUrl) {
       toast({
         title: t.missingDocuments,
         description: t.missingDocumentsDescClient,
@@ -85,7 +91,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
     setIsSubmitting(true);
     
     try {
-        const success = await submitVerification(user.id, { idDoc, certDoc });
+        const success = await submitVerification(user.id, { idDocUrl, certDocUrl });
 
         if (success) {
             toast({
@@ -106,36 +112,6 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
     }
   };
 
-  const UploadBox = ({ title, onButtonClick, preview, file }: { title: string; onButtonClick: () => void; preview: string | null; file: File | null }) => (
-    <div className="space-y-2">
-      <h3 className="font-medium">{title}</h3>
-      <div className="flex items-center gap-4 rounded-lg border p-4">
-        {preview ? (
-          <div className="relative h-24 w-24 flex-shrink-0">
-            <Image src={preview} alt="Preview" layout="fill" objectFit="cover" className="rounded-md" />
-          </div>
-        ) : (
-          <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-md bg-muted">
-            <FileUp className="h-8 w-8 text-muted-foreground" />
-          </div>
-        )}
-        <div className="flex-grow">
-          <Button type="button" variant="outline" onClick={onButtonClick} disabled={isSubmitting}>
-            {t.uploadFile}
-          </Button>
-          {file ? (
-            <div className="mt-2 flex items-center text-sm text-success">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                <span className="truncate max-w-[200px]">{file.name}</span>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground">{t.uploadFileDesc}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
     <Card className="w-full max-w-2xl">
@@ -155,12 +131,34 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
                 </AlertDescription>
             </Alert>
           )}
-          <UploadBox 
-            title={t.idUploadTitle} 
-            onButtonClick={() => idInputRef.current?.click()}
-            preview={idDocPreview}
-            file={idDoc}
-          />
+          
+          <div className="space-y-2">
+            <h3 className="font-medium">{t.idUploadTitle}</h3>
+            <div className="flex items-center gap-4 rounded-lg border p-4">
+                {idDocUrl && idDoc?.type.startsWith('image/') ? (
+                <div className="relative h-24 w-24 flex-shrink-0">
+                    <Image src={idDocUrl} alt="ID Preview" layout="fill" objectFit="cover" className="rounded-md" />
+                </div>
+                ) : (
+                <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-md bg-muted">
+                    <FileUp className="h-8 w-8 text-muted-foreground" />
+                </div>
+                )}
+                <div className="flex-grow">
+                <Button type="button" variant="outline" onClick={() => idInputRef.current?.click()} disabled={isSubmitting}>
+                    {t.uploadFile}
+                </Button>
+                {idDoc ? (
+                    <div className="mt-2 flex items-center text-sm text-success gap-2">
+                        {idDoc.type.startsWith('image/') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <FileIcon className="mr-2 h-4 w-4 text-muted-foreground" />}
+                        <span className="truncate max-w-[200px]">{idDoc.name}</span>
+                    </div>
+                ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">{t.uploadFileDesc}</p>
+                )}
+                </div>
+            </div>
+          </div>
            <input
             type="file"
             ref={idInputRef}
@@ -169,12 +167,33 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
             onChange={(e) => handleFileChange(e, 'id')}
           />
 
-          <UploadBox
-            title={t.certUploadTitle}
-            onButtonClick={() => certInputRef.current?.click()}
-            preview={certDocPreview}
-            file={certDoc}
-          />
+          <div className="space-y-2">
+            <h3 className="font-medium">{t.certUploadTitle}</h3>
+             <div className="flex items-center gap-4 rounded-lg border p-4">
+                {certDocUrl && certDoc?.type.startsWith('image/') ? (
+                <div className="relative h-24 w-24 flex-shrink-0">
+                    <Image src={certDocUrl} alt="Certificate Preview" layout="fill" objectFit="cover" className="rounded-md" />
+                </div>
+                ) : (
+                <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-md bg-muted">
+                    <FileUp className="h-8 w-8 text-muted-foreground" />
+                </div>
+                )}
+                <div className="flex-grow">
+                <Button type="button" variant="outline" onClick={() => certInputRef.current?.click()} disabled={isSubmitting}>
+                    {t.uploadFile}
+                </Button>
+                {certDoc ? (
+                     <div className="mt-2 flex items-center text-sm text-success gap-2">
+                        {certDoc.type.startsWith('image/') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <FileIcon className="mr-2 h-4 w-4 text-muted-foreground" />}
+                        <span className="truncate max-w-[200px]">{certDoc.name}</span>
+                    </div>
+                ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">{t.uploadFileDesc}</p>
+                )}
+                </div>
+            </div>
+          </div>
           <input
             type="file"
             ref={certInputRef}
@@ -187,7 +206,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
           <Button type="button" variant="outline" asChild>
             <Link href="/">{t.backToHome}</Link>
           </Button>
-          <Button type="submit" disabled={isSubmitting || !idDoc || !certDoc}>
+          <Button type="submit" disabled={isSubmitting || !idDocUrl || !certDocUrl}>
             {isSubmitting ? t.submitting : t.submitForVerification}
           </Button>
         </CardFooter>
