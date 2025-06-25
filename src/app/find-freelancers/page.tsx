@@ -119,7 +119,33 @@ export default function FindFreelancersPage() {
                 
                 {isLoading ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
+                        {[...Array(6)].map((_, i) => (
+                           <Card key={i} className="flex flex-col">
+                                <CardContent className="p-6 flex-grow flex flex-col">
+                                    <div className="flex items-start gap-4 mb-4">
+                                        <Skeleton className="h-16 w-16 rounded-full" />
+                                        <div className="flex-grow space-y-2">
+                                            <Skeleton className="h-5 w-3/4" />
+                                            <Skeleton className="h-4 w-1/2" />
+                                            <Skeleton className="h-5 w-1/4" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 mb-4">
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-2/3" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        <Skeleton className="h-6 w-20" />
+                                        <Skeleton className="h-6 w-24" />
+                                        <Skeleton className="h-6 w-16" />
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Skeleton className="h-10 w-full" />
+                                </CardFooter>
+                            </Card>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,21 +155,37 @@ export default function FindFreelancersPage() {
                             const profile = freelancerProfiles.find(p => p.userId === f.id);
 
                             return (
-                                <Card key={f.id} className="flex flex-col">
-                                    <CardHeader className="text-center items-center">
-                                        <Avatar className="h-24 w-24 mb-2">
-                                            <AvatarImage src={f.avatarUrl} alt={f.name} />
-                                            <AvatarFallback>{f.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <CardTitle>{f.name}</CardTitle>
-                                        <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'}>{t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}</Badge>
-                                        <div className="flex items-center gap-1 pt-1">
-                                            <StarRating rating={rating} />
-                                            <span className="text-sm text-muted-foreground">({count})</span>
+                               <Card key={f.id} className="flex flex-col transition-shadow hover:shadow-lg">
+                                    <CardContent className="p-6 flex-grow flex flex-col">
+                                        <div className="flex items-start gap-4 mb-4">
+                                            <Avatar className="h-16 w-16 border">
+                                                <AvatarImage src={f.avatarUrl} alt={f.name} />
+                                                <AvatarFallback>{f.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-grow">
+                                                <CardTitle className="text-lg">{f.name}</CardTitle>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <StarRating rating={rating} />
+                                                    <span className="text-sm text-muted-foreground">({count} {t.reviews.toLowerCase()})</span>
+                                                </div>
+                                                <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'} className="mt-2">
+                                                    {t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}
+                                                </Badge>
+                                            </div>
                                         </div>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow">
-                                        <p className="text-sm text-muted-foreground line-clamp-3 h-[60px]">{profile?.bio || t.noBio}</p>
+                                        
+                                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-grow">{profile?.bio || t.noBio}</p>
+                                        
+                                        {profile?.skills && profile.skills.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {profile.skills.slice(0, 3).map(skill => (
+                                                    <Badge key={skill} variant="outline">{skill}</Badge>
+                                                ))}
+                                                {profile.skills.length > 3 && (
+                                                    <Badge variant="outline">+{profile.skills.length - 3}</Badge>
+                                                )}
+                                            </div>
+                                        )}
                                     </CardContent>
                                     <CardFooter>
                                         <Button className="w-full" onClick={() => setSelectedFreelancer(f)}>
