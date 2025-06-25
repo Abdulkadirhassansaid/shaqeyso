@@ -20,13 +20,14 @@ import { StarRating } from './star-rating';
 import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
+import { ImageCropper } from './image-cropper';
 
 interface ClientProfilePageProps {
   user: User;
 }
 
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
-  const { updateUserProfile } = useAuth();
+  const { updateUserProfile, uploadFile } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
@@ -36,7 +37,9 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const [reviewers, setReviewers] = React.useState<User[]>([]);
   const [isLoadingReviewers, setIsLoadingReviewers] = React.useState(true);
   const [companyName, setCompanyName] = React.useState(user.name);
-  const [avatar, setAvatar] = React.useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = React.useState<string>(user.avatarUrl);
+  const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
+  const [newAvatarFile, setNewAvatarFile] = React.useState<File | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   
@@ -93,7 +96,7 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatar(reader.result as string);
+        setImageToCrop(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -103,9 +106,22 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
     e.preventDefault();
     setIsSaving(true);
     
+    let avatarUrl = user.avatarUrl;
+    if (newAvatarFile) {
+        try {
+            const filePath = `avatars/${user.id}/${newAvatarFile.name}`;
+            avatarUrl = await uploadFile(filePath, newAvatarFile);
+        } catch (error) {
+            console.error("Error uploading avatar:", error);
+            toast({ title: "Avatar Upload Failed", variant: "destructive" });
+            setIsSaving(false);
+            return;
+        }
+    }
+    
     const userData = { 
       name: companyName, // Keep user.name in sync with company name
-      ...(avatar && { avatarUrl: avatar })
+      avatarUrl: avatarUrl
     };
     
     const profileData = {
@@ -119,6 +135,7 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
         title: t.profileUpdated,
         description: t.profileUpdatedDesc,
       });
+      setNewAvatarFile(null);
     } else {
       toast({
         title: t.updateFailed,
@@ -130,122 +147,133 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-            <Button variant="outline" size="sm" onClick={() => router.back()}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t.back}
-            </Button>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-            <Card>
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <CardTitle>{t.companyProfile}</CardTitle>
-                    {user.verificationStatus === 'verified' && (
-                        <BadgeCheck className="h-6 w-6 text-primary" />
-                    )}
-                </div>
-                <CardDescription>{t.companyProfileDesc}</CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSave}>
-                <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatar || user.avatarUrl} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                    <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()} disabled={isSaving}>
-                        <Camera className="mr-2 h-4 w-4" />
-                        {t.uploadLogo}
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-2">{t.uploadLogoDesc}</p>
-                    </div>
-                    <input
-                    type="file"
-                    ref={avatarInputRef}
-                    className="hidden"
-                    accept="image/png, image/jpeg"
-                    onChange={handleAvatarChange}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="companyName">{t.companyName}</Label>
-                    <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    disabled={isSaving}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="email">{t.emailLabel}</Label>
-                    <Input id="email" value={user.email} disabled />
-                </div>
-                </CardContent>
-                <CardFooter>
-                    <Button type="submit" disabled={isSaving}>
-                        {isSaving ? t.saving : t.saveChanges}
-                    </Button>
-                </CardFooter>
-            </form>
-            </Card>
-        </div>
+    <>
+      <div className="max-w-4xl mx-auto space-y-6">
+          <div>
+              <Button variant="outline" size="sm" onClick={() => router.back()}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  {t.back}
+              </Button>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
+              <Card>
+              <CardHeader>
+                  <div className="flex items-center gap-2">
+                      <CardTitle>{t.companyProfile}</CardTitle>
+                      {user.verificationStatus === 'verified' && (
+                          <BadgeCheck className="h-6 w-6 text-primary" />
+                      )}
+                  </div>
+                  <CardDescription>{t.companyProfileDesc}</CardDescription>
+              </CardHeader>
+              <form onSubmit={handleSave}>
+                  <CardContent className="space-y-6">
+                  <div className="flex items-center gap-4">
+                      <Avatar className="h-24 w-24">
+                      <AvatarImage src={avatarPreview} alt={user.name} />
+                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                      <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()} disabled={isSaving}>
+                          <Camera className="mr-2 h-4 w-4" />
+                          {t.uploadLogo}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">{t.uploadLogoDesc}</p>
+                      </div>
+                      <input
+                      type="file"
+                      ref={avatarInputRef}
+                      className="hidden"
+                      accept="image/png, image/jpeg"
+                      onChange={handleAvatarChange}
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="companyName">{t.companyName}</Label>
+                      <Input
+                      id="companyName"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      disabled={isSaving}
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="email">{t.emailLabel}</Label>
+                      <Input id="email" value={user.email} disabled />
+                  </div>
+                  </CardContent>
+                  <CardFooter>
+                      <Button type="submit" disabled={isSaving}>
+                          {isSaving ? t.saving : t.saveChanges}
+                      </Button>
+                  </CardFooter>
+              </form>
+              </Card>
+          </div>
 
-        <div className="md:col-span-1 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t.ratingsAndReviews}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {clientReviews.length > 0 ? (
-                        <div className="space-y-4">
-                            <div className="text-center">
-                                <p className="text-4xl font-bold">{averageRating.toFixed(1)}</p>
-                                <div className="flex justify-center">
-                                    <StarRating rating={averageRating} size={20} />
-                                </div>
-                                <p className="text-sm text-muted-foreground">({clientReviews.length} {t.ratingsAndReviews.toLowerCase()})</p>
-                            </div>
-                            <Separator />
-                            {isLoadingReviewers ? (
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-10 w-full" />
-                                        <Skeleton className="h-10 w-full" />
-                                    </div>
-                            ) : (
-                                <div className="space-y-4 max-h-96 overflow-y-auto">
-                                    {clientReviews.map(review => {
-                                        const reviewer = reviewers.find(u => u.id === review.reviewerId);
-                                        return (
-                                            <div key={review.id} className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage src={reviewer?.avatarUrl} />
-                                                        <AvatarFallback>{reviewer?.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <p className="text-sm font-medium">{reviewer?.name}</p>
-                                                        <StarRating rating={review.rating} />
-                                                    </div>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
-                                                <p className="text-xs text-muted-foreground text-right">{format(new Date(review.date), 'dd MMM yyyy')}</p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground text-center">{t.noReviewsYet}</p>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
-        </div>
-    </div>
+          <div className="md:col-span-1 space-y-6">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>{t.ratingsAndReviews}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      {clientReviews.length > 0 ? (
+                          <div className="space-y-4">
+                              <div className="text-center">
+                                  <p className="text-4xl font-bold">{averageRating.toFixed(1)}</p>
+                                  <div className="flex justify-center">
+                                      <StarRating rating={averageRating} size={20} />
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">({clientReviews.length} {t.ratingsAndReviews.toLowerCase()})</p>
+                              </div>
+                              <Separator />
+                              {isLoadingReviewers ? (
+                                      <div className="space-y-4">
+                                          <Skeleton className="h-10 w-full" />
+                                          <Skeleton className="h-10 w-full" />
+                                      </div>
+                              ) : (
+                                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                                      {clientReviews.map(review => {
+                                          const reviewer = reviewers.find(u => u.id === review.reviewerId);
+                                          return (
+                                              <div key={review.id} className="space-y-2">
+                                                  <div className="flex items-center gap-2">
+                                                      <Avatar className="h-8 w-8">
+                                                          <AvatarImage src={reviewer?.avatarUrl} />
+                                                          <AvatarFallback>{reviewer?.name.charAt(0)}</AvatarFallback>
+                                                      </Avatar>
+                                                      <div>
+                                                          <p className="text-sm font-medium">{reviewer?.name}</p>
+                                                          <StarRating rating={review.rating} />
+                                                      </div>
+                                                  </div>
+                                                  <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
+                                                  <p className="text-xs text-muted-foreground text-right">{format(new Date(review.date), 'dd MMM yyyy')}</p>
+                                              </div>
+                                          );
+                                      })}
+                                  </div>
+                              )}
+                          </div>
+                      ) : (
+                          <p className="text-sm text-muted-foreground text-center">{t.noReviewsYet}</p>
+                      )}
+                  </CardContent>
+              </Card>
+          </div>
+          </div>
+      </div>
+      <ImageCropper
+        image={imageToCrop}
+        onClose={() => setImageToCrop(null)}
+        onCropComplete={(croppedImage) => {
+          setNewAvatarFile(croppedImage);
+          setAvatarPreview(URL.createObjectURL(croppedImage));
+          setImageToCrop(null);
+        }}
+      />
+    </>
   );
 }

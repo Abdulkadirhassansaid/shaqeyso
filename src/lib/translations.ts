@@ -46,6 +46,8 @@ export const translations = {
         posted: 'Posted',
         view: 'View',
         myAccount: "My Account",
+        cropImage: "Crop Image",
+        zoom: "Zoom",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -552,6 +554,8 @@ export const translations = {
         posted: 'La soo geliyay',
         view: 'Arag',
         myAccount: "Akoonkayga",
+        cropImage: "Jar Sawirka",
+        zoom: "Soo Dhawee",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',

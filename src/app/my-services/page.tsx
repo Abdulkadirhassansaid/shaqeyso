@@ -50,6 +50,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { LoadingDots } from '@/components/loading-dots';
+import { ImageCropper } from '@/components/image-cropper';
 
 export default function MyServicesPage() {
   const { user, isLoading, updateUserProfile, uploadFile } = useAuth();
@@ -84,6 +85,7 @@ export default function MyServicesPage() {
   );
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
   const [isServiceSaving, setIsServiceSaving] = React.useState(false);
+  const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!user || !db) return;
@@ -234,9 +236,16 @@ export default function MyServicesPage() {
   const handleServiceImageChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    if (e.target.files) {
-      const filesToAdd = Array.from(e.target.files);
-      setServiceImages((prev) => [...prev, ...filesToAdd]);
+    if (e.target.files && e.target.files[0]) {
+      if (e.target.files.length > 1) {
+          toast({ title: "One image at a time", description: "You can crop and upload one image at a time for your service." });
+      }
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+          setImageToCrop(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
     if (serviceImageInputRef.current) {
       serviceImageInputRef.current.value = '';
@@ -516,6 +525,15 @@ export default function MyServicesPage() {
             </DialogContent>
           </Dialog>
         </div>
+        <ImageCropper
+           image={imageToCrop}
+           aspect={16 / 9}
+           onClose={() => setImageToCrop(null)}
+           onCropComplete={(croppedImage) => {
+             setServiceImages((prev) => [...prev, croppedImage]);
+             setImageToCrop(null);
+           }}
+        />
       </main>
     </div>
   );
