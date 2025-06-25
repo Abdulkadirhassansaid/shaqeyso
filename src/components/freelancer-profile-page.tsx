@@ -26,6 +26,7 @@ import { collection, onSnapshot, query, where, getDocs } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
 import { ImageCropper } from './image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
 
 
 interface FreelancerProfilePageProps {
@@ -93,7 +94,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [name, setName] = React.useState(user.name);
   const [avatarPreview, setAvatarPreview] = React.useState<string>(user.avatarUrl);
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
-  const [newAvatarFile, setNewAvatarFile] = React.useState<File | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
   const [bio, setBio] = React.useState('');
   const [hourlyRate, setHourlyRate] = React.useState(0);
@@ -103,6 +103,12 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
 
+  React.useEffect(() => {
+    const localAvatar = localStorage.getItem(`mock_avatar_${user.id}`);
+    if (localAvatar) {
+        setAvatarPreview(localAvatar);
+    }
+  }, [user.id]);
 
   React.useEffect(() => {
     if (freelancerProfile) {
@@ -206,7 +212,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
 
     setIsSaving(true);
     try {
-      // Mock Upload: We only save text data. Image upload is skipped.
       const profileData = {
         bio,
         hourlyRate,
@@ -224,14 +229,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           title: t.profileUpdated,
           description: t.freelancerProfileUpdatedDesc,
         });
-
-        if (newAvatarFile) {
-          toast({
-            title: "Image Upload Mocked",
-            description: "Profile text saved. Image upload is disabled for now.",
-          });
-        }
-        setNewAvatarFile(null);
       } else {
         throw new Error('Profile update failed');
       }
@@ -244,6 +241,17 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedImage: File) => {
+    try {
+        const dataUrl = await fileToDataUrl(croppedImage);
+        localStorage.setItem(`mock_avatar_${user.id}`, dataUrl);
+        setAvatarPreview(dataUrl);
+        setImageToCrop(null);
+    } catch (error) {
+        toast({ title: "Error", description: "Could not process image." });
     }
   };
 
@@ -447,11 +455,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
       <ImageCropper
         image={imageToCrop}
         onClose={() => setImageToCrop(null)}
-        onCropComplete={(croppedImage) => {
-          setNewAvatarFile(croppedImage);
-          setAvatarPreview(URL.createObjectURL(croppedImage));
-          setImageToCrop(null);
-        }}
+        onCropComplete={handleCropComplete}
       />
     </>
   );

@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,14 @@ import { BadgeCheck } from 'lucide-react';
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
   const { t } = useLanguage();
+  const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(user?.avatarUrl);
+
+  React.useEffect(() => {
+    if (user) {
+        const localAvatar = localStorage.getItem(`mock_avatar_${user.id}`);
+        setAvatarUrl(localAvatar || user.avatarUrl);
+    }
+  }, [user]);
 
   if (isLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
@@ -44,7 +53,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatarUrl} alt={user.name} />
+            <AvatarImage src={avatarUrl} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>

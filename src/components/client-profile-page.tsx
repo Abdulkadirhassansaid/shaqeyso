@@ -21,6 +21,7 @@ import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from 'fire
 import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
 import { ImageCropper } from './image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
 
 interface ClientProfilePageProps {
   user: User;
@@ -39,11 +40,17 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const [companyName, setCompanyName] = React.useState(user.name);
   const [avatarPreview, setAvatarPreview] = React.useState<string>(user.avatarUrl);
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
-  const [newAvatarFile, setNewAvatarFile] = React.useState<File | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   
   const clientProfile = clientProfiles.find(p => p.userId === user.id);
+
+  React.useEffect(() => {
+    const localAvatar = localStorage.getItem(`mock_avatar_${user.id}`);
+    if (localAvatar) {
+        setAvatarPreview(localAvatar);
+    }
+  }, [user.id]);
 
   React.useEffect(() => {
     if (!db) return;
@@ -108,9 +115,8 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
 
     setIsSaving(true);
     try {
-      // Mock Upload: We only save text data. Image upload is skipped.
       const userData = {
-        name: companyName, // Keep user.name in sync with company name
+        name: companyName,
       };
 
       const profileData = {
@@ -124,14 +130,6 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
           title: t.profileUpdated,
           description: t.profileUpdatedDesc,
         });
-
-        if (newAvatarFile) {
-          toast({
-            title: "Image Upload Mocked",
-            description: "Profile text saved. Image upload is disabled for now.",
-          });
-        }
-        setNewAvatarFile(null);
       } else {
         throw new Error('Profile update failed');
       }
@@ -144,6 +142,17 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedImage: File) => {
+    try {
+        const dataUrl = await fileToDataUrl(croppedImage);
+        localStorage.setItem(`mock_avatar_${user.id}`, dataUrl);
+        setAvatarPreview(dataUrl);
+        setImageToCrop(null);
+    } catch (error) {
+        toast({ title: "Error", description: "Could not process image." });
     }
   };
 
@@ -269,11 +278,7 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
       <ImageCropper
         image={imageToCrop}
         onClose={() => setImageToCrop(null)}
-        onCropComplete={(croppedImage) => {
-          setNewAvatarFile(croppedImage);
-          setAvatarPreview(URL.createObjectURL(croppedImage));
-          setImageToCrop(null);
-        }}
+        onCropComplete={handleCropComplete}
       />
     </>
   );

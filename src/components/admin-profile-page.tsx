@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Camera, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ImageCropper } from './image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
+
 
 interface AdminProfilePageProps {
   user: User;
@@ -28,9 +30,15 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
   const [name, setName] = React.useState(user.name);
   const [avatarPreview, setAvatarPreview] = React.useState<string>(user.avatarUrl);
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
-  const [newAvatarFile, setNewAvatarFile] = React.useState<File | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    const localAvatar = localStorage.getItem(`mock_avatar_${user.id}`);
+    if (localAvatar) {
+        setAvatarPreview(localAvatar);
+    }
+  }, [user.id]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -49,7 +57,6 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
 
     setIsSaving(true);
     try {
-      // Mock Upload: We only save text data. Image upload is skipped.
       const userData = {
         name: name,
       };
@@ -61,14 +68,6 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
           title: t.profileUpdated,
           description: t.adminProfileUpdatedDesc,
         });
-
-        if (newAvatarFile) {
-           toast({
-            title: "Image Upload Mocked",
-            description: "Profile text saved. Image upload is disabled for now.",
-          });
-        }
-        setNewAvatarFile(null);
       } else {
         throw new Error('Profile update failed');
       }
@@ -83,6 +82,18 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
       setIsSaving(false);
     }
   };
+
+  const handleCropComplete = async (croppedImage: File) => {
+    try {
+        const dataUrl = await fileToDataUrl(croppedImage);
+        localStorage.setItem(`mock_avatar_${user.id}`, dataUrl);
+        setAvatarPreview(dataUrl);
+        setImageToCrop(null);
+    } catch (error) {
+        toast({ title: "Error", description: "Could not process image." });
+    }
+  };
+
 
   return (
     <>
@@ -145,11 +156,7 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
        <ImageCropper
         image={imageToCrop}
         onClose={() => setImageToCrop(null)}
-        onCropComplete={(croppedImage) => {
-          setNewAvatarFile(croppedImage);
-          setAvatarPreview(URL.createObjectURL(croppedImage));
-          setImageToCrop(null);
-        }}
+        onCropComplete={handleCropComplete}
        />
     </>
   );
