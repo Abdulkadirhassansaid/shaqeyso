@@ -49,7 +49,7 @@ export function ClientDashboard() {
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
-  const { users: allUsers } = useUsers();
+  const { users: allUsers, isUsersLoading } = useUsers();
   const { addTransaction } = useAuth();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
@@ -382,7 +382,7 @@ export function ClientDashboard() {
                           freelancer={hiredFreelancer}
                           onConfirm={() => handleApproveAndPay(selectedJob.id)}
                       >
-                          <Button>{t.approveAndPay}</Button>
+                          <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
                       </ApprovePaymentDialog>
                   </CardFooter>
               )}
@@ -475,7 +475,7 @@ export function ClientDashboard() {
                                     freelancer={hiredFreelancer}
                                     onConfirm={() => handleApproveAndPay(job.id)}
                                 >
-                                    <Button>{t.approveAndPay}</Button>
+                                    <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
                                 </ApprovePaymentDialog>
                               </>
                           )}
@@ -597,7 +597,7 @@ export function ClientDashboard() {
                                                   freelancer={hiredFreelancer}
                                                   onConfirm={() => handleApproveAndPay(job.id)}
                                               >
-                                                  <Button>{t.approveAndPay}</Button>
+                                                  <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
                                               </ApprovePaymentDialog>
                                             </>
                                         )}
