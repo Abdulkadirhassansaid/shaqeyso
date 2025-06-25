@@ -115,7 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const authUser = userCredential.user;
 
             let initialTransactions: Transaction[] = [];
-            if (role === 'client') {
+            const isAdmin = email.toLowerCase() === 'abdikadirhassan2015@gmail.com';
+            const finalRole = isAdmin ? 'admin' : role;
+
+            if (finalRole === 'client') {
                 initialTransactions.push({
                     id: `txn-${Date.now()}`,
                     description: 'Initial account funding',
@@ -130,20 +133,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 name,
                 email: authUser.email!,
                 avatarUrl: `https://placehold.co/100x100.png?text=${name.charAt(0)}`,
-                role,
+                role: finalRole,
                 isBlocked: false,
-                verificationStatus: 'unverified',
+                verificationStatus: isAdmin ? 'verified' : 'unverified',
                 transactions: initialTransactions.length > 0 ? initialTransactions : undefined,
             };
             
             const batch = writeBatch(db);
             batch.set(doc(db, 'users', authUser.uid), newUser);
 
-            if (role === 'freelancer') {
+            if (finalRole === 'freelancer') {
                 batch.set(doc(db, 'freelancerProfiles', authUser.uid), {
                     skills: [], bio: '', hourlyRate: 0, portfolio: [], services: []
                 });
-            } else {
+            } else if (finalRole === 'client') {
                  batch.set(doc(db, 'clientProfiles', authUser.uid), {
                     companyName: name, projectsPosted: []
                 });
