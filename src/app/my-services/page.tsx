@@ -18,9 +18,6 @@ import { useLanguage } from '@/hooks/use-language';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Dialog,
@@ -29,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import {
@@ -47,7 +43,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import type { User, FreelancerProfile, Service } from '@/lib/types';
+import type { FreelancerProfile, Service } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { generateServiceDescription } from '@/app/actions';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -269,112 +265,110 @@ export default function MyServicesPage() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div>
+          <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t.back}
             </Button>
+            <Button
+              type="button"
+              onClick={() => setIsServiceDialogOpen(true)}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {t.addService}
+            </Button>
           </div>
 
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <div>
-                <CardTitle>{t.myServicesPageTitle}</CardTitle>
-                <CardDescription>{t.myServicesPageDesc}</CardDescription>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setIsServiceDialogOpen(true)}
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {t.addService}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {services.length > 0 ? (
-                  services.map((service) => (
-                    <div key={service.id} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">{service.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {service.description}
-                          </p>
-                        </div>
-                        <div className="flex gap-1">
+           <header>
+            <h1 className="text-3xl font-bold tracking-tight">{t.myServicesPageTitle}</h1>
+            <p className="text-muted-foreground mt-1">{t.myServicesPageDesc}</p>
+          </header>
+
+          <div className="space-y-4">
+            {services.length > 0 ? (
+              services.map((service) => (
+                <Card key={service.id}>
+                 <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-semibold">{service.title}</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {service.description}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditService(service)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEditService(service)}
+                            className="text-destructive hover:text-destructive"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  {t.deleteServiceTitle}
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {t.deleteServiceDesc}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>
-                                  {t.cancel}
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteService(service.id)}
-                                  className="bg-destructive hover:bg-destructive/90"
-                                >
-                                  {t.delete}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                      {service.images && service.images.length > 0 && (
-                        <div className="mt-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                          {service.images.map((img, index) => (
-                            <Image
-                              data-ai-hint="portfolio image"
-                              key={index}
-                              src={img}
-                              alt={`${service.title} image ${index + 1}`}
-                              width={100}
-                              height={100}
-                              className="rounded-md object-cover aspect-square"
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <div className="text-right mt-2">
-                        <Badge>${service.price}</Badge>
-                      </div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {t.deleteServiceTitle}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {t.deleteServiceDesc}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>
+                              {t.cancel}
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteService(service.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              {t.delete}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t.noServicesYet}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                  {service.images && service.images.length > 0 && (
+                    <div className="mt-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                      {service.images.map((img, index) => (
+                        <Image
+                          data-ai-hint="portfolio image"
+                          key={index}
+                          src={img}
+                          alt={`${service.title} image ${index + 1}`}
+                          width={100}
+                          height={100}
+                          className="rounded-md object-cover aspect-square"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div className="text-right mt-2">
+                    <Badge>${service.price}</Badge>
+                  </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  {t.noServicesYet}
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
           <Dialog
             open={isServiceDialogOpen}

@@ -473,7 +473,7 @@ export const translations = {
         searchUsersPlaceholder: 'Search by name or email...',
         noUsersFound: 'No users found.',
 
-        // New Freelancer Marketplace
+        // New Freelancer Marketplace & Services
         findFreelancers: 'Find Freelancers',
         findFreelancersDesc: "Browse our community of talented freelancers.",
         searchFreelancersPlaceholder: "Search by name, skill, or title...",
@@ -488,9 +488,23 @@ export const translations = {
         freelancerDetails: "Freelancer Details",
         requestQuote: "Request a Quote",
         myServices: "My Services",
+        reportProblem: 'Report a Problem',
         myServicesPageTitle: "Manage Your Services",
         myServicesPageDesc: "Add, edit, or remove the services you offer to clients.",
-        reportProblem: 'Report a Problem',
+        addService: "Add Service",
+        editService: "Edit Service",
+        noServicesYet: "You haven't added any services yet. Click 'Add Service' to get started.",
+        deleteServiceTitle: "Delete this service?",
+        deleteServiceDesc: "This action cannot be undone. Are you sure you want to permanently delete this service?",
+        editServiceDesc: 'Update the details for your service.',
+        addServiceDesc: 'Provide the details for your new service.',
+        serviceTitle: 'Service Title',
+        serviceTitlePlaceholder: 'e.g., Professional Logo Design',
+        serviceDescription: 'Service Description',
+        serviceDescPlaceholder: 'Describe the service you offer...',
+        servicePrice: 'Service Price ($)',
+        serviceImages: 'Portfolio Images',
+        uploadImages: 'Upload Images',
     },
     so: {
         // General
@@ -965,7 +979,7 @@ export const translations = {
         searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
         noUsersFound: 'Lama helin isticmaaleyaal.',
 
-        // New Freelancer Marketplace
+        // New Freelancer Marketplace & Services
         findFreelancers: 'Raadi Shaqaale Madaxbanaan',
         findFreelancersDesc: "Dhex baadho bulshadeena shaqaalaha madaxbannaan ee kartida leh.",
         searchFreelancersPlaceholder: "Ku raadi magac, xirfad, ama cinwaan...",
@@ -980,9 +994,23 @@ export const translations = {
         freelancerDetails: "Faahfaahinta Shaqaale Madaxbanaan",
         requestQuote: "Codso Qiime",
         myServices: "Adeegyadayda",
+        reportProblem: 'Dhibaatada Ka Warbixi',
         myServicesPageTitle: "Maamul Adeegyadaada",
         myServicesPageDesc: "Kudar, wax ka beddel, ama ka saar adeegyada aad u fidinayso macaamiisha.",
-        reportProblem: 'Dhibaatada Ka Warbixi',
+        addService: "Kudar Adeeg",
+        editService: "Wax ka beddel Adeegga",
+        noServicesYet: "Weli wax adeegyo ah ma aadan ku darin. Guji 'Kudar Adeeg' si aad u bilowdo.",
+        deleteServiceTitle: "Tirtir adeeggan?",
+        deleteServiceDesc: "Tallaabadan lama laaban karo. Ma hubtaa inaad rabto inaad si joogto ah u tirtirto adeeggan?",
+        editServiceDesc: 'Cusbooneysii faahfaahinta adeeggaaga.',
+        addServiceDesc: 'Bixi faahfaahinta adeeggaaga cusub.',
+        serviceTitle: 'Cinwaanka Adeegga',
+        serviceTitlePlaceholder: 'Tusaale, Naqshadeynta Astaanta Xirfadeed',
+        serviceDescription: 'Sharaxaadda Adeegga',
+        serviceDescPlaceholder: 'Sharax adeegga aad bixinayso...',
+        servicePrice: 'Qiimaha Adeegga ($)',
+        serviceImages: 'Sawirrada Portfolio',
+        uploadImages: 'Soo Geli Sawirro',
     }
 };
 
