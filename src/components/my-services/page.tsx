@@ -13,6 +13,7 @@ import {
   Wand2,
   UploadCloud,
   X,
+  Link,
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import {
@@ -51,9 +52,10 @@ import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import { LoadingDots } from '@/components/loading-dots';
 import { ImageCropper } from '@/components/image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
 
 export default function MyServicesPage() {
-  const { user, isLoading, updateUserProfile } = useAuth();
+  const { user, isLoading, updateUserProfile, uploadFile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
@@ -86,6 +88,9 @@ export default function MyServicesPage() {
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
   const [isServiceSaving, setIsServiceSaving] = React.useState(false);
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
+  
+  const [isServiceImageUrlDialogOpen, setIsServiceImageUrlDialogOpen] = React.useState(false);
+  const [serviceImageUrl, setServiceImageUrl] = React.useState('');
 
   React.useEffect(() => {
     if (!user || !db) return;
@@ -141,7 +146,7 @@ export default function MyServicesPage() {
 
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !uploadFile) return;
     if (!serviceTitle || !serviceDesc || !servicePrice) {
       toast({ title: t.missingFieldsTitle, variant: 'destructive' });
       return;
@@ -151,18 +156,27 @@ export default function MyServicesPage() {
     try {
       const serviceId = editingService?.id || `service-${Date.now()}`;
       
-      // Mock Upload: Filter out new File objects and only keep existing string URLs
+      const uploadPromises = serviceImages
+        .filter((image): image is File => typeof image !== 'string')
+        .map((file, index) => {
+          const filePath = `services/${user.id}/${serviceId}/${Date.now()}-${index}-${file.name}`;
+          return uploadFile(filePath, file);
+        });
+
+      const newImageUrls = await Promise.all(uploadPromises);
       const existingImageUrls = serviceImages.filter(
         (image): image is string => typeof image === 'string'
       );
-      const newImages = serviceImages.filter((image): image is File => typeof image !== 'string');
+      
+      const allImageUrls = [...existingImageUrls, ...newImageUrls];
+
 
       const newService: Service = {
         id: serviceId,
         title: serviceTitle,
         description: serviceDesc,
         price: Number(servicePrice),
-        images: existingImageUrls, // Only save existing images
+        images: allImageUrls,
       };
 
       let updatedServices;
@@ -185,12 +199,6 @@ export default function MyServicesPage() {
           title: editingService ? 'Service Updated' : 'Service Added',
           description: 'Your list of services has been saved.',
         });
-        if (newImages.length > 0) {
-            toast({
-              title: "Image Upload Mocked",
-              description: "Service details saved. New image uploads are disabled for now.",
-            });
-        }
         setIsServiceDialogOpen(false);
       } else {
         throw new Error('Failed to update profile.');
@@ -254,6 +262,13 @@ export default function MyServicesPage() {
       prev.filter((_, index) => index !== indexToRemove)
     );
   };
+  
+  const handleAddServiceImageUrl = () => {
+    if (!serviceImageUrl) return;
+    setServiceImages(prev => [...prev, serviceImageUrl]);
+    setServiceImageUrl('');
+    setIsServiceImageUrlDialogOpen(false);
+  }
 
   const resetServiceDialog = () => {
     setEditingService(null);
@@ -268,6 +283,7 @@ export default function MyServicesPage() {
   }
 
   return (
+    <>
     <div className="flex min-h-screen w-full flex-col bg-background">
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -456,15 +472,26 @@ export default function MyServicesPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="service-images">{t.serviceImages}</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => serviceImageInputRef.current?.click()}
-                      disabled={isServiceSaving}
-                    >
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      {t.uploadImages}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => serviceImageInputRef.current?.click()}
+                          disabled={isServiceSaving}
+                        >
+                          <UploadCloud className="mr-2 h-4 w-4" />
+                          {t.uploadImages}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsServiceImageUrlDialogOpen(true)}
+                          disabled={isServiceSaving}
+                        >
+                            <Link className="mr-2 h-4 w-4" />
+                            {t.addFromUrl}
+                        </Button>
+                    </div>
                     <input
                       type="file"
                       ref={serviceImageInputRef}
@@ -532,5 +559,32 @@ export default function MyServicesPage() {
         />
       </main>
     </div>
+    <Dialog open={isServiceImageUrlDialogOpen} onOpenChange={setIsServiceImageUrlDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{t.addImageFromUrl}</DialogTitle>
+                <DialogDescription>{t.addImageFromUrlDesc}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="service-image-url">{t.imageUrl}</Label>
+                    <Input
+                        id="service-image-url"
+                        value={serviceImageUrl}
+                        onChange={(e) => setServiceImageUrl(e.target.value)}
+                        placeholder="https://..."
+                        required
+                    />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setIsServiceImageUrlDialogOpen(false)}>{t.cancel}</Button>
+                <Button type="button" onClick={handleAddServiceImageUrl} disabled={!serviceImageUrl}>
+                    {t.addImage}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

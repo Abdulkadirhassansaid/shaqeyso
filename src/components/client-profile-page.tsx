@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Camera, Star, BadgeCheck, ArrowLeft } from 'lucide-react';
+import { Camera, Star, BadgeCheck, ArrowLeft, Link } from 'lucide-react';
 import { useReviews } from '@/hooks/use-reviews';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
@@ -22,6 +22,14 @@ import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
 import { ImageCropper } from './image-cropper';
 import { fileToDataUrl } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ClientProfilePageProps {
   user: User;
@@ -43,14 +51,15 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   
+  const [isUrlDialogOpen, setIsUrlDialogOpen] = React.useState(false);
+  const [imageUrl, setImageUrl] = React.useState('');
+
   const clientProfile = clientProfiles.find(p => p.userId === user.id);
 
   React.useEffect(() => {
     const localAvatar = localStorage.getItem(`mock_avatar_${user.id}`);
-    if (localAvatar) {
-        setAvatarPreview(localAvatar);
-    }
-  }, [user.id]);
+    setAvatarPreview(localAvatar || user.avatarUrl);
+  }, [user.id, user.avatarUrl]);
 
   React.useEffect(() => {
     if (!db) return;
@@ -151,8 +160,29 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
         localStorage.setItem(`mock_avatar_${user.id}`, dataUrl);
         setAvatarPreview(dataUrl);
         setImageToCrop(null);
+        toast({ title: t.profileUpdated, description: 'Avatar updated locally. Save changes to update your name.'})
     } catch (error) {
         toast({ title: "Error", description: "Could not process image." });
+    }
+  };
+
+  const handleAvatarUrlSave = async () => {
+    if (!imageUrl || !user) return;
+    setIsSaving(true);
+    try {
+        const success = await updateUserProfile(user.id, { avatarUrl: imageUrl });
+        if (success) {
+            toast({ title: t.profileUpdated, description: 'Your avatar has been updated.' });
+            // The onSnapshot listener in useAuth will update the user object and re-render.
+        } else {
+            throw new Error('Avatar update via URL failed');
+        }
+    } catch(error) {
+         toast({ title: t.updateFailed, description: (error as Error).message, variant: 'destructive' });
+    } finally {
+        setIsUrlDialogOpen(false);
+        setImageUrl('');
+        setIsSaving(false);
     }
   };
 
@@ -184,12 +214,15 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
                       <AvatarImage src={avatarPreview} alt={user.name} />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <div>
-                      <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()} disabled={isSaving}>
-                          <Camera className="mr-2 h-4 w-4" />
-                          {t.uploadLogo}
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-2">{t.uploadLogoDesc}</p>
+                      <div className="flex flex-col gap-2">
+                        <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()} disabled={isSaving}>
+                            <Camera className="mr-2 h-4 w-4" />
+                            {t.uploadLogo}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => setIsUrlDialogOpen(true)} disabled={isSaving}>
+                            <Link className="mr-2 h-4 w-4" />
+                            {t.useUrl}
+                        </Button>
                       </div>
                       <input
                       type="file"
@@ -280,6 +313,32 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
         onClose={() => setImageToCrop(null)}
         onCropComplete={handleCropComplete}
       />
+      <Dialog open={isUrlDialogOpen} onOpenChange={setIsUrlDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{t.setImageFromUrl}</DialogTitle>
+                <DialogDescription>{t.setImageFromUrlDesc}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="image-url">{t.imageUrl}</Label>
+                    <Input
+                        id="image-url"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://..."
+                        required
+                    />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setIsUrlDialogOpen(false)}>{t.cancel}</Button>
+                <Button type="button" onClick={handleAvatarUrlSave} disabled={!imageUrl || isSaving}>
+                    {isSaving ? t.saving : t.saveAvatar}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     </>
   );
 }

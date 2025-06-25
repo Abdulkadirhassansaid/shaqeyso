@@ -48,6 +48,15 @@ export const translations = {
         myAccount: "My Account",
         cropImage: "Crop Image",
         zoom: "Zoom",
+        useUrl: "Use URL",
+        setImageFromUrl: "Set Image from URL",
+        setImageFromUrlDesc: "Paste an image URL below. This will be saved directly.",
+        imageUrl: "Image URL",
+        saveAvatar: "Save Avatar",
+        addFromUrl: "Add from URL",
+        addImageFromUrl: "Add Image from URL",
+        addImageFromUrlDesc: "Paste an image URL to add it to your service.",
+        addImage: "Add Image",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -556,6 +565,15 @@ export const translations = {
         myAccount: "Akoonkayga",
         cropImage: "Jar Sawirka",
         zoom: "Soo Dhawee",
+        useUrl: "Isticmaal URL",
+        setImageFromUrl: "Ka deji Sawirka URL",
+        setImageFromUrlDesc: "Hoos ku dheji URL sawir. Si toos ah ayaa loo keydin doonaa.",
+        imageUrl: "URL-ka Sawirka",
+        saveAvatar: "Keydi Sawirka",
+        addFromUrl: "Ka Kudar URL",
+        addImageFromUrl: "Ka Kudar Sawir URL",
+        addImageFromUrlDesc: "Ku dheji URL sawir si aad ugu darto adeeggaaga.",
+        addImage: "Kudar Sawir",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
