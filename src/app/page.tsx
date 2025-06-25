@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -14,30 +15,38 @@ import { useLoading } from '@/hooks/use-loading';
 export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const { setIsLoading } = useLoading();
+  const { setIsLoading: setPageIsLoading } = useLoading();
 
   React.useEffect(() => {
+    // Don't do anything until the auth state is fully resolved.
     if (isLoading) {
       return;
     }
+
+    // Redirect users who are not logged in or are unverified.
     if (!user) {
-      setIsLoading(true);
+      setPageIsLoading(true);
       router.replace('/login');
-      return;
+    } else if (user.role !== 'admin' && user.verificationStatus === 'unverified') {
+      setPageIsLoading(true);
+      router.replace('/onboarding');
     }
-    
-    if (user.role !== 'admin' && user.verificationStatus === 'unverified') {
-        setIsLoading(true);
-        router.replace('/onboarding');
-        return;
-    }
+  }, [isLoading, user, router, setPageIsLoading]);
 
-  }, [isLoading, user, router, setIsLoading]);
-
-  if (isLoading || !user || (user.role !== 'admin' && user.verificationStatus === 'unverified')) {
+  // While loading auth state OR if there's no user (and we are about to redirect), show nothing.
+  if (isLoading || !user) {
     return null;
   }
 
+  // If we reach here, we know we have a user.
+  // If they are unverified, they will be redirected by the useEffect.
+  // This check prevents a "flash" of the dashboard for unverified users before the redirect completes.
+  if (user.role !== 'admin' && user.verificationStatus === 'unverified') {
+    return null;
+  }
+  
+  // At this point, we have a valid, logged-in user who is either an admin, or verified, or pending/rejected.
+  // All these states are allowed to see their dashboard.
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
