@@ -46,42 +46,41 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
     setIsSaving(true);
-    
-    let avatarUrl = user.avatarUrl;
-    if (newAvatarFile) {
-        try {
-            const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
-            avatarUrl = await uploadFile(filePath, newAvatarFile);
-        } catch (error) {
-            console.error("Error uploading avatar:", error);
-            toast({ title: "Avatar Upload Failed", variant: "destructive" });
-            setIsSaving(false);
-            return;
-        }
-    }
+    try {
+      let avatarUrl = user.avatarUrl;
+      if (newAvatarFile) {
+        const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
+        avatarUrl = await uploadFile(filePath, newAvatarFile);
+      }
 
-    const userData = { 
-      name: name,
-      avatarUrl: avatarUrl
-    };
-    
-    const success = await updateUserProfile(user.id, userData);
+      const userData = {
+        name: name,
+        avatarUrl: avatarUrl,
+      };
 
-    if (success) {
-      toast({
-        title: t.profileUpdated,
-        description: t.adminProfileUpdatedDesc,
-      });
-      setNewAvatarFile(null);
-    } else {
+      const success = await updateUserProfile(user.id, userData);
+
+      if (success) {
+        toast({
+          title: t.profileUpdated,
+          description: t.adminProfileUpdatedDesc,
+        });
+        setNewAvatarFile(null);
+      } else {
+        throw new Error('Profile update failed');
+      }
+    } catch (error) {
+      console.error('Error saving admin profile:', error);
       toast({
         title: t.updateFailed,
         description: t.updateFailedDesc,
         variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   return (

@@ -203,48 +203,47 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setIsSaving(true);
-    
-    let avatarUrl = user.avatarUrl;
-    if (newAvatarFile) {
-        try {
-            const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
-            avatarUrl = await uploadFile(filePath, newAvatarFile);
-        } catch (error) {
-            console.error("Error uploading avatar:", error);
-            toast({ title: "Avatar Upload Failed", variant: "destructive" });
-            setIsSaving(false);
-            return;
-        }
-    }
 
-    const profileData = {
+    setIsSaving(true);
+    try {
+      let avatarUrl = user.avatarUrl;
+      if (newAvatarFile) {
+        const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
+        avatarUrl = await uploadFile(filePath, newAvatarFile);
+      }
+
+      const profileData = {
         bio,
         hourlyRate,
         skills,
-    };
-    
-    const userData = { 
-      name,
-      avatarUrl: avatarUrl
-    };
-    
-    const success = await updateUserProfile(user.id, userData, profileData);
+      };
 
-    if (success) {
-      toast({
-        title: t.profileUpdated,
-        description: t.freelancerProfileUpdatedDesc,
-      });
-      setNewAvatarFile(null);
-    } else {
+      const userData = {
+        name,
+        avatarUrl: avatarUrl,
+      };
+
+      const success = await updateUserProfile(user.id, userData, profileData);
+
+      if (success) {
+        toast({
+          title: t.profileUpdated,
+          description: t.freelancerProfileUpdatedDesc,
+        });
+        setNewAvatarFile(null);
+      } else {
+        throw new Error('Profile update failed');
+      }
+    } catch (error) {
+      console.error('Error saving freelancer profile:', error);
       toast({
         title: t.updateFailed,
         description: t.updateFailedDesc,
         variant: 'destructive',
       });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   return (
