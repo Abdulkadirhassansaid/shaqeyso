@@ -100,6 +100,16 @@ export default function FindFreelancersPage() {
     });
   }, [freelancers, freelancerProfiles, searchQuery]);
   
+  // Effect to reset dialog state when it closes
+  React.useEffect(() => {
+      if (!requestingService) {
+          setSelectedDeliveryTier(null);
+      } else {
+          // Pre-select standard delivery
+          setSelectedDeliveryTier({ price: requestingService.price, deliveryTime: requestingService.deliveryTime });
+      }
+  }, [requestingService]);
+
   const handleRequestService = async () => {
     if (!requestingService || !user || !selectedFreelancer || !selectedDeliveryTier) {
         toast({ title: t.selectDeliveryOption, variant: 'destructive' });
@@ -150,16 +160,6 @@ export default function FindFreelancersPage() {
   if (!user || user.role === 'freelancer') {
       return null;
   }
-
-  // Effect to reset dialog state when it closes
-  React.useEffect(() => {
-      if (!requestingService) {
-          setSelectedDeliveryTier(null);
-      } else {
-          // Pre-select standard delivery
-          setSelectedDeliveryTier({ price: requestingService.price, deliveryTime: requestingService.deliveryTime });
-      }
-  }, [requestingService])
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -405,5 +405,3 @@ export default function FindFreelancersPage() {
     </div>
   );
 }
-
-    
