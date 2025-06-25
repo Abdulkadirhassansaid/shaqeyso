@@ -540,7 +540,7 @@ export function ClientDashboard() {
                           <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                           </div>
                       </CardHeader>
-                      <CardFooter className="flex justify-between items-center">
+                      <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                           <div className="flex items-center gap-4 flex-wrap">
                              <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
                              {status === 'InProgress' && hiredFreelancer && (
@@ -657,7 +657,7 @@ export function ClientDashboard() {
                                         <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                     </div>
                                 </CardHeader>
-                                <CardFooter className="flex justify-between items-center">
+                                <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div className="flex items-center gap-4 flex-wrap">
                                         {status === 'InProgress' && (
                                             <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
@@ -753,5 +753,3 @@ export function ClientDashboard() {
     </>
   );
 }
-
-    

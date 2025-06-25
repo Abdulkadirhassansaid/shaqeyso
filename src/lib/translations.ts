@@ -507,6 +507,7 @@ export const translations = {
         verificationRejectedDesc: "The user's submission has been rejected.",
         searchUsersPlaceholder: 'Search by name or email...',
         noUsersFound: 'No users found.',
+        reportProblem: 'Report a Problem',
 
         // New Freelancer Marketplace & Services
         findFreelancers: 'Find Freelancers',
@@ -523,7 +524,6 @@ export const translations = {
         freelancerDetails: "Freelancer Details",
         requestQuote: "Request a Quote",
         myServices: "My Services",
-        reportProblem: 'Report a Problem',
         myServicesPageTitle: "Manage Your Services",
         myServicesPageDesc: "Add, edit, or remove the services you offer to clients.",
         addService: "Add Service",
@@ -1067,6 +1067,7 @@ export const translations = {
         searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
         noUsersFound: 'Lama helin isticmaaleyaal.',
         reasoning: 'Sababayn',
+        reportProblem: 'Dhibaatada Ka Warbixi',
 
         // New Freelancer Marketplace & Services
         findFreelancers: 'Raadi Shaqaale Madaxbanaan',
@@ -1083,7 +1084,6 @@ export const translations = {
         freelancerDetails: "Faahfaahinta Shaqaale Madaxbanaan",
         requestQuote: "Codso Qiime",
         myServices: "Adeegyadayda",
-        reportProblem: 'Dhibaatada Ka Warbixi',
         myServicesPageTitle: "Maamul Adeegyadaada",
         myServicesPageDesc: "Kudar, wax ka beddel, ama ka saar adeegyada aad u fidinayso macaamiisha.",
         addService: "Kudar Adeeg",

@@ -18,12 +18,19 @@ import {
   BadgeCheck,
   AlertTriangle,
 } from 'lucide-react';
+import { DirectChatDialog } from '@/components/direct-chat-dialog';
+import { useUsers } from '@/hooks/use-users';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { users } = useUsers();
+  const { toast } = useToast();
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const adminUser = users.find(u => u.role === 'admin');
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -33,6 +40,14 @@ export default function AccountPage() {
 
   if (isLoading || !user) {
     return null; // Or a loading skeleton
+  }
+
+  const handleReportProblemClick = () => {
+    if (adminUser) {
+        setIsChatOpen(true);
+    } else {
+        toast({ title: "Admin not found", description: "Could not initiate chat."});
+    }
   }
 
   const menuItems = [
@@ -55,10 +70,10 @@ export default function AccountPage() {
       roles: ['client', 'freelancer', 'admin'],
     },
     {
-      href: '/report-problem',
       label: t.reportProblem,
       icon: AlertTriangle,
-      roles: ['client', 'freelancer', 'admin'],
+      onClick: handleReportProblemClick,
+      roles: ['client', 'freelancer'],
     },
   ];
 
@@ -67,6 +82,7 @@ export default function AccountPage() {
   );
 
   return (
+    <>
     <div className="flex min-h-screen w-full flex-col bg-background">
       <main className="flex-1 container mx-auto py-4 px-2 sm:px-4">
         <div className="max-w-md mx-auto space-y-6">
@@ -87,20 +103,32 @@ export default function AccountPage() {
           <Card className="overflow-hidden">
             <nav>
               <ul className="divide-y">
-                {userMenuItems.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center justify-between p-4 transition-colors hover:bg-muted"
-                    >
+                {userMenuItems.map((item) => {
+                  const itemContent = (
+                    <>
                       <div className="flex items-center gap-4">
                         <item.icon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">{item.label}</span>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </Link>
-                  </li>
-                ))}
+                    </>
+                  );
+                  return (
+                    <li key={item.label}>
+                      {'href' in item && item.href ? (
+                        <Link href={item.href} className="flex items-center justify-between p-4 transition-colors hover:bg-muted">
+                            {itemContent}
+                        </Link>
+                      ) : (
+                        'onClick' in item && (
+                            <button onClick={item.onClick} className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
+                                {itemContent}
+                            </button>
+                        )
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             </nav>
           </Card>
@@ -120,5 +148,13 @@ export default function AccountPage() {
         </div>
       </main>
     </div>
+    {adminUser && isChatOpen && (
+        <DirectChatDialog
+            otherUser={adminUser}
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+        />
+    )}
+    </>
   );
 }
