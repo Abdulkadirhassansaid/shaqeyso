@@ -37,11 +37,8 @@ import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 
 
-interface ClientDashboardProps {
-  user: User;
-}
-
-export function ClientDashboard({ user }: ClientDashboardProps) {
+export function ClientDashboard() {
+  const { user } = useAuth();
   const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, releasePayment, markJobAsReviewed } = useJobs();
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
@@ -67,6 +64,10 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     });
     return () => unsub();
   }, []);
+
+  if (!user) {
+    return null; // Or a loading skeleton
+  }
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
   const manualJobs = clientJobs.filter(job => !job.sourceServiceId);
@@ -533,7 +534,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
                                       <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                                      <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.deleteJob}</AlertDialogAction>
                                   </AlertDialogFooter>
                               </AlertDialogContent>
                           </AlertDialog>

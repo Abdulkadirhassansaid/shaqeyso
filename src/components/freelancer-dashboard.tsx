@@ -57,7 +57,8 @@ type RecommendedJob = Job & {
     reason: string;
 };
 
-export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
+export function FreelancerDashboard() {
+  const { user } = useAuth();
   const { jobs, markJobAsReviewed } = useJobs();
   const { proposals, deleteProposal } = useProposals();
   const { users: allUsers } = useUsers();
@@ -87,10 +88,11 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     return () => unsub();
   }, []);
 
-  const freelancerProfileData = freelancerProfiles.find(p => p.userId === user.id);
+  const freelancerProfileData = freelancerProfiles.find(p => p.userId === user?.id);
   
   React.useEffect(() => {
     const getRecommendations = async () => {
+      if (!user) return;
       const profile = freelancerProfiles.find(p => p.userId === user.id);
       if (!profile || (profile.skills.length === 0 && !profile.bio)) {
           return;
@@ -130,7 +132,11 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
     };
     
     getRecommendations();
-  }, [jobs, freelancerProfiles, user.id]);
+  }, [jobs, freelancerProfiles, user]);
+
+  if (!user) {
+    return null; // or a loading skeleton
+  }
 
   const handleReviewSubmit = async (jobId: string, revieweeId: string, rating: number, comment: string) => {
       await addReview({

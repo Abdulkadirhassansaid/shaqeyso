@@ -686,6 +686,7 @@ export function AdminDashboard() {
                                     const status = job.status || 'Unknown';
 
                                     const hasUnreadMessages = adminUser && job.lastMessageTimestamp &&
+                                        job.lastMessageSenderId !== adminUser.id &&
                                         (!job.lastReadBy?.[adminUser.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[adminUser.id]));
 
                                     return (

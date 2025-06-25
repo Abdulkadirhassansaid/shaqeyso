@@ -32,8 +32,8 @@ export default function ShaqeysoHubApp() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-4 md:py-8 px-4 sm:px-6 lg:px-8">
-        {user.role === 'client' && <ClientDashboard user={user} />}
-        {user.role === 'freelancer' && <FreelancerDashboard user={user} />}
+        {user.role === 'client' && <ClientDashboard />}
+        {user.role === 'freelancer' && <FreelancerDashboard />}
         {user.role === 'admin' && (
           <Card className="max-w-md mx-auto mt-10">
             <CardHeader className="text-center">
