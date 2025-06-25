@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download, Search, Landmark } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, FileText, Download, Search, Landmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -52,16 +52,26 @@ import { Skeleton } from './ui/skeleton';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
     if (!dataUrl) return 'bin';
-    const mimeMatch = dataUrl.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+    // Improved regex to handle various MIME types, including PDFs
+    const mimeMatch = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+)/);
     if (!mimeMatch) return 'bin';
+    
     const mimeType = mimeMatch[1];
     switch (mimeType) {
         case 'image/jpeg': return 'jpg';
         case 'image/png': return 'png';
         case 'application/pdf': return 'pdf';
-        default: return mimeType.split('/')[1] || 'bin';
+        default: 
+            const parts = mimeType.split('/');
+            return parts[1] || 'bin';
     }
 }
+
+const isPdf = (dataUrl: string): boolean => {
+    if (!dataUrl) return false;
+    return dataUrl.startsWith('data:application/pdf');
+}
+
 
 export function AdminDashboard() {
   const { toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
@@ -932,7 +942,7 @@ export function AdminDashboard() {
                              <div className="space-y-2">
                                 <Label>{t.idUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                    {reviewingUser.passportOrIdUrl.startsWith('data:application/pdf') ? (
+                                    {isPdf(reviewingUser.passportOrIdUrl) ? (
                                         <div className="p-4 flex items-center gap-2 text-foreground">
                                             <FileText className="h-6 w-6 text-muted-foreground" />
                                             <span className="font-medium">PDF Document</span>
@@ -947,12 +957,6 @@ export function AdminDashboard() {
                                         />
                                     )}
                                     <div className="flex justify-end gap-2 pt-1">
-                                        <Button asChild size="sm" variant="outline">
-                                           <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer">
-                                               <ExternalLink className="mr-2 h-4 w-4" />
-                                               {t.view}
-                                           </a>
-                                        </Button>
                                         <Button asChild size="sm">
                                            <a href={reviewingUser.passportOrIdUrl} download={`id-document-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.passportOrIdUrl)}`}>
                                                <Download className="mr-2 h-4 w-4" />
@@ -968,7 +972,7 @@ export function AdminDashboard() {
                             <div className="space-y-2">
                                 <Label>{t.certUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                     {reviewingUser.businessCertificateUrl.startsWith('data:application/pdf') ? (
+                                     {isPdf(reviewingUser.businessCertificateUrl) ? (
                                         <div className="p-4 flex items-center gap-2 text-foreground">
                                             <FileText className="h-6 w-6 text-muted-foreground" />
                                             <span className="font-medium">PDF Document</span>
@@ -983,12 +987,6 @@ export function AdminDashboard() {
                                         />
                                     )}
                                     <div className="flex justify-end gap-2 pt-1">
-                                        <Button asChild size="sm" variant="outline">
-                                             <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer">
-                                                <ExternalLink className="mr-2 h-4 w-4" />
-                                                {t.view}
-                                            </a>
-                                        </Button>
                                         <Button asChild size="sm">
                                            <a href={reviewingUser.businessCertificateUrl} download={`business-certificate-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.businessCertificateUrl)}`}>
                                                <Download className="mr-2 h-4 w-4" />
@@ -1041,3 +1039,4 @@ export function AdminDashboard() {
 
     
     
+
