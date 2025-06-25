@@ -74,8 +74,19 @@ export function AdminDashboard() {
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
 
+  // This is the true, total withdrawable balance from the admin account.
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + tx.amount, 0);
 
+  // Total fees collected by the platform.
+  const totalFeesCollected = adminTransactions
+    .filter(tx => tx.description.startsWith('Platform Fee'))
+    .reduce((acc, tx) => acc + tx.amount, 0);
+
+  // Total value of all successfully completed jobs.
+  const totalValueProcessed = jobs
+    .filter(j => j.status === 'Completed')
+    .reduce((acc, job) => acc + job.budget, 0);
+  
   const pendingVerifications = users.filter(u => u.verificationStatus === 'pending');
   
   const verificationSubmissions = users
@@ -191,10 +202,7 @@ export function AdminDashboard() {
     setRejectionReason('');
   };
 
-  const thisMonthRevenue = adminTransactions
-    .filter(tx => isThisMonth(parseISO(tx.date)) && tx.amount > 0)
-    .reduce((acc, tx) => acc + tx.amount, 0);
-
+  // Revenue chart data now correctly only tracks platform fees.
   const revenueChartData = React.useMemo(() => {
     const dataMap = new Map<string, { total: number; date: Date }>();
     let interval: Date[];
@@ -232,7 +240,8 @@ export function AdminDashboard() {
     }
 
     adminTransactions.forEach(tx => {
-      if (tx.amount > 0) { // Only count positive transactions as revenue
+      // Only count platform fee transactions as revenue for the chart
+      if (tx.description.startsWith('Platform Fee')) {
           const transactionDate = parseISO(tx.date);
           const keyDate = groupingFn(transactionDate);
           const key = format(keyDate, dateFormat);
@@ -352,20 +361,22 @@ export function AdminDashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${platformBalance.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">{t.fromCompletedJobs}</p>
+                            <p className="text-xs text-muted-foreground">Total withdrawable funds (incl. escrow).</p>
                         </CardContent>
                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button disabled={platformBalance <= 0}>
                                       <Banknote className="mr-2 h-4 w-4" />
-                                      {t.withdrawToBank}
+                                      {t.withdrawFunds}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
                                         <DialogTitle>{t.withdrawDialogTitle}</DialogTitle>
-                                        <DialogDescription>{t.withdrawDialogDesc}</DialogDescription>
+                                        <DialogDescription>
+                                            Your current withdrawable balance is ${platformBalance.toFixed(2)}. {t.withdrawDialogDesc}
+                                        </DialogDescription>
                                     </DialogHeader>
                                     <form onSubmit={handleConfirmWithdrawal}>
                                         <div className="grid gap-4 py-4">
@@ -408,38 +419,38 @@ export function AdminDashboard() {
                     </Card>
                     <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{t.revenueThisMonth}</CardTitle>
+                            <CardTitle className="text-sm font-medium">Total Fees Collected</CardTitle>
                              <div className="p-2 rounded-lg bg-primary/10">
-                                <TrendingUp className="h-5 w-5 text-primary" />
+                                <DollarSign className="h-5 w-5 text-primary" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${thisMonthRevenue.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">{t.platformFeesThisMonth}</p>
+                            <div className="text-2xl font-bold">${totalFeesCollected.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Lifetime earnings from 5% platform fee.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="transition-all hover:-translate-y-1">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Value Processed</CardTitle>
+                            <div className="p-2 rounded-lg bg-info/10">
+                                <TrendingUp className="h-5 w-5 text-info" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">${totalValueProcessed.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Total value of all completed jobs.</p>
                         </CardContent>
                     </Card>
                     <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalUsers}</CardTitle>
-                            <div className="p-2 rounded-lg bg-info/10">
-                                <Users className="h-5 w-5 text-info" />
+                            <div className="p-2 rounded-lg bg-accent/10">
+                                <Users className="h-5 w-5 text-accent" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{users.filter(u => u.role !== 'admin').length}</div>
                             <p className="text-xs text-muted-foreground">{users.filter(u => u.role === 'client').length} {t.clients}, {users.filter(u => u.role === 'freelancer').length} {t.freelancers}</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="transition-all hover:-translate-y-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{t.totalJobs}</CardTitle>
-                            <div className="p-2 rounded-lg bg-accent/10">
-                                <Briefcase className="h-5 w-5 text-accent" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{jobs.length}</div>
-                            <p className="text-xs text-muted-foreground">{jobs.filter(j => j.status === 'Completed').length} {t.completed.toLowerCase()}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -947,3 +958,5 @@ export function AdminDashboard() {
     </div>
   );
 }
+
+    
