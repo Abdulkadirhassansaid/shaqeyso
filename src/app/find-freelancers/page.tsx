@@ -240,46 +240,45 @@ export default function FindFreelancersPage() {
                                     {selectedProfile.skills?.map(skill => <Badge key={skill} variant="outline">{skill}</Badge>)}
                                 </div>
                             </div>
-                             <div className="space-y-4">
+                            <div className="space-y-4">
                                 <h3 className="font-semibold">{t.myServices}</h3>
-                                <div className="space-y-3">
-                                    {selectedProfile.services?.map(service => (
-                                        <div key={service.id} className="border rounded-lg p-4 space-y-3">
-                                            <div className="flex justify-between items-start gap-2">
-                                                <h4 className="font-semibold text-base">{service.title}</h4>
-                                                <Badge variant="secondary" className="shrink-0">${service.price.toFixed(2)}</Badge>
-                                            </div>
-
-                                            {service.images && service.images.length > 0 ? (
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {service.images.slice(0, 3).map((img, index) => (
-                                                        <div key={index} className="relative aspect-video bg-muted rounded-md overflow-hidden">
-                                                            <Image data-ai-hint="portfolio image" src={img} alt={`${service.title} image ${index + 1}`} fill className="object-cover" />
-                                                            {index === 2 && service.images.length > 3 && (
-                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-lg">
-                                                                    +{service.images.length - 3}
-                                                                </div>
-                                                            )}
+                                {selectedProfile.services && selectedProfile.services.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {selectedProfile.services.map(service => (
+                                            <Card key={service.id} className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
+                                                <div className="relative aspect-video bg-muted">
+                                                    {service.images && service.images.length > 0 ? (
+                                                        <Image
+                                                            data-ai-hint="portfolio image"
+                                                            src={service.images[0]}
+                                                            alt={service.title}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-full w-full items-center justify-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground opacity-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                                                         </div>
-                                                    ))}
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground opacity-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                                <div className="p-4 flex flex-col flex-grow space-y-2">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <h4 className="font-semibold text-base line-clamp-2 flex-grow">{service.title}</h4>
+                                                        <Badge variant="secondary" className="shrink-0">${service.price.toFixed(2)}</Badge>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2 flex-grow">{service.description}</p>
                                                 </div>
-                                            )}
-
-                                            <p className="text-sm text-muted-foreground line-clamp-3">{service.description}</p>
-                                            
-                                            <Button size="sm" variant="outline" className="w-full" onClick={() => setChattingWith(selectedFreelancer)}>
-                                                {t.requestQuote}
-                                            </Button>
-                                        </div>
-                                    ))}
-                                    {(!selectedProfile.services || selectedProfile.services.length === 0) && (
-                                        <p className="text-sm text-muted-foreground text-center py-4">{t.noServicesYet}</p>
-                                    )}
-                                </div>
+                                                <CardFooter>
+                                                    <Button size="sm" className="w-full" onClick={() => setChattingWith(selectedFreelancer)}>
+                                                        {t.requestQuote}
+                                                    </Button>
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">{t.noServicesYet}</p>
+                                )}
                             </div>
                         </div>
                         <DialogFooter>
