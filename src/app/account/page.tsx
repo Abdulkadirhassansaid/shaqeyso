@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   User as UserIcon,
-  LayoutGrid,
   CreditCard,
   Settings,
   LogOut,
   ChevronRight,
   BadgeCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -43,12 +43,6 @@ export default function AccountPage() {
       roles: ['client', 'freelancer', 'admin'],
     },
     {
-      href: '/my-services',
-      label: t.myServices,
-      icon: LayoutGrid,
-      roles: ['freelancer'],
-    },
-    {
       href: '/billing',
       label: t.billing,
       icon: CreditCard,
@@ -58,6 +52,12 @@ export default function AccountPage() {
       href: '/settings',
       label: t.settings,
       icon: Settings,
+      roles: ['client', 'freelancer', 'admin'],
+    },
+    {
+      href: '/report-problem',
+      label: t.reportProblem,
+      icon: AlertTriangle,
       roles: ['client', 'freelancer', 'admin'],
     },
   ];
