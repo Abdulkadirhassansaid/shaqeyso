@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs, getDoc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Job, Service, User, Transaction } from '@/lib/types';
 import { addDays, format } from 'date-fns';
@@ -202,42 +202,40 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         freelancerReviewed: false,
     };
     
-    const clientTransaction: Omit<Transaction, 'id' | 'date'> = {
-        description: `Payment for "${service.title}"`,
-        amount: -price,
-        status: 'Completed',
-    };
-    
-    const escrowTransaction: Omit<Transaction, 'id' | 'date'> = {
-        description: `Escrow for job: "${service.title}"`,
-        amount: price,
-        status: 'Completed',
-    };
-
     try {
-        const batch = writeBatch(db);
-        const jobRef = doc(collection(db, 'jobs'));
-        batch.set(jobRef, newJobData);
+        await runTransaction(db, async (transaction) => {
+            const adminDoc = await transaction.get(adminUserRef);
+            if (!adminDoc.exists()) {
+                throw new Error("Admin user document not found.");
+            }
+            
+            // Create the new job
+            const jobRef = doc(collection(db, 'jobs'));
+            transaction.set(jobRef, newJobData);
 
-        // Debit client
-        batch.update(clientRef, {
-            transactions: arrayUnion({
-                ...clientTransaction,
+            // Debit client
+            const clientTransactions = clientSnap.data()?.transactions || [];
+            const newClientTransactions = [...clientTransactions, {
                 id: `txn-client-${Date.now()}`,
                 date: new Date().toISOString(),
-            })
-        });
-        
-        // Credit admin/platform for escrow
-        batch.update(adminUserRef, {
-            transactions: arrayUnion({
-                ...escrowTransaction,
+                description: `Payment for "${service.title}"`,
+                amount: -price,
+                status: 'Completed',
+            }];
+            transaction.update(clientRef, { transactions: newClientTransactions });
+            
+            // Credit admin/platform for escrow
+            const adminTransactions = adminDoc.data()?.transactions || [];
+            const newAdminTransactions = [...adminTransactions, {
                 id: `txn-escrow-${Date.now()}`,
                 date: new Date().toISOString(),
-            })
+                description: `Escrow for job: "${service.title}"`,
+                amount: price,
+                status: 'Completed',
+            }];
+            transaction.update(adminUserRef, { transactions: newAdminTransactions });
         });
 
-        await batch.commit();
         return { success: true };
     } catch (error) {
         console.error("Error creating job from service:", error);

@@ -32,14 +32,14 @@ import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { collection, onSnapshot, doc, writeBatch, query, where, getDocs, arrayUnion } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, where, getDocs, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 
 
 export function ClientDashboard() {
   const { user } = useAuth();
-  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } = useJobs();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } from useJobs();
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
@@ -105,35 +105,41 @@ export function ClientDashboard() {
         toast({ title: "Error", description: "Admin account not found. Cannot process payment.", variant: "destructive" });
         return;
     }
-    const adminUserRef = doc(db, 'users', adminUser.id);
-  
+
     try {
-      const batch = writeBatch(db);
-  
-      // Debit client
-      const clientRef = doc(db, 'users', user.id);
-      batch.update(clientRef, {
-        transactions: arrayUnion({
+      await runTransaction(db, async (transaction) => {
+        const clientRef = doc(db, 'users', user.id);
+        const adminRef = doc(db, 'users', adminUser.id);
+        
+        const clientDoc = await transaction.get(clientRef);
+        const adminDoc = await transaction.get(adminRef);
+
+        if (!clientDoc.exists() || !adminDoc.exists()) {
+          throw "User or admin document not found!";
+        }
+
+        // Debit client
+        const clientTransactions = clientDoc.data().transactions || [];
+        const newClientTransactions = [...clientTransactions, {
           id: `txn-client-${Date.now()}`,
           date: new Date().toISOString(),
           description: `${t.escrowFunding} "${jobToHire.title}"`,
           amount: -jobToHire.budget,
           status: 'Completed',
-        })
-      });
-  
-      // Credit admin for escrow
-      batch.update(adminUserRef, {
-        transactions: arrayUnion({
+        }];
+        transaction.update(clientRef, { transactions: newClientTransactions });
+
+        // Credit admin for escrow
+        const adminTransactions = adminDoc.data().transactions || [];
+        const newAdminTransactions = [...adminTransactions, {
           id: `txn-escrow-${Date.now()}`,
           date: new Date().toISOString(),
           description: `Escrow for job: "${jobToHire.title}"`,
           amount: jobToHire.budget,
           status: 'Completed'
-        })
+        }];
+        transaction.update(adminRef, { transactions: newAdminTransactions });
       });
-  
-      await batch.commit();
       
       await hireFreelancerForJob(proposalToHire.jobId, proposalToHire.freelancerId);
       await acceptProposal(proposalToHire.id, proposalToHire.jobId);
@@ -173,59 +179,66 @@ export function ClientDashboard() {
   
   const handleApproveAndPay = async (jobId: string) => {
     if (!db) return;
-  
     const jobToApprove = jobs.find(j => j.id === jobId);
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
   
     const adminUser = allUsers.find(u => u.role === 'admin');
     if (!adminUser) {
-      console.error("Admin user not found for fee collection.");
       toast({ title: "Error", description: "Admin account not found. Could not process payment.", variant: "destructive" });
       return;
     }
-    const adminUserRef = doc(db, 'users', adminUser.id);
-  
-    const platformFee = jobToApprove.budget * 0.05;
-    const freelancerPayout = jobToApprove.budget - platformFee;
   
     try {
-      const batch = writeBatch(db);
+      await runTransaction(db, async (transaction) => {
+        const jobRef = doc(db, 'jobs', jobToApprove.id);
+        const freelancerRef = doc(db, 'users', jobToApprove.hiredFreelancerId!);
+        const adminRef = doc(db, 'users', adminUser.id);
   
-      // 1. Mark job as completed
-      const jobRef = doc(db, 'jobs', jobToApprove.id);
-      batch.update(jobRef, { status: 'Completed' });
+        // We must read all documents inside the transaction before writing
+        const freelancerDoc = await transaction.get(freelancerRef);
+        const adminDoc = await transaction.get(adminRef);
   
-      // 2. Atomically update admin and freelancer transactions
-      const releaseTx = {
-        id: `txn-release-${Date.now()}`,
-        date: new Date().toISOString(),
-        description: `Release escrow for "${jobToApprove.title}"`,
-        amount: -jobToApprove.budget,
-        status: 'Completed' as const,
-      };
-      const feeTx = {
-          id: `txn-fee-${Date.now()}`,
-          date: new Date().toISOString(),
-          description: `${t.platformFee} for "${jobToApprove.title}"`,
-          amount: platformFee,
-          status: 'Completed' as const,
-      };
-      batch.update(adminUserRef, {
-        transactions: arrayUnion(releaseTx, feeTx)
+        if (!freelancerDoc.exists() || !adminDoc.exists()) {
+          throw "User or Admin document not found!";
+        }
+  
+        const platformFee = jobToApprove.budget * 0.05;
+        const freelancerPayout = jobToApprove.budget - platformFee;
+  
+        // Prepare new transactions for freelancer
+        const currentFreelancerTransactions = freelancerDoc.data().transactions || [];
+        const payoutTx = {
+            id: `txn-payout-${Date.now()}`,
+            date: new Date().toISOString(),
+            description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
+            amount: freelancerPayout,
+            status: 'Completed' as const,
+        };
+        const newFreelancerTransactions = [...currentFreelancerTransactions, payoutTx];
+  
+        // Prepare new transactions for admin
+        const currentAdminTransactions = adminDoc.data().transactions || [];
+        const releaseTx = {
+            id: `txn-release-${Date.now()}`,
+            date: new Date().toISOString(),
+            description: `Release escrow for "${jobToApprove.title}"`,
+            amount: -jobToApprove.budget,
+            status: 'Completed' as const,
+        };
+        const feeTx = {
+            id: `txn-fee-${Date.now()}`,
+            date: new Date().toISOString(),
+            description: `${t.platformFee} for "${jobToApprove.title}"`,
+            amount: platformFee,
+            status: 'Completed' as const,
+        };
+        const newAdminTransactions = [...currentAdminTransactions, releaseTx, feeTx];
+  
+        // Perform all writes
+        transaction.update(jobRef, { status: 'Completed' });
+        transaction.update(freelancerRef, { transactions: newFreelancerTransactions });
+        transaction.update(adminRef, { transactions: newAdminTransactions });
       });
-  
-      const freelancerRef = doc(db, 'users', jobToApprove.hiredFreelancerId);
-      batch.update(freelancerRef, {
-        transactions: arrayUnion({
-          id: `txn-payout-${Date.now()}`,
-          date: new Date().toISOString(),
-          description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
-          amount: freelancerPayout,
-          status: 'Completed' as const,
-        })
-      });
-  
-      await batch.commit();
   
       toast({
         title: t.paymentComplete,
