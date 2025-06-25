@@ -14,7 +14,6 @@ interface JobsContextType {
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
   hireFreelancerForJob: (jobId: string, freelancerId: string) => Promise<boolean>;
-  releasePayment: (jobId: string) => Promise<boolean>;
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
@@ -119,16 +118,6 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
   
-  const releasePayment = React.useCallback(async (jobId: string): Promise<boolean> => {
-    if (!db) return false;
-    try {
-        await updateDoc(doc(db, 'jobs', jobId), { status: 'Completed' });
-        return true;
-    } catch (error) {
-        console.error("Error releasing payment:", error);
-        return false;
-    }
-  }, []);
 
   const markJobAsReviewed = React.useCallback(async (jobId: string, role: 'client' | 'freelancer'): Promise<boolean> => {
     if (!db) return false;
@@ -187,6 +176,13 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     if (clientBalance < price) {
         return { success: false, message: "Insufficient funds. Please top up your balance." };
     }
+    
+    const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+    const adminSnapshot = await getDocs(adminQuery);
+    if (adminSnapshot.empty) {
+      return { success: false, message: "Admin account not found. Cannot process payment." };
+    }
+    const adminUserRef = adminSnapshot.docs[0].ref;
 
     const deadline = addDays(new Date(), deliveryTime);
 
@@ -206,9 +202,15 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         freelancerReviewed: false,
     };
     
-    const newTransaction: Omit<Transaction, 'id' | 'date'> = {
+    const clientTransaction: Omit<Transaction, 'id' | 'date'> = {
         description: `Payment for "${service.title}"`,
         amount: -price,
+        status: 'Completed',
+    };
+    
+    const escrowTransaction: Omit<Transaction, 'id' | 'date'> = {
+        description: `Escrow for job: "${service.title}"`,
+        amount: price,
         status: 'Completed',
     };
 
@@ -217,10 +219,20 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         const jobRef = doc(collection(db, 'jobs'));
         batch.set(jobRef, newJobData);
 
+        // Debit client
         batch.update(clientRef, {
             transactions: arrayUnion({
-                ...newTransaction,
-                id: `txn-${Date.now()}`,
+                ...clientTransaction,
+                id: `txn-client-${Date.now()}`,
+                date: new Date().toISOString(),
+            })
+        });
+        
+        // Credit admin/platform for escrow
+        batch.update(adminUserRef, {
+            transactions: arrayUnion({
+                ...escrowTransaction,
+                id: `txn-escrow-${Date.now()}`,
                 date: new Date().toISOString(),
             })
         });
@@ -233,7 +245,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

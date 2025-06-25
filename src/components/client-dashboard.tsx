@@ -32,14 +32,14 @@ import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, writeBatch, query, where, getDocs, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 
 
 export function ClientDashboard() {
   const { user } = useAuth();
-  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, releasePayment, markJobAsReviewed } = useJobs();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } = useJobs();
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
@@ -50,7 +50,6 @@ export function ClientDashboard() {
   const [isRanking, setIsRanking] = React.useState(false);
   const { toast } = useToast();
   const { users: allUsers, isUsersLoading } = useUsers();
-  const { addTransaction } = useAuth();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
   const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
@@ -85,39 +84,79 @@ export function ClientDashboard() {
   }, [jobs, selectedJob]);
   
   const handleHireFreelancer = async () => {
-    if (!proposalToHire) return;
-
+    if (!proposalToHire || !user) return;
+  
     const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
     if (!jobToHire) return;
-
+  
     const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
-
+  
     if (clientBalance < jobToHire.budget) {
-        toast({
-            title: t.insufficientFundsTitle,
-            description: t.insufficientFundsDesc,
-            variant: "destructive",
-        });
-        return;
+      toast({
+        title: t.insufficientFundsTitle,
+        description: t.insufficientFundsDesc,
+        variant: "destructive",
+      });
+      return;
     }
-
-    // Move funds to escrow
-    await addTransaction(user.id, {
-        description: `${t.escrowFunding} "${jobToHire.title}"`,
-        amount: -jobToHire.budget,
-        status: 'Completed',
-    });
-
-    await hireFreelancerForJob(proposalToHire.jobId, proposalToHire.freelancerId);
-    await acceptProposal(proposalToHire.id, proposalToHire.jobId);
-
-    toast({
+  
+    // Find admin user to handle escrow
+    const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+    const adminSnapshot = await getDocs(adminQuery);
+    if (adminSnapshot.empty) {
+      toast({ title: "Error", description: "Admin account not found. Cannot process payment.", variant: "destructive" });
+      return;
+    }
+    const adminUserRef = adminSnapshot.docs[0].ref;
+  
+    try {
+      const batch = writeBatch(db);
+  
+      // Debit client
+      const clientRef = doc(db, 'users', user.id);
+      batch.update(clientRef, {
+        transactions: arrayUnion({
+          id: `txn-client-${Date.now()}`,
+          date: new Date().toISOString(),
+          description: `${t.escrowFunding} "${jobToHire.title}"`,
+          amount: -jobToHire.budget,
+          status: 'Completed',
+        })
+      });
+  
+      // Credit admin for escrow
+      batch.update(adminUserRef, {
+        transactions: arrayUnion({
+          id: `txn-escrow-${Date.now()}`,
+          date: new Date().toISOString(),
+          description: `Escrow for job: "${jobToHire.title}"`,
+          amount: jobToHire.budget,
+          status: 'Completed'
+        })
+      });
+  
+      await batch.commit();
+      
+      await hireFreelancerForJob(proposalToHire.jobId, proposalToHire.freelancerId);
+      await acceptProposal(proposalToHire.id, proposalToHire.jobId);
+  
+      toast({
         title: t.freelancerHired,
         description: t.freelancerHiredDesc,
-    });
-    setProposalToHire(null);
-    setSelectedJob(null);
-    setRankedFreelancers([]);
+      });
+  
+      setProposalToHire(null);
+      setSelectedJob(null);
+      setRankedFreelancers([]);
+  
+    } catch (error) {
+      console.error("Error during hiring process:", error);
+      toast({
+        title: "Hiring Failed",
+        description: "An error occurred while trying to hire the freelancer.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleStartInterview = async () => {
@@ -135,41 +174,80 @@ export function ClientDashboard() {
   };
   
   const handleApproveAndPay = async (jobId: string) => {
+    if (!db) return;
+  
     const jobToApprove = jobs.find(j => j.id === jobId);
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
-
-    const adminUser = allUsers.find(u => u.role === 'admin');
-    if (!adminUser) {
-        console.error("Admin user not found for fee collection.");
-        // In a real app, you'd handle this more gracefully.
-        toast({ title: "Error", description: "Admin user not found. Could not process payment.", variant: "destructive" });
-        return;
+  
+    const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
+    const adminSnapshot = await getDocs(adminQuery);
+    if (adminSnapshot.empty) {
+      console.error("Admin user not found for fee collection.");
+      toast({ title: "Error", description: "Admin account not found. Could not process payment.", variant: "destructive" });
+      return;
     }
-
+    const adminUserRef = adminSnapshot.docs[0].ref;
+  
     const platformFee = jobToApprove.budget * 0.05;
     const freelancerPayout = jobToApprove.budget - platformFee;
-
-    await releasePayment(jobToApprove.id);
-    
-    // Release funds from escrow to freelancer (minus fee)
-    await addTransaction(jobToApprove.hiredFreelancerId, {
-        description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
-        amount: freelancerPayout,
-        status: 'Completed',
-    });
-
-    // Send fee to admin
-    await addTransaction(adminUser.id, {
-        description: `${t.platformFee} for "${jobToApprove.title}"`,
-        amount: platformFee,
-        status: 'Completed',
-    });
-
-    toast({
+  
+    try {
+      const batch = writeBatch(db);
+  
+      // 1. Mark job as completed
+      const jobRef = doc(db, 'jobs', jobToApprove.id);
+      batch.update(jobRef, { status: 'Completed' });
+  
+      // 2. Debit admin account to release escrow
+      batch.update(adminUserRef, {
+        transactions: arrayUnion({
+          id: `txn-release-${Date.now()}`,
+          date: new Date().toISOString(),
+          description: `Release escrow for "${jobToApprove.title}"`,
+          amount: -jobToApprove.budget,
+          status: 'Completed',
+        })
+      });
+  
+      // 3. Credit freelancer account
+      const freelancerRef = doc(db, 'users', jobToApprove.hiredFreelancerId);
+      batch.update(freelancerRef, {
+        transactions: arrayUnion({
+          id: `txn-payout-${Date.now()}`,
+          date: new Date().toISOString(),
+          description: `${t.paymentReceivedFromEscrow} "${jobToApprove.title}"`,
+          amount: freelancerPayout,
+          status: 'Completed',
+        })
+      });
+  
+      // 4. Credit admin account with the platform fee
+      batch.update(adminUserRef, {
+        transactions: arrayUnion({
+          id: `txn-fee-${Date.now()}`,
+          date: new Date().toISOString(),
+          description: `${t.platformFee} for "${jobToApprove.title}"`,
+          amount: platformFee,
+          status: 'Completed',
+        })
+      });
+  
+      await batch.commit();
+  
+      toast({
         title: t.paymentComplete,
         description: t.paymentCompleteDesc,
-    });
+      });
+    } catch (error) {
+      console.error("Error releasing payment:", error);
+      toast({
+        title: "Payment Failed",
+        description: "An error occurred while releasing the payment.",
+        variant: "destructive"
+      });
+    }
   };
+
 
   const handleRankFreelancers = async (job: Job) => {
     setIsRanking(true);
