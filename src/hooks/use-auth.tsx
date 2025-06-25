@@ -25,10 +25,10 @@ import {
   arrayRemove,
   serverTimestamp,
 } from 'firebase/firestore';
-import { auth, db, storage } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
-import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { useLoading } from './use-loading';
+import { fileToDataUrl } from '@/lib/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -42,28 +42,34 @@ interface AuthContextType {
   addTransaction: (userId: string, transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
   toggleUserBlockStatus: (userId: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
-  submitVerification: (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }) => Promise<boolean>;
+  submitVerification: (userId: string, documents: { idDoc: File, certDoc?: File }) => Promise<boolean>;
   approveVerification: (userId: string) => Promise<boolean>;
   rejectVerification: (userId: string, reason: string) => Promise<boolean>;
-  uploadFile: (path: string, file: File) => Promise<string>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null);
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [authHasLoaded, setAuthHasLoaded] = React.useState(false);
+    const [dbUserLoaded, setDbUserLoaded] = React.useState(false);
+
+    const isLoading = !authHasLoaded || !dbUserLoaded;
+
     const router = useRouter();
     const { setIsLoading: setPageIsLoading } = useLoading();
 
     React.useEffect(() => {
       if (!auth || !db) {
-        setIsLoading(false);
+        setAuthHasLoaded(true);
+        setDbUserLoaded(true);
         return;
       }
       
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setAuthHasLoaded(true);
         if (firebaseUser) {
+          setDbUserLoaded(false); // Reset DB loaded status for new user
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
@@ -72,16 +78,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               setUser(null);
             }
-            setIsLoading(false);
+            setDbUserLoaded(true);
           }, (error) => {
             console.error("Error listening to user document:", error);
             setUser(null);
-            setIsLoading(false);
+            setDbUserLoaded(true);
           });
           return () => unsubDoc();
         } else {
           setUser(null);
-          setIsLoading(false);
+          setDbUserLoaded(true); // No user, so DB loading is complete
         }
       });
       return () => unsubscribe();
@@ -243,22 +249,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const uploadFile = React.useCallback(async (path: string, file: File): Promise<string> => {
-        if (!storage) throw new Error("Firebase Storage not configured.");
-        const fileRef = storageRef(storage, path);
-        await uploadBytes(fileRef, file);
-        return await getDownloadURL(fileRef);
-    }, []);
-    
-    const submitVerification = React.useCallback(async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
+    const submitVerification = React.useCallback(async (userId: string, documents: { idDoc: File, certDoc?: File }): Promise<boolean> => {
         if (!db) return false;
         try {
-            const userRef = doc(db, 'users', userId);
-            await updateDoc(userRef, {
+            const idDocUrl = await fileToDataUrl(documents.idDoc);
+            const docUpdates: { [key: string]: any } = {
+                passportOrIdUrl: idDocUrl,
                 verificationStatus: 'pending',
-                ...documents,
                 verificationRejectionReason: '',
-            });
+            };
+
+            if (documents.certDoc) {
+                docUpdates.businessCertificateUrl = await fileToDataUrl(documents.certDoc);
+            }
+
+            await updateDoc(doc(db, 'users', userId), docUpdates);
             return true;
         } catch (error) {
             console.error("Error submitting verification:", error);
@@ -367,8 +372,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, uploadFile }), 
-    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, uploadFile]);
+    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification }), 
+    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification]);
 
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -381,5 +386,3 @@ export const useAuth = () => {
     }
     return context;
 };
-
-    

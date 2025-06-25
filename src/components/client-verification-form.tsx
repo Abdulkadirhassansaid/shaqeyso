@@ -13,36 +13,63 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import Link from 'next/link';
+import { ImageCropper } from './image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
 
 interface ClientVerificationFormProps {
   user: User;
 }
 
 export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
-  const { submitVerification, uploadFile } = useAuth();
+  const { submitVerification } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const router = useRouter();
+  
   const idInputRef = React.useRef<HTMLInputElement>(null);
   const certInputRef = React.useRef<HTMLInputElement>(null);
 
   const [idDoc, setIdDoc] = React.useState<File | null>(null);
-  const [idDocPreview, setIdDocPreview] = React.useState<string | null>(null);
   const [certDoc, setCertDoc] = React.useState<File | null>(null);
-  const [certDocPreview, setCertDocPreview] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  const [idDocPreview, setIdDocPreview] = React.useState<string | null>(null);
+  const [certDocPreview, setCertDocPreview] = React.useState<string | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: React.Dispatch<React.SetStateAction<File | null>>, setPreview: React.Dispatch<React.SetStateAction<string | null>>) => {
+  const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
+  const [cropTarget, setCropTarget] = React.useState<'id' | 'cert' | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'id' | 'cert') => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setFile(file);
       if (file.type.startsWith('image/')) {
-        setPreview(URL.createObjectURL(file));
-      } else {
-        setPreview(null);
+        setCropTarget(target);
+        fileToDataUrl(file).then(dataUrl => setImageToCrop(dataUrl));
+      } else { // Handle PDFs and other files
+        if (target === 'id') {
+          setIdDoc(file);
+          setIdDocPreview(null); // No preview for non-images
+        } else {
+          setCertDoc(file);
+          setCertDocPreview(null);
+        }
       }
     }
+     // Reset input value to allow re-uploading the same file
+    if(e.target) e.target.value = '';
   };
+  
+  const handleCropComplete = (croppedImage: File) => {
+    if (cropTarget === 'id') {
+      setIdDoc(croppedImage);
+      setIdDocPreview(URL.createObjectURL(croppedImage));
+    } else if (cropTarget === 'cert') {
+      setCertDoc(croppedImage);
+      setCertDocPreview(URL.createObjectURL(croppedImage));
+    }
+    setImageToCrop(null);
+    setCropTarget(null);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,13 +85,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
     setIsSubmitting(true);
     
     try {
-        const idDocUrl = await uploadFile(`verification/${user.id}/id_doc_${idDoc.name}`, idDoc);
-        const certDocUrl = await uploadFile(`verification/${user.id}/cert_doc_${certDoc.name}`, certDoc);
-        
-        const success = await submitVerification(user.id, {
-            passportOrIdUrl: idDocUrl,
-            businessCertificateUrl: certDocUrl
-        });
+        const success = await submitVerification(user.id, { idDoc, certDoc });
 
         if (success) {
             toast({
@@ -105,7 +126,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
           {file ? (
             <div className="mt-2 flex items-center text-sm text-success">
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                <span>{file.name}</span>
+                <span className="truncate max-w-[200px]">{file.name}</span>
             </div>
           ) : (
             <p className="mt-2 text-xs text-muted-foreground">{t.uploadFileDesc}</p>
@@ -116,6 +137,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
   );
 
   return (
+    <>
     <Card className="w-full max-w-2xl">
       <form onSubmit={handleSubmit}>
         <CardHeader>
@@ -144,7 +166,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
             ref={idInputRef}
             className="hidden"
             accept="image/png, image/jpeg, application/pdf"
-            onChange={(e) => handleFileChange(e, setIdDoc, setIdDocPreview)}
+            onChange={(e) => handleFileChange(e, 'id')}
           />
 
           <UploadBox
@@ -158,7 +180,7 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
             ref={certInputRef}
             className="hidden"
             accept="image/png, image/jpeg, application/pdf"
-            onChange={(e) => handleFileChange(e, setCertDoc, setCertDocPreview)}
+            onChange={(e) => handleFileChange(e, 'cert')}
           />
         </CardContent>
         <CardFooter className="flex justify-between">
@@ -171,5 +193,12 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
         </CardFooter>
       </form>
     </Card>
+    <ImageCropper 
+      image={imageToCrop}
+      onClose={() => setImageToCrop(null)}
+      onCropComplete={handleCropComplete}
+      aspect={4/3}
+    />
+    </>
   );
 }

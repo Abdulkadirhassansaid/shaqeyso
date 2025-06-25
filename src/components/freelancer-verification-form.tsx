@@ -13,13 +13,15 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import Link from 'next/link';
+import { ImageCropper } from './image-cropper';
+import { fileToDataUrl } from '@/lib/utils';
 
 interface FreelancerVerificationFormProps {
   user: User;
 }
 
 export function FreelancerVerificationForm({ user }: FreelancerVerificationFormProps) {
-  const { submitVerification, uploadFile } = useAuth();
+  const { submitVerification } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const router = useRouter();
@@ -29,17 +31,27 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
   const [idDocPreview, setIdDocPreview] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setIdDoc(file);
       if (file.type.startsWith('image/')) {
-        setIdDocPreview(URL.createObjectURL(file));
-      } else {
-        setIdDocPreview(null);
+        fileToDataUrl(file).then(dataUrl => setImageToCrop(dataUrl));
+      } else { // Handle PDFs and other files
+        setIdDoc(file);
+        setIdDocPreview(null); // No preview for non-images
       }
     }
+    // Reset input value to allow re-uploading the same file
+    if(e.target) e.target.value = '';
   };
+  
+  const handleCropComplete = (croppedImage: File) => {
+    setIdDoc(croppedImage);
+    setIdDocPreview(URL.createObjectURL(croppedImage));
+    setImageToCrop(null);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,11 +67,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
     setIsSubmitting(true);
     
     try {
-        const idDocUrl = await uploadFile(`verification/${user.id}/id_doc_${idDoc.name}`, idDoc);
-        
-        const success = await submitVerification(user.id, {
-            passportOrIdUrl: idDocUrl,
-        });
+        const success = await submitVerification(user.id, { idDoc });
 
         if (success) {
             toast({
@@ -81,6 +89,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
   };
 
   return (
+    <>
     <Card className="w-full max-w-lg">
       <form onSubmit={handleSubmit}>
         <CardHeader>
@@ -117,7 +126,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
                     {idDoc ? (
                         <div className="mt-2 flex items-center text-sm text-success">
                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                            <span>{idDoc.name}</span>
+                            <span className="truncate max-w-[200px]">{idDoc.name}</span>
                         </div>
                     ) : (
                         <p className="mt-2 text-xs text-muted-foreground">{t.uploadFileDesc}</p>
@@ -143,5 +152,12 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
         </CardFooter>
       </form>
     </Card>
+     <ImageCropper 
+      image={imageToCrop}
+      onClose={() => setImageToCrop(null)}
+      onCropComplete={handleCropComplete}
+      aspect={4/3}
+    />
+    </>
   );
 }
