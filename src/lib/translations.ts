@@ -141,6 +141,8 @@ export const translations = {
         personalId: 'Personal ID',
         businessCertificate: 'Business Certificate',
         missingDocumentDesc: 'Please choose a document type and upload the corresponding file.',
+        verificationApprovedTitle: "Verification Approved!",
+        verificationApprovedDesc: "Your account is now fully verified. You can access all platform features.",
 
         // Settings Page
         settingsTitle: 'Settings',
@@ -699,6 +701,8 @@ export const translations = {
         personalId: 'Aqoonsi Shakhsi',
         businessCertificate: 'Shahaadada Ganacsiga',
         missingDocumentDesc: 'Fadlan dooro nooca dukumeentiga oo soo geli feylka u dhigma.',
+        verificationApprovedTitle: "Xaqiijinta Waa La Ansixiyay!",
+        verificationApprovedDesc: "Akoonkaaga hadda si buuxda ayaa loo xaqiijiyay. Waxaad geli kartaa dhammaan sifooyinka barmaamijka.",
 
         // Settings Page
         settingsTitle: 'Dejinta',

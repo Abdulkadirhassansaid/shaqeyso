@@ -28,6 +28,8 @@ import {
 import { auth, db } from '@/lib/firebase';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
 import { useLoading } from './use-loading';
+import { useToast } from './use-toast';
+import { useLanguage } from './use-language';
 
 interface AuthContextType {
   user: User | null;
@@ -57,6 +59,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const router = useRouter();
     const { setIsLoading: setPageIsLoading } = useLoading();
+    const { toast } = useToast();
+    const { t } = useLanguage();
+    const prevUserRef = React.useRef<User | null>(null);
+
+    React.useEffect(() => {
+        // This effect runs when the user object changes.
+        // It checks if the user object exists and if the previous user object existed.
+        if (prevUserRef.current && user) {
+            // Check if the verification status has changed from something else to 'verified'.
+            if (prevUserRef.current.verificationStatus !== 'verified' && user.verificationStatus === 'verified') {
+                toast({
+                    title: t.verificationApprovedTitle,
+                    description: t.verificationApprovedDesc,
+                });
+            }
+        }
+        // Update the ref to the current user for the next render.
+        prevUserRef.current = user;
+    }, [user, toast, t]);
+
 
     React.useEffect(() => {
       if (!auth || !db) {
