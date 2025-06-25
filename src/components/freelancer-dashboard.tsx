@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -258,12 +259,12 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
             const isRecommended = !!recommendation;
             
             return (
-                 <Card key={job.id} className={cn("flex flex-col transition-all", isRecommended && "border-primary/50 bg-primary/5")}>
+                 <Card key={job.id} className={cn("flex flex-col transition-all duration-300 hover:-translate-y-1", isRecommended && "border-primary/50 bg-primary/5")}>
                     <CardHeader>
                         <div className="flex justify-between items-start gap-2">
                             <CardTitle className="text-lg font-headline">{job.title}</CardTitle>
                              {isRecommended && (
-                                <Badge variant="default" className="shrink-0">
+                                <Badge variant="accent" className="shrink-0">
                                     <Wand2 className="mr-1.5 h-3 w-3" />
                                     {t.forYou}
                                 </Badge>
@@ -295,10 +296,10 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </div>
                         )}
                     </CardContent>
-                    <CardFooter className='flex-col items-start gap-4'>
-                        <div className="flex items-center gap-2 text-sm font-semibold">
+                    <CardFooter className='flex-col items-stretch gap-4'>
+                        <div className="flex items-center gap-2 text-base font-semibold">
                             <DollarSign className="h-5 w-5 text-green-500" />
-                            <span>${job.budget}</span>
+                            <span>${job.budget.toFixed(2)}</span>
                         </div>
                         <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
                     </CardFooter>
@@ -319,7 +320,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
             {myProjects.map(job => {
                 const client = allUsers.find(u => u.id === job.clientId);
                 return (
-                    <Card key={job.id}>
+                    <Card key={job.id} className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row justify-between items-start">
                             <CardTitle className="text-lg">{job.title}</CardTitle>
                             <Badge variant={job.status === 'Completed' ? 'default' : 'secondary'}>
@@ -340,8 +341,8 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                         </CardContent>
                         <CardFooter className="flex-col items-stretch gap-2">
                             {job.status === 'Completed' && (
-                                <div className="flex flex-col items-stretch gap-2 w-full p-2 bg-green-50 border border-green-200 rounded-md">
-                                    <div className="flex items-center text-sm text-green-500 gap-2">
+                                <div className="flex flex-col items-stretch gap-2 w-full p-3 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-500/30">
+                                    <div className="flex items-center text-sm text-green-600 dark:text-green-400 gap-2">
                                         <CheckCircle className="h-5 w-5"/>
                                         <span>{t.projectCompletedAndPaid}</span>
                                     </div>
@@ -384,7 +385,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 return (
                     <Card 
                         key={proposal.id} 
-                        className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow" 
+                        className="flex flex-col cursor-pointer transition-all duration-300 hover:-translate-y-1"
                         onClick={() => setViewingProposal(proposal)}
                     >
                         <CardHeader>
@@ -402,7 +403,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </p>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="link" className="p-0 h-auto dark:text-accent">{t.viewDetailsAndProposals}</Button>
+                            <Button variant="link" className="p-0 h-auto text-primary dark:text-accent">{t.viewDetailsAndProposals}</Button>
                         </CardFooter>
                     </Card>
                 )

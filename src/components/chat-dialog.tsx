@@ -135,7 +135,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 bg-secondary/50" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
             {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -150,9 +150,13 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                     const messageBgClass = isSender
                       ? 'bg-primary text-primary-foreground'
                       : isAdminMessage
-                        ? 'bg-secondary'
-                        : 'bg-muted';
+                        ? 'bg-card border'
+                        : 'bg-card';
                     
+                    const bubbleShape = isSender
+                      ? 'rounded-t-2xl rounded-bl-2xl'
+                      : 'rounded-t-2xl rounded-br-2xl';
+
                     return (
                     <div
                         key={message.id}
@@ -162,16 +166,16 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         )}
                     >
                         {!isSender && (
-                            <Avatar className="h-8 w-8 self-start">
+                            <Avatar className="h-10 w-10 self-start border-2 border-background">
                                 <AvatarImage src={senderDetails?.avatarUrl} />
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         )}
                         <div className={cn(
-                            "flex flex-col gap-1",
+                            "flex flex-col gap-1 w-fit max-w-md",
                             isSender ? 'items-end' : 'items-start'
                         )}>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 px-1">
                                 <p className="text-sm font-semibold">{senderDetails?.name}</p>
                                 {isAdminMessage && (
                                     <Badge variant="outline" className="h-5 text-xs">Admin</Badge>
@@ -179,11 +183,12 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                             </div>
                             <div
                                 className={cn(
-                                    'max-w-xs md:max-w-md rounded-lg px-3 py-2 text-sm',
-                                    messageBgClass
+                                    'px-4 py-3 shadow-md',
+                                    messageBgClass,
+                                    bubbleShape
                                 )}
                             >
-                                {message.text && <p className="leading-relaxed">{message.text}</p>}
+                                {message.text && <p className="leading-relaxed text-base">{message.text}</p>}
                                 {message.files && message.files.length > 0 && (
                                     <div className={cn("space-y-2", message.text && "mt-2")}>
                                         {message.files.map((file, index) => (
@@ -191,7 +196,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                                                 key={index}
                                                 href={file.url}
                                                 download={file.name}
-                                                className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-background/50 hover:bg-background")}
+                                                className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-secondary hover:bg-secondary/80")}
                                             >
                                                 <FileText className="h-6 w-6 shrink-0" />
                                                 <div className="overflow-hidden">
@@ -202,13 +207,13 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                                         ))}
                                     </div>
                                 )}
-                                <p className={cn("text-xs mt-1 text-right", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-                                    {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
-                                </p>
                             </div>
+                            <p className={cn("text-xs mt-1 px-1", isSender ? 'text-right' : 'text-left', 'text-muted-foreground')}>
+                                {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
+                            </p>
                         </div>
                          {isSender && (
-                            <Avatar className="h-8 w-8 self-start">
+                            <Avatar className="h-10 w-10 self-start border-2 border-background">
                                 <AvatarImage src={senderDetails?.avatarUrl} />
                                 <AvatarFallback>{senderDetails?.name.charAt(0)}</AvatarFallback>
                             </Avatar>
@@ -229,14 +234,15 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder={t.typeYourMessage}
                         autoComplete="off"
+                        className="h-12 text-base"
                         />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
-                            <Paperclip className="h-4 w-4" />
+                        <Button type="button" variant="ghost" size="icon" className="h-12 w-12" onClick={() => fileInputRef.current?.click()}>
+                            <Paperclip className="h-5 w-5" />
                             <span className="sr-only">{t.attachFile}</span>
                         </Button>
                         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} multiple />
-                        <Button type="submit" size="icon" disabled={!newMessage.trim() && files.length === 0}>
-                        <Send className="h-4 w-4" />
+                        <Button type="submit" variant="accent" size="icon" className="h-12 w-12" disabled={!newMessage.trim() && files.length === 0}>
+                        <Send className="h-5 w-5" />
                         <span className="sr-only">{t.sendMessage}</span>
                         </Button>
                     </form>

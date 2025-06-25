@@ -344,7 +344,7 @@ export function AdminDashboard() {
             </TabsList>
             <TabsContent value="analytics" className="mt-6 space-y-6">
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
+                    <Card className="transition-all hover:-translate-y-1">
                         <CardHeader>
                             <CardTitle className="text-sm font-medium">{t.platformBalance}</CardTitle>
                         </CardHeader>
@@ -404,11 +404,11 @@ export function AdminDashboard() {
                             </Dialog>
                         </CardFooter>
                     </Card>
-                    <Card>
+                    <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.revenueThisMonth}</CardTitle>
-                             <div className="p-2 rounded-md bg-primary/20">
-                                <TrendingUp className="h-4 w-4 text-primary" />
+                             <div className="p-2 rounded-lg bg-primary/10">
+                                <TrendingUp className="h-5 w-5 text-primary" />
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -416,11 +416,11 @@ export function AdminDashboard() {
                             <p className="text-xs text-muted-foreground">{t.platformFeesThisMonth}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalUsers}</CardTitle>
-                            <div className="p-2 rounded-md bg-info/20">
-                                <Users className="h-4 w-4 text-info" />
+                            <div className="p-2 rounded-lg bg-info/10">
+                                <Users className="h-5 w-5 text-info" />
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -428,11 +428,11 @@ export function AdminDashboard() {
                             <p className="text-xs text-muted-foreground">{users.filter(u => u.role === 'client').length} {t.clients}, {users.filter(u => u.role === 'freelancer').length} {t.freelancers}</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{t.totalJobs}</CardTitle>
-                            <div className="p-2 rounded-md bg-accent/20">
-                                <Briefcase className="h-4 w-4 text-accent" />
+                            <div className="p-2 rounded-lg bg-accent/10">
+                                <Briefcase className="h-5 w-5 text-accent" />
                             </div>
                         </CardHeader>
                         <CardContent>
