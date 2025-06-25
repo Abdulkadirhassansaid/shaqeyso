@@ -646,7 +646,7 @@ export const translations = {
 
         // Onboarding & Verification
         welcomeToPlatform: 'Ku soo dhowow Shaqeyso Hub, {name}!',
-        onboardingDesc: 'Tallaabada ugu dambeysa waa inaad xaqiijiso aqoonsigaaga. Tani waxay gacan ka geysaneysaa in bulshadeena ay noqoto mid amaan ah oo qof walba u nabdoon.',
+        onboardingDesc: 'The final step is to verify your identity. This helps keep our community safe and secure for everyone.',
         onboardingSecureTitle: 'Amaan & Sugan',
         onboardingSecureDesc: 'Dukumentiyadaada waa la xareeyay oo si amaan ah ayaa loo keydiyay.',
         onboardingVerifiedTitle: 'Bulsho La Xaqiijiyay',
@@ -1034,6 +1034,7 @@ export const translations = {
         verificationRejectedDesc: "Gudbinta isticmaalaha waa la diiday.",
         searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
         noUsersFound: 'Lama helin isticmaaleyaal.',
+        reasoning: 'Sababayn',
 
         // New Freelancer Marketplace & Services
         findFreelancers: 'Raadi Shaqaale Madaxbanaan',

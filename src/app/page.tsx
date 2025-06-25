@@ -23,13 +23,8 @@ export default function ShaqeysoHubApp() {
   const { t } = useLanguage();
 
   React.useEffect(() => {
-    // Don't do anything until the auth state is fully resolved.
-    if (isLoading) {
-      return;
-    }
-
-    // Only redirect users who are not logged in.
-    if (!user) {
+    // This effect should only handle redirecting logged-out users.
+    if (!isLoading && !user) {
       setPageIsLoading(true);
       router.replace('/login');
     }
@@ -40,49 +35,32 @@ export default function ShaqeysoHubApp() {
     return null;
   }
   
-  // Handle users who are not yet verified
-  if (user.role !== 'admin' && (user.verificationStatus === 'unverified' || user.verificationStatus === 'rejected')) {
-    return (
-      <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
-        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-            <Card className="w-full max-w-lg">
-                <CardHeader>
-                    <CardTitle>{user.verificationStatus === 'rejected' ? t.verificationRejectedTitle : t.welcomeToPlatform.replace('{name}', user.name)}</CardTitle>
-                    <CardDescription>
-                        {user.verificationStatus === 'rejected' ? t.verificationRejectedDesc : t.onboardingDesc}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                     {user.verificationStatus === 'rejected' && user.verificationRejectionReason && (
-                      <Alert variant="destructive" className="mb-4">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>Rejection Reason</AlertTitle>
-                          <AlertDescription>
-                              {user.verificationRejectionReason}
-                          </AlertDescription>
-                      </Alert>
-                  )}
-                   {user.verificationStatus === 'unverified' && (
-                     <p className="text-sm text-muted-foreground">{t.onboardingNextStep}</p>
-                   )}
-                </CardContent>
-                <CardFooter>
-                    <Button asChild>
-                        <Link href="/verify">{t.startVerification}</Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </main>
-      </div>
-    );
-  }
-  
-  // Show dashboard for verified, pending, and admin users
+  // Show dashboard for all logged-in users, with conditional alerts based on verification status.
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-4 md:py-8 px-4 sm:px-6 lg:px-8">
+        
+        {user.role !== 'admin' && (user.verificationStatus === 'unverified' || user.verificationStatus === 'rejected') && (
+            <Alert variant={user.verificationStatus === 'rejected' ? "destructive" : "default"} className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>
+                    {user.verificationStatus === 'rejected' ? t.verificationRejectedTitle : t.verificationRequiredTitle}
+                </AlertTitle>
+                <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-grow">
+                    <p>{user.verificationStatus === 'rejected' ? t.verificationRejectedDesc : (user.role === 'client' ? t.verificationRequiredClientDesc : t.verificationRequiredFreelancerDesc)}</p>
+                    {user.verificationStatus === 'rejected' && user.verificationRejectionReason && (
+                        <p className="font-semibold mt-2">{t.reasoning}: {user.verificationRejectionReason}</p>
+                    )}
+                  </div>
+                  <Button asChild className="ml-auto shrink-0">
+                      <Link href="/verify">{t.startVerification}</Link>
+                  </Button>
+                </AlertDescription>
+            </Alert>
+        )}
+
         {user.verificationStatus === 'pending' && user.role !== 'admin' && (
              <Alert className="mb-6">
               <Clock className="h-4 w-4" />
@@ -90,6 +68,7 @@ export default function ShaqeysoHubApp() {
               <AlertDescription>{t.verificationPendingDesc}</AlertDescription>
             </Alert>
         )}
+        
         {user.role === 'client' && <ClientDashboard />}
         {user.role === 'freelancer' && <FreelancerDashboard />}
         {user.role === 'admin' && (
