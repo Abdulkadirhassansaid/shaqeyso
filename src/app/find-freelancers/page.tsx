@@ -122,27 +122,27 @@ export default function FindFreelancersPage() {
                         {[...Array(6)].map((_, i) => (
                            <Card key={i} className="flex flex-col">
                                 <CardContent className="p-6 flex-grow flex flex-col">
-                                    <div className="flex items-start gap-4 mb-4">
+                                    <div className="flex items-center gap-4 mb-4">
                                         <Skeleton className="h-16 w-16 rounded-full" />
                                         <div className="flex-grow space-y-2">
-                                            <Skeleton className="h-5 w-3/4" />
-                                            <Skeleton className="h-4 w-1/2" />
-                                            <Skeleton className="h-5 w-1/4" />
+                                            <Skeleton className="h-6 w-3/4" />
+                                            <Skeleton className="h-5 w-1/2" />
                                         </div>
                                     </div>
-                                    <div className="space-y-2 mb-4">
+                                    <Skeleton className="h-6 w-24 rounded-full mb-4" />
+                                    <div className="space-y-2 mb-4 flex-grow">
                                         <Skeleton className="h-4 w-full" />
                                         <Skeleton className="h-4 w-full" />
                                         <Skeleton className="h-4 w-2/3" />
                                     </div>
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        <Skeleton className="h-6 w-20" />
-                                        <Skeleton className="h-6 w-24" />
-                                        <Skeleton className="h-6 w-16" />
+                                    <div className="flex flex-wrap gap-2">
+                                        <Skeleton className="h-6 w-20 rounded-full" />
+                                        <Skeleton className="h-6 w-24 rounded-full" />
+                                        <Skeleton className="h-6 w-16 rounded-full" />
                                     </div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full rounded-md" />
                                 </CardFooter>
                             </Card>
                         ))}
@@ -157,22 +157,31 @@ export default function FindFreelancersPage() {
                             return (
                                <Card key={f.id} className="flex flex-col transition-shadow hover:shadow-lg">
                                     <CardContent className="p-6 flex-grow flex flex-col">
-                                        <div className="flex items-start gap-4 mb-4">
+                                        <div className="flex items-center gap-4 mb-4">
                                             <Avatar className="h-16 w-16 border">
                                                 <AvatarImage src={f.avatarUrl} alt={f.name} />
                                                 <AvatarFallback>{f.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex-grow">
-                                                <CardTitle className="text-lg">{f.name}</CardTitle>
+                                                <div className="flex justify-between items-start">
+                                                    <CardTitle className="text-lg">{f.name}</CardTitle>
+                                                    {profile?.hourlyRate > 0 && (
+                                                        <div className="text-right shrink-0">
+                                                            <span className="font-bold text-lg">${profile.hourlyRate.toFixed(2)}</span>
+                                                            <span className="text-xs text-muted-foreground">/hr</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <StarRating rating={rating} />
                                                     <span className="text-sm text-muted-foreground">({count} {t.reviews.toLowerCase()})</span>
                                                 </div>
-                                                <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'} className="mt-2">
-                                                    {t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}
-                                                </Badge>
                                             </div>
                                         </div>
+
+                                        <Badge variant={level === 'Top Rated' ? 'default' : 'secondary'} className="w-fit mb-4">
+                                            {t[level.replace(' ', '').toLowerCase() as keyof typeof t] || level}
+                                        </Badge>
                                         
                                         <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-grow">{profile?.bio || t.noBio}</p>
                                         
@@ -231,26 +240,40 @@ export default function FindFreelancersPage() {
                                     {selectedProfile.skills?.map(skill => <Badge key={skill} variant="outline">{skill}</Badge>)}
                                 </div>
                             </div>
-                             <div className="space-y-2">
+                             <div className="space-y-4">
                                 <h3 className="font-semibold">{t.myServices}</h3>
                                 <div className="space-y-3">
                                     {selectedProfile.services?.map(service => (
-                                        <div key={service.id} className="border rounded-lg p-3">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h4 className="font-medium">{service.title}</h4>
-                                                    <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
-                                                </div>
-                                                <Button size="sm" variant="outline" onClick={() => setChattingWith(selectedFreelancer)}>{t.requestQuote}</Button>
+                                        <div key={service.id} className="border rounded-lg p-4 space-y-3">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <h4 className="font-semibold text-base">{service.title}</h4>
+                                                <Badge variant="secondary" className="shrink-0">${service.price.toFixed(2)}</Badge>
                                             </div>
-                                             {service.images && service.images.length > 0 && (
-                                                <div className="mt-2 grid grid-cols-4 gap-2">
-                                                    {service.images.map((img, index) => (
-                                                        <Image data-ai-hint="portfolio image" key={index} src={img} alt={`${service.title} image ${index + 1}`} width={100} height={100} className="rounded-md object-cover aspect-square" />
+
+                                            {service.images && service.images.length > 0 ? (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {service.images.slice(0, 3).map((img, index) => (
+                                                        <div key={index} className="relative aspect-video bg-muted rounded-md overflow-hidden">
+                                                            <Image data-ai-hint="portfolio image" src={img} alt={`${service.title} image ${index + 1}`} fill className="object-cover" />
+                                                            {index === 2 && service.images.length > 3 && (
+                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-lg">
+                                                                    +{service.images.length - 3}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     ))}
                                                 </div>
+                                            ) : (
+                                                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground opacity-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                                </div>
                                             )}
-                                             <div className="text-right font-bold text-primary mt-2">${service.price.toFixed(2)}</div>
+
+                                            <p className="text-sm text-muted-foreground line-clamp-3">{service.description}</p>
+                                            
+                                            <Button size="sm" variant="outline" className="w-full" onClick={() => setChattingWith(selectedFreelancer)}>
+                                                {t.requestQuote}
+                                            </Button>
                                         </div>
                                     ))}
                                     {(!selectedProfile.services || selectedProfile.services.length === 0) && (
