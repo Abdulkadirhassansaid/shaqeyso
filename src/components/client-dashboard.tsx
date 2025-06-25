@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -68,6 +69,9 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   }, []);
 
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
+  const manualJobs = clientJobs.filter(job => !job.sourceServiceId);
+  const serviceOrderJobs = clientJobs.filter(job => !!job.sourceServiceId);
+
 
   React.useEffect(() => {
     if (selectedJob) {
@@ -402,8 +406,9 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList>
+      <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
+          <TabsTrigger value="service-orders">{t.myServiceOrders}</TabsTrigger>
           <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
       </TabsList>
       <TabsContent value="my-jobs" className="mt-6">
@@ -423,7 +428,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                 </div>
             </CardHeader>
           <CardContent className="space-y-4">
-              {clientJobs.map((job) => {
+              {manualJobs.map((job) => {
               const status = job.status || 'Open';
               const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
               const canEdit = status === 'Open' || status === 'Interviewing';
@@ -522,11 +527,74 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                   </Card>
               );
               })}
-              {clientJobs.length === 0 && (
+              {manualJobs.length === 0 && (
               <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
               )}
           </CardContent>
           </Card>
+      </TabsContent>
+      <TabsContent value="service-orders" className="mt-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.myServiceOrders}</CardTitle>
+                    <CardDescription>{t.myServiceOrdersDesc}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {serviceOrderJobs.map((job) => {
+                        const status = job.status || 'Open';
+                        const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+                        return (
+                            <Card key={job.id} className="hover:shadow-md transition-shadow">
+                                <CardHeader>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <CardTitle className="text-lg">{job.title}</CardTitle>
+                                            <CardDescription>{t.budget}: ${job.budget}</CardDescription>
+                                        </div>
+                                        <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardFooter className="flex justify-between items-center">
+                                    <div className="flex items-center gap-4 flex-wrap">
+                                        {job.status === 'InProgress' && hiredFreelancer && (
+                                            <Button variant="outline" onClick={() => setJobToChat(job)}>
+                                                <MessageSquare className="mr-2 h-4 w-4" />
+                                                {t.chatWith} {hiredFreelancer.name}
+                                            </Button>
+                                        )}
+                                        {status === 'InProgress' && hiredFreelancer && (
+                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                <ShieldCheck className="h-5 w-5 text-success" />
+                                                <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
+                                            </div>
+                                        )}
+                                        {status === 'Completed' && hiredFreelancer && (
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center text-sm text-success gap-2">
+                                                    <CheckCircle className="h-5 w-5"/>
+                                                    <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                                                </div>
+                                                <Button 
+                                                    variant="secondary" 
+                                                    size="sm" 
+                                                    onClick={() => setJobToReview(job)}
+                                                    disabled={job.clientReviewed}
+                                                >
+                                                    <Star className="mr-2 h-4 w-4" />
+                                                    {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardFooter>
+                            </Card>
+                        );
+                    })}
+                    {serviceOrderJobs.length === 0 && (
+                        <p className="text-muted-foreground text-center py-4">{t.noServiceOrders}</p>
+                    )}
+                </CardContent>
+            </Card>
       </TabsContent>
       <TabsContent value="post-job" className="mt-6">
         {user.verificationStatus === 'verified' ? (

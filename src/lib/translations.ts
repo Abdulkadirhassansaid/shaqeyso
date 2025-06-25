@@ -263,6 +263,9 @@ export const translations = {
         finalPaymentWarning: 'By clicking Approve & Pay, you confirm that you are satisfied with the work and are authorizing the release of funds. This action cannot be undone.',
         insufficientFundsTitle: 'Insufficient Funds',
         insufficientFundsDesc: 'You do not have enough funds in your account to hire for this job. Please top up your balance.',
+        myServiceOrders: "My Service Orders",
+        myServiceOrdersDesc: "Track the status of services you have ordered from freelancers.",
+        noServiceOrders: "You haven't ordered any services yet.",
 
         // Job Post Form
         postNewJobTitle: 'Post a New Job',
@@ -517,7 +520,7 @@ export const translations = {
         servicePrice: 'Service Price ($)',
         serviceImages: 'Portfolio Images',
         uploadImages: 'Upload Images',
-        requestService: "Request Service",
+        requestService: "Contact About Service",
         deliveryTime: 'Delivery Time',
         days: 'days',
         standardDelivery: 'Standard Delivery',
@@ -757,7 +760,7 @@ export const translations = {
 
 
         // Client Dashboard
-        myJobPostings: 'Shaqooyinkayga La Soo Geliyey',
+        myJobPostings: 'Shaqooyinkayga',
         postNewJob: 'Soo Geli Shaqo Cusub',
         clientJobDesc: "Waa kuwan shaqooyinka aad soo gelisay. Guji shaqo si aad u aragto codsiyada.",
         viewDetailsAndProposals: 'Arag Faahfaahinta',
@@ -801,6 +804,9 @@ export const translations = {
         finalPaymentWarning: 'Markaad gujiso Ansixi & Bixi, waxaad xaqiijinaysaa inaad ku qanacsan tahay shaqada oo aad oggolaanayso sii daynta lacagta. Tallaabadan lama laaban karo.',
         insufficientFundsTitle: 'Dhaqaale Kugu Filan Majiro',
         insufficientFundsDesc: 'Akoonkaaga kuma jiraan dhaqaale kugu filan oo aad ku shaqaaleysiin karto shaqadan. Fadlan ku shubo hadhaagaaga.',
+        myServiceOrders: "Dalabyada Adeegyadayda",
+        myServiceOrdersDesc: "La soco xaaladda adeegyada aad ka dalbatay xirfadlayaasha.",
+        noServiceOrders: "Weli wax adeegyo ah ma aadan dalban.",
 
         // Job Post Form
         postNewJobTitle: 'Soo Geli Shaqo Cusub',
@@ -1055,7 +1061,7 @@ export const translations = {
         servicePrice: 'Qiimaha Adeegga ($)',
         serviceImages: 'Sawirrada Portfolio',
         uploadImages: 'Soo Geli Sawirro',
-        requestService: "Codso Adeeg",
+        requestService: "La xiriir Adeegga ku saabsan",
         deliveryTime: 'Wakhtiga Gudbinta',
         days: 'maalmood',
         standardDelivery: 'Gudbin Caadi ah',
