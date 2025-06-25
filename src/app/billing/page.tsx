@@ -100,6 +100,14 @@ export default function BillingPage() {
   
   const handleWithdraw = async () => {
     if (balance <= 0) return;
+    if ((user.paymentMethods || []).length === 0) {
+      toast({
+        title: t.noWithdrawalMethodTitle,
+        description: t.noWithdrawalMethodDesc,
+        variant: 'destructive',
+      });
+      return;
+    }
     const withdrawalAmount = balance;
     await addTransaction(user.id, {
         description: t.withdrawalToBank,
@@ -181,7 +189,7 @@ export default function BillingPage() {
                 <p className="text-sm text-muted-foreground mt-1">{t.availableForWithdrawal}</p>
               </CardContent>
               <CardFooter>
-                  <Button onClick={handleWithdraw} disabled={balance <= 0}>{t.withdrawFunds}</Button>
+                  <Button onClick={handleWithdraw} disabled={balance <= 0 || (user.paymentMethods || []).length === 0}>{t.withdrawFunds}</Button>
               </CardFooter>
             </Card>
           )}

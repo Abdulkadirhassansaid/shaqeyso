@@ -218,6 +218,8 @@ export const translations = {
         invalidAmount: "Invalid Amount",
         mustSelectPaymentMethod: "You must select a payment method.",
         topUpFrom: "Top up from",
+        noWithdrawalMethodTitle: "No Payment Method Added",
+        noWithdrawalMethodDesc: "You must add a payment method before you can withdraw your funds.",
 
 
         // Client Dashboard
@@ -760,7 +762,8 @@ export const translations = {
         invalidAmount: "Lacag Khaldan",
         mustSelectPaymentMethod: "Waa inaad doorataa habka lacag bixinta.",
         topUpFrom: "Ka shubo",
-
+        noWithdrawalMethodTitle: "Hab Lacag Bixineed Lama Darin",
+        noWithdrawalMethodDesc: "Waa inaad ku dartaa hab lacag bixineed ka hor intaadan lacagta la bixin.",
 
         // Client Dashboard
         myJobPostings: 'Shaqooyinkayga',
