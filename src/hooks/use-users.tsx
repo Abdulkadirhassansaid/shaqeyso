@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { User } from '@/lib/types';
 
@@ -23,20 +23,17 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
         return;
     };
 
-    const fetchUsers = async () => {
-        try {
-            const querySnapshot = await getDocs(collection(db, 'users'));
-            const usersData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
-            setUsers(usersData);
-        } catch (error) {
-            console.error("Error fetching users:", error);
-        } finally {
-            setIsUsersLoading(false);
-        }
-    };
+    const q = query(collection(db, 'users'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const usersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
+        setUsers(usersData);
+        setIsUsersLoading(false);
+    }, (error) => {
+        console.error("Error fetching users:", error);
+        setIsUsersLoading(false);
+    });
 
-    fetchUsers();
-    
+    return () => unsubscribe();
   }, []);
 
   const value = React.useMemo(() => ({ users, isUsersLoading }), [users, isUsersLoading]);
