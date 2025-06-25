@@ -79,101 +79,56 @@ export default function LoginPage() {
   const isDisabled = isSubmitting || isAuthLoading;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 md:bg-muted">
-      {/* Desktop View */}
-      <div className="hidden md:block w-full max-w-sm">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Icons.logo className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle>{t.welcomeBack}</CardTitle>
-            <CardDescription>{t.loginPrompt}</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleLogin}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email-desktop">{t.emailLabel}</Label>
-                <Input
-                  id="email-desktop"
-                  type="email"
-                  placeholder="user@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isDisabled}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password-desktop">{t.passwordLabel}</Label>
-                <Input
-                  id="password-desktop"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isDisabled}
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isDisabled}>
-                {isSubmitting ? t.signingIn : t.signIn}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {t.noAccount}{' '}
-                <Link href="/signup" className="font-semibold text-primary hover:underline">
-                  {t.signUp}
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
-
-      {/* Mobile View */}
-      <div className="md:hidden flex h-full w-full flex-col p-4">
-        <div className="flex-grow flex flex-col justify-center">
-          <h1 className="text-3xl font-bold mb-8">Email Login</h1>
-          <form onSubmit={handleLogin} className="space-y-6">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background p-4">
+      <Card className="w-full max-w-md overflow-hidden">
+        <CardHeader className="text-center bg-card/80 backdrop-blur-sm p-8">
+            <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
+                <Icons.logo className="h-10 w-10 text-primary" />
+            </Link>
+          <CardTitle>{t.welcomeBack}</CardTitle>
+          <CardDescription>{t.loginPrompt}</CardDescription>
+        </CardHeader>
+        <form onSubmit={handleLogin}>
+          <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
+              <Label htmlFor="email">{t.emailLabel}</Label>
               <Input
-                id="email-mobile"
+                id="email"
                 type="email"
-                placeholder="Email address"
+                placeholder="user@example.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isDisabled}
-                className="h-12 text-base"
+                className="h-12"
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="password">{t.passwordLabel}</Label>
               <Input
-                id="password-mobile"
+                id="password"
                 type="password"
-                placeholder="Password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isDisabled}
-                className="h-12 text-base"
+                className="h-12"
               />
             </div>
-            <Button type="submit" className="w-full h-12 text-base" disabled={isDisabled}>
-              {isSubmitting ? t.signingIn : 'Login'}
+             <Button type="submit" size="lg" variant="accent" className="w-full mt-4" disabled={isDisabled}>
+              {isSubmitting ? t.signingIn : t.signIn}
             </Button>
-          </form>
-        </div>
-        <div className="flex-none text-center">
-          <p className="text-sm text-muted-foreground">
-            {t.noAccount}{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              {t.signUp}
-            </Link>
-          </p>
-        </div>
-      </div>
+          </CardContent>
+          <CardFooter className="flex-col gap-4 p-6 bg-secondary/50">
+            <p className="text-sm text-muted-foreground">
+              {t.noAccount}{' '}
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
+                {t.signUp}
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { useLoading } from '@/hooks/use-loading';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function SignupPage() {
   const [name, setName] = React.useState('');
@@ -56,26 +57,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 md:bg-muted">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Icons.logo className="h-8 w-8 text-primary" />
-          </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background p-4">
+      <Card className="w-full max-w-md overflow-hidden">
+        <CardHeader className="text-center bg-card/80 backdrop-blur-sm p-8">
+          <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
+            <Icons.logo className="h-10 w-10 text-primary" />
+          </Link>
           <CardTitle>{t.createAccount}</CardTitle>
           <CardDescription>{t.signupPrompt}</CardDescription>
         </CardHeader>
-        <CardContent>
-            <div className="mx-auto max-w-sm text-center my-4">
-                <Image 
-                  data-ai-hint="workspace computer" 
-                  src="https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=300&h=200&fit=crop" 
-                  alt="Choose a role" 
-                  width={300} 
-                  height={200}
-                  className="mx-auto rounded-lg"
-                />
-            </div>
+        <CardContent className="p-8">
             <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">{t.fullNameLabel}</Label>
@@ -87,6 +78,7 @@ export default function SignupPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={isSubmitting}
+                  className="h-12"
                 />
               </div>
               <div className="space-y-2">
@@ -99,6 +91,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
+                  className="h-12"
                 />
               </div>
               <div className="space-y-2">
@@ -110,32 +103,33 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isSubmitting}
+                  className="h-12"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3 pt-2">
                 <Label>{t.iAmA}</Label>
                 <RadioGroup
                   defaultValue="freelancer"
-                  className="flex gap-4"
+                  className="grid grid-cols-2 gap-4"
                   onValueChange={(value) => setRole(value as 'client' | 'freelancer')}
                   disabled={isSubmitting}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="freelancer" id="r-freelancer" />
-                    <Label htmlFor="r-freelancer" className="font-normal">{t.freelancer}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="client" id="r-client" />
-                    <Label htmlFor="r-client" className="font-normal">{t.client}</Label>
-                  </div>
+                  <Label htmlFor="r-freelancer" className={cn("flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-secondary/50 hover:border-accent transition-all", role === 'freelancer' && 'border-accent bg-accent/10')}>
+                    <RadioGroupItem value="freelancer" id="r-freelancer" className="sr-only" />
+                    <span className="font-semibold text-center">{t.freelancer}</span>
+                  </Label>
+                  <Label htmlFor="r-client" className={cn("flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-secondary/50 hover:border-accent transition-all", role === 'client' && 'border-accent bg-accent/10')}>
+                    <RadioGroupItem value="client" id="r-client" className="sr-only"/>
+                    <span className="font-semibold text-center">{t.client}</span>
+                  </Label>
                 </RadioGroup>
               </div>
-               <Button type="submit" className="w-full" disabled={isSubmitting}>
+               <Button type="submit" size="lg" variant="accent" className="w-full mt-6" disabled={isSubmitting}>
                 {isSubmitting ? t.creatingAccount : t.createAccount}
               </Button>
             </form>
         </CardContent>
-        <CardFooter className="flex-col gap-4">
+        <CardFooter className="flex-col gap-4 p-6 bg-secondary/50">
           <p className="text-sm text-muted-foreground">
             {t.alreadyHaveAccount}{' '}
             <Link href="/login" className="font-semibold text-primary hover:underline">
