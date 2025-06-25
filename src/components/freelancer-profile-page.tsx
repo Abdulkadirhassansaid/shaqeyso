@@ -234,6 +234,9 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         if (avatarPreview.startsWith('http')) {
           userData.avatarUrl = avatarPreview;
           localStorage.removeItem(`mock_avatar_${user.id}`);
+        } else if (avatarPreview.startsWith('data:image')) {
+             // This is a mock upload, do not save to DB
+            console.log("Mock avatar detected. Not saving to database.");
         }
       }
 
@@ -273,6 +276,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
   const handleSetAvatarFromUrl = () => {
     if (!imageUrl || !user) return;
     setAvatarPreview(imageUrl);
+    localStorage.removeItem(`mock_avatar_${user.id}`);
     setIsUrlDialogOpen(false);
     setImageUrl('');
   };
