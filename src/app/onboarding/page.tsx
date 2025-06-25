@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Icons } from '@/components/icons';
 import { Check, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { auth } from '@/lib/firebase';
 
 export default function OnboardingPage() {
   const { user, isLoading } = useAuth();
@@ -19,25 +18,19 @@ export default function OnboardingPage() {
 
   React.useEffect(() => {
     if (isLoading) {
-      return; // Wait for the initial auth state to load
+      return; // Wait for auth state to fully resolve
     }
-    
-    // If the auth context has no user object yet...
+
     if (!user) {
-      // ...but Firebase Auth *does* have an authenticated user...
-      if (auth?.currentUser) {
-        // ...then we are in a temporary state during signup where the user document is still loading from Firestore.
-        // We wait for the `useAuth` hook to provide the user object.
-        return;
-      }
-      // If there's no user in context and no user in Firebase Auth, they need to sign up.
+      // The hook has confirmed no user is logged in, redirect to signup.
       router.replace('/signup');
     } else if (user.verificationStatus === 'verified') {
-      // If the user is already verified, they don't need to be on this page.
+      // If the user is already verified, they shouldn't be here.
       router.replace('/');
     }
   }, [isLoading, user, router]);
 
+  // Render a skeleton/loader while waiting for auth state or during redirect
   if (isLoading || !user || user.verificationStatus === 'verified') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">

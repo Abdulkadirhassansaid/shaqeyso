@@ -57,33 +57,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { setIsLoading: setPageIsLoading } = useLoading();
 
     React.useEffect(() => {
-        if (!auth || !db) {
-          setIsLoading(false);
-          return;
-        }
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
-                const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
-                    if (userDocSnap.exists()) {
-                        const userData = { ...userDocSnap.data(), id: userDocSnap.id } as User;
-                        setUser(userData);
-                    } else {
-                        // This case handles the small delay between auth creation and DB write
-                        // during signup. We don't nullify the user here to avoid race conditions.
-                    }
-                    setIsLoading(false);
-                }, (error) => {
-                    console.error("Error listening to user document:", error);
-                    setIsLoading(false);
-                });
-                return () => unsubDoc();
-            } else {
-                setUser(null);
-                setIsLoading(false);
+      if (!auth || !db) {
+        setIsLoading(false);
+        return;
+      }
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
+            if (userDocSnap.exists()) {
+              const userData = { ...userDocSnap.data(), id: userDocSnap.id } as User;
+              setUser(userData);
+              setIsLoading(false); // Set loading to false only when we have the user doc
             }
-        });
-        return () => unsubscribe();
+            // If doc doesn't exist yet, we wait. isLoading remains true.
+            // This can happen right after signup.
+          }, (error) => {
+            console.error("Error listening to user document:", error);
+            setUser(null);
+            setIsLoading(false);
+          });
+          return () => unsubDoc();
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      });
+      return () => unsubscribe();
     }, []);
     
 
