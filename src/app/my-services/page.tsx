@@ -301,85 +301,102 @@ export default function MyServicesPage() {
             <p className="text-muted-foreground mt-1">{t.myServicesPageDesc}</p>
           </header>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {services.length > 0 ? (
               services.map((service) => (
-                <Card key={service.id}>
-                 <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold">{service.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {service.description}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
+                <Card key={service.id} className="overflow-hidden transition-shadow hover:shadow-lg flex flex-col">
+                  <div className="aspect-video bg-muted relative">
+                      {service.images && service.images.length > 0 ? (
+                          <Image
+                              data-ai-hint="portfolio image"
+                              src={service.images[0]}
+                              alt={service.title}
+                              fill
+                              className="object-cover"
+                          />
+                      ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground opacity-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                          </div>
+                      )}
+                  </div>
+
+                  <div className="p-4 flex flex-col flex-grow">
+                      <div className="flex justify-between items-start gap-4">
+                          <h4 className="font-semibold text-lg line-clamp-2">{service.title}</h4>
+                          <Badge variant="secondary" className="text-base shrink-0">${service.price.toFixed(2)}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-3 flex-grow">{service.description}</p>
+                      
+                      {service.images && service.images.length > 1 && (
+                          <div className="flex gap-2 mt-4">
+                              {service.images.slice(1, 5).map((img, index) => (
+                                  <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden">
+                                      <Image
+                                          src={img}
+                                          alt={`${service.title} thumbnail ${index + 1}`}
+                                          fill
+                                          className="object-cover"
+                                      />
+                                  </div>
+                              ))}
+                              {service.images.length > 5 && (
+                                  <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+                                      +{service.images.length - 5}
+                                  </div>
+                              )}
+                          </div>
+                      )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 p-4 border-t bg-muted/50">
                       <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditService(service)}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditService(service)}
                       >
-                        <Edit className="h-4 w-4" />
+                          <Edit className="mr-2 h-4 w-4" />
+                          {t.edit}
                       </Button>
                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {t.deleteServiceTitle}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {t.deleteServiceDesc}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {t.cancel}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteService(service.id)}
-                              className="bg-destructive hover:bg-destructive/90"
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
                             >
+                              <Trash2 className="mr-2 h-4 w-4" />
                               {t.delete}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {t.deleteServiceTitle}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t.deleteServiceDesc}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>
+                                {t.cancel}
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteService(service.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                {t.delete}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
                       </AlertDialog>
-                    </div>
                   </div>
-                  {service.images && service.images.length > 0 && (
-                    <div className="mt-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                      {service.images.map((img, index) => (
-                        <Image
-                          data-ai-hint="portfolio image"
-                          key={index}
-                          src={img}
-                          alt={`${service.title} image ${index + 1}`}
-                          width={100}
-                          height={100}
-                          className="rounded-md object-cover aspect-square"
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <div className="text-right mt-2">
-                    <Badge>${service.price}</Badge>
-                  </div>
-                  </CardContent>
-                </Card>
+              </Card>
               ))
             ) : (
-              <Card>
+              <Card className="md:col-span-2">
                 <CardContent className="p-8 text-center text-muted-foreground">
                   {t.noServicesYet}
                 </CardContent>
