@@ -57,6 +57,7 @@ export const translations = {
         addImageFromUrl: "Add Image from URL",
         addImageFromUrlDesc: "Paste an image URL to add it to your service.",
         addImage: "Add Image",
+        confirm: "Confirm",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -516,6 +517,13 @@ export const translations = {
         servicePrice: 'Service Price ($)',
         serviceImages: 'Portfolio Images',
         uploadImages: 'Upload Images',
+        requestService: "Request Service",
+        confirmServiceRequest: "Confirm Service Request",
+        confirmServiceRequestDesc: "You are about to order the service '{serviceTitle}' for {price}. This amount will be deducted from your balance and held in escrow. Do you want to proceed?",
+        serviceRequested: "Service Requested!",
+        serviceRequestedDesc: "A new job has been created and the freelancer has been notified. You can track it in your dashboard.",
+        serviceRequestFailed: "Service Request Failed",
+        serviceRequestFailedDesc: "There was an error creating the job for this service.",
     },
     so: {
         // General
@@ -574,6 +582,7 @@ export const translations = {
         addImageFromUrl: "Ka Kudar Sawir URL",
         addImageFromUrlDesc: "Ku dheji URL sawir si aad ugu darto adeeggaaga.",
         addImage: "Kudar Sawir",
+        confirm: "Xaqiiji",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -642,7 +651,7 @@ export const translations = {
         verificationPendingDesc: 'Dukumentiyadaada hadda waa la eegayaa. Tani waxay caadi ahaan qaadataa 24-48 saacadood.',
         youCanBrowse: 'Dhanka kale, xor ayaad u tahay inaad dhex mushaaxdo barmaamijka.',
         verificationRejectedTitle: 'Xaqiijinta Waa La Diiday',
-        verificationRejectedDesc: 'Cilad ayaa ka timid gudbintaada. Fadlan hoos ka eeg sababta oo dib u soo gudbi dukumentiyadaada.',
+        verificationRejectedDesc: 'There was an issue with your submission. Please review the reason below and resubmit your documents.',
         verificationRequiredTitle: 'Xaqiijin Ayaa Loo Baahan Yahay',
         verificationRequiredClientDesc: 'Akoonkaaga waa in la xaqiijiyaa ka hor intaadan soo gelin shaqooyin.',
         verificationRequiredFreelancerDesc: 'Akoonkaaga waa in la xaqiijiyaa ka hor intaadan codsan shaqooyin.',
@@ -848,7 +857,7 @@ export const translations = {
         chatWithClient: 'La sheekeyso Macmiilka',
         myProposals: "Codsiyadayda",
         myProposalsDesc: "View and manage all your submitted job proposals.",
-        noProposalsSubmitted: "Weli wax codsiyo ah ma aadan gudbin.",
+        noProposalsSubmitted: "You have not submitted any proposals yet.",
         yourProposal: "Codsigaaga",
         editProposal: "Wax ka Beddel Codsiga",
         deleteProposal: "Tirtir Codsiga",
@@ -1033,9 +1042,18 @@ export const translations = {
         servicePrice: 'Qiimaha Adeegga ($)',
         serviceImages: 'Sawirrada Portfolio',
         uploadImages: 'Soo Geli Sawirro',
+        requestService: "Codso Adeegga",
+        confirmServiceRequest: "Xaqiiji Codsiga Adeegga",
+        confirmServiceRequestDesc: "Waxaad ku dhowdahay inaad dalbato adeegga '{serviceTitle}' oo qiimihiisu yahay {price}. Lacagtan waxaa laga jari doonaa hadhaagaaga oo lagu hayn doonaa escrow. Ma rabtaa inaad sii waddo?",
+        serviceRequested: "Adeegga Waa La Codsaday!",
+        serviceRequestedDesc: "Shaqo cusub ayaa la sameeyay oo xirfadlaha waa la ogeysiiyay. Waxaad kala socon kartaa dashboard-kaaga.",
+        serviceRequestFailed: "Codsiga Adeegga Waa Fashilmay",
+        serviceRequestFailedDesc: "Cilad ayaa dhacday markii la abuurayay shaqada adeeggan.",
     }
 };
 
 export type Language = keyof typeof translations;
 
 export type Translations = typeof translations;
+
+    

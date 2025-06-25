@@ -34,6 +34,7 @@ export type Job = {
   clientReviewed?: boolean;
   freelancerReviewed?: boolean;
   postedDate: string;
+  sourceServiceId?: string;
 };
 
 export type Proposal = {
@@ -120,3 +121,5 @@ export type DirectMessage = {
     text: string;
     timestamp: string; // ISO date string
 };
+
+    

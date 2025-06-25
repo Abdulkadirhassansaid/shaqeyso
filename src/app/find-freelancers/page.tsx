@@ -21,24 +21,29 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 
 export default function FindFreelancersPage() {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, addTransaction } = useAuth();
   const { users, isUsersLoading } = useUsers();
-  const { jobs, isJobsLoading } = useJobs();
+  const { jobs, isJobsLoading, createJobFromService } = useJobs();
   const { reviews, isReviewsLoading } = useReviews();
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
   const [profilesLoading, setProfilesLoading] = React.useState(true);
   const router = useRouter();
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
   const [chattingWith, setChattingWith] = React.useState<User | null>(null);
+  const [requestingService, setRequestingService] = React.useState<Service | null>(null);
+
 
   React.useEffect(() => {
     if (!isAuthLoading && user?.role === 'freelancer') {
@@ -90,6 +95,45 @@ export default function FindFreelancersPage() {
     });
   }, [freelancers, freelancerProfiles, searchQuery]);
   
+  const handleRequestService = async () => {
+    if (!requestingService || !user || !selectedFreelancer) return;
+
+    const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+
+    if (clientBalance < requestingService.price) {
+        toast({
+            title: t.insufficientFundsTitle,
+            description: t.insufficientFundsDesc,
+            variant: 'destructive',
+        });
+        setRequestingService(null);
+        return;
+    }
+
+    const jobResult = await createJobFromService(requestingService, selectedFreelancer.id, user.id);
+
+    if (jobResult.success && jobResult.jobId) {
+        await addTransaction(user.id, {
+            description: `${t.escrowFunding} for service "${requestingService.title}"`,
+            amount: -requestingService.price,
+            status: 'Completed',
+        });
+
+        toast({
+            title: t.serviceRequested,
+            description: t.serviceRequestedDesc,
+        });
+        setRequestingService(null);
+        setSelectedFreelancer(null);
+    } else {
+        toast({
+            title: t.serviceRequestFailed,
+            description: t.serviceRequestFailedDesc,
+            variant: 'destructive',
+        });
+    }
+  };
+  
   const isLoading = isAuthLoading || isUsersLoading || isJobsLoading || isReviewsLoading || profilesLoading;
   
   const selectedProfile = freelancerProfiles.find(p => p.userId === selectedFreelancer?.id);
@@ -118,7 +162,7 @@ export default function FindFreelancersPage() {
                 </div>
                 
                 {isLoading ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[...Array(6)].map((_, i) => (
                            <Card key={i} className="flex flex-col">
                                 <CardContent className="p-6 flex-grow flex flex-col">
@@ -148,7 +192,7 @@ export default function FindFreelancersPage() {
                         ))}
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredFreelancers.length > 0 ? filteredFreelancers.map(f => {
                             const level = getFreelancerLevel(f.id);
                             const { rating, count } = getFreelancerRating(f.id);
@@ -165,12 +209,12 @@ export default function FindFreelancersPage() {
                                             <div className="flex-grow">
                                                 <div className="flex justify-between items-start">
                                                     <CardTitle className="text-lg">{f.name}</CardTitle>
-                                                    {profile?.hourlyRate > 0 && (
+                                                    {profile?.hourlyRate && profile.hourlyRate > 0 ? (
                                                         <div className="text-right shrink-0">
                                                             <span className="font-bold text-lg">${profile.hourlyRate.toFixed(2)}</span>
                                                             <span className="text-xs text-muted-foreground">/hr</span>
                                                         </div>
-                                                    )}
+                                                    ) : null}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <StarRating rating={rating} />
@@ -243,7 +287,7 @@ export default function FindFreelancersPage() {
                             <div className="space-y-4">
                                 <h3 className="font-semibold">{t.myServices}</h3>
                                 {selectedProfile.services && selectedProfile.services.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid sm:grid-cols-2 gap-4">
                                         {selectedProfile.services.map(service => (
                                             <Card key={service.id} className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
                                                 <div className="relative aspect-video bg-muted">
@@ -269,8 +313,8 @@ export default function FindFreelancersPage() {
                                                     <p className="text-sm text-muted-foreground line-clamp-2 flex-grow">{service.description}</p>
                                                 </div>
                                                 <CardFooter>
-                                                    <Button size="sm" className="w-full" onClick={() => setChattingWith(selectedFreelancer)}>
-                                                        {t.requestQuote}
+                                                    <Button size="sm" className="w-full" onClick={() => setRequestingService(service)}>
+                                                        {t.requestService}
                                                     </Button>
                                                 </CardFooter>
                                             </Card>
@@ -297,7 +341,27 @@ export default function FindFreelancersPage() {
                     onClose={() => setChattingWith(null)}
                 />
             )}
+            {requestingService && selectedFreelancer && (
+                <AlertDialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{t.confirmServiceRequest}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {t.confirmServiceRequestDesc
+                                    .replace('{serviceTitle}', requestingService.title)
+                                    .replace('{price}', `$${requestingService.price.toFixed(2)}`)}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleRequestService}>{t.confirm}</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </main>
     </div>
   );
 }
+
+    
