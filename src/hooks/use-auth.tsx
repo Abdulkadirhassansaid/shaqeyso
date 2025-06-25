@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -34,7 +33,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }>;
-  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer') => Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
+  signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer' | 'admin') => Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
   logout: () => void;
   updateUserProfile: (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>) => Promise<boolean>;
   addPaymentMethod: (userId: string, method: Omit<PaymentMethod, 'id'>) => Promise<boolean>;
@@ -87,14 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
 
-     const signup = React.useCallback(async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
+     const signup = React.useCallback(async (name: string, email: string, pass: string, role: 'client' | 'freelancer' | 'admin'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
         if (!auth || !db) return { success: false, message: 'unknown' };
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
             const authUser = userCredential.user;
 
             let initialTransactions: Transaction[] = [];
-            const isAdmin = email.toLowerCase() === 'abdikadirhassan2015@gmail.com';
+            const isAdmin = email.toLowerCase() === 'mahiryare@gmail.com';
             const finalRole = isAdmin ? 'admin' : role;
 
             if (finalRole === 'client') {
@@ -166,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return { success: true, user: userDocSnap.data() as User };
         } catch (error: any) {
              // If login failed because the user doesn't exist, and it's the special admin user, create them.
-            if (error.code === 'auth/user-not-found' && email.toLowerCase() === 'abdikadirhassan2015@gmail.com' && pass === 'Mahir4422') {
+            if (error.code === 'auth/user-not-found' && email.toLowerCase() === 'mahiryare@gmail.com' && pass === 'Mahir4422') {
                 const signupResult = await signup('Admin', email, pass, 'admin');
                 if (signupResult.success && signupResult.user) {
                     return { success: true, user: signupResult.user };
