@@ -551,16 +551,16 @@ export function FreelancerDashboard() {
           </Dialog>
       )}
       <AlertDialog open={!!deletingProposal} onOpenChange={(isOpen) => !isOpen && setDeletingProposal(null)}>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>{t.deleteProposalConfirmTitle}</AlertDialogTitle>
-                  <AlertDialogDescription>{t.deleteProposalConfirmDesc}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setDeletingProposal(null)}>{t.cancel}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteProposal} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>{t.deleteProposalConfirmTitle}</AlertDialogTitle>
+                <AlertDialogDescription>{t.deleteProposalConfirmDesc}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeletingProposal(null)}>{t.cancel}</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteProposal} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
       </AlertDialog>
     </>
   );
