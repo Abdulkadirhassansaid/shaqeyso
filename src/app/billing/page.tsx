@@ -380,7 +380,7 @@ export default function BillingPage() {
                         <TableRow key={tx.id}>
                         <TableCell>{format(new Date(tx.date), 'yyyy-MM-dd')}</TableCell>
                         <TableCell className="font-medium">{tx.description}</TableCell>
-                        <TableCell className={`text-right font-medium ${tx.amount > 0 ? 'text-green-500' : 'text-destructive'}`}>
+                        <TableCell className={`text-right font-medium ${tx.amount > 0 ? 'text-success' : 'text-destructive'}`}>
                             {tx.amount > 0 ? `+$${tx.amount.toFixed(2)}` : `-$${Math.abs(tx.amount).toFixed(2)}`}
                         </TableCell>
                         <TableCell className="text-right">

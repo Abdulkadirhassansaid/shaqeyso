@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -120,7 +119,7 @@ export function FreelancerVerificationForm({ user }: FreelancerVerificationFormP
                         {t.uploadFile}
                     </Button>
                     {idDoc ? (
-                        <div className="mt-2 flex items-center text-sm text-green-600">
+                        <div className="mt-2 flex items-center text-sm text-success">
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             <span>{idDoc.name}</span>
                         </div>

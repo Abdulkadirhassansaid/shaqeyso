@@ -453,13 +453,13 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
 
                            {status === 'InProgress' && hiredFreelancer && (
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                                  <ShieldCheck className="h-5 w-5 text-success" />
                                   <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
                               </div>
                           )}
                           {status === 'Completed' && hiredFreelancer && (
                                 <div className="flex items-center gap-4">
-                                    <div className="flex items-center text-sm text-green-500 gap-2">
+                                    <div className="flex items-center text-sm text-success gap-2">
                                         <CheckCircle className="h-5 w-5"/>
                                         <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
                                     </div>

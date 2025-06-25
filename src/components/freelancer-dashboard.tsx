@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -298,7 +297,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                     </CardContent>
                     <CardFooter className='flex-col items-stretch gap-4'>
                         <div className="flex items-center gap-2 text-base font-semibold">
-                            <DollarSign className="h-5 w-5 text-green-500" />
+                            <DollarSign className="h-5 w-5 text-success" />
                             <span>${job.budget.toFixed(2)}</span>
                         </div>
                         <Button className="w-full" onClick={() => setSelectedJob(job)}>{t.viewAndApply}</Button>
@@ -332,7 +331,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             <div className="mt-4 space-y-2 text-sm">
                                 {client && <p className="font-medium">{t.client}: {client.name}</p>}
                                 {job.status === 'InProgress' && (
-                                    <div className="flex items-center text-green-600 gap-2 font-medium">
+                                    <div className="flex items-center text-success gap-2 font-medium">
                                         <ShieldCheck className="h-4 w-4"/>
                                         <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
                                     </div>
@@ -341,8 +340,8 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                         </CardContent>
                         <CardFooter className="flex-col items-stretch gap-2">
                             {job.status === 'Completed' && (
-                                <div className="flex flex-col items-stretch gap-2 w-full p-3 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-500/30">
-                                    <div className="flex items-center text-sm text-green-600 dark:text-green-400 gap-2">
+                                <div className="flex flex-col items-stretch gap-2 w-full p-3 bg-success/10 border border-success/20 rounded-lg dark:bg-success/20 dark:border-success/30">
+                                    <div className="flex items-center text-sm text-success dark:text-success/90 gap-2">
                                         <CheckCircle className="h-5 w-5"/>
                                         <span>{t.projectCompletedAndPaid}</span>
                                     </div>
