@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -28,6 +27,7 @@ import {
 import { auth, db, storage } from '@/lib/firebase';
 import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
 import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
+import { useLoading } from './use-loading';
 
 interface AuthContextType {
   user: User | null;
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const router = useRouter();
+    const { setIsLoading: setPageIsLoading } = useLoading();
 
     React.useEffect(() => {
         if (!auth || !db) {
@@ -168,10 +169,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = React.useCallback(async () => {
         if (!auth) return;
+        setPageIsLoading(true);
         await signOut(auth);
         setUser(null);
         router.push('/login');
-    }, [router]);
+    }, [router, setPageIsLoading]);
 
     const updateUserProfile = React.useCallback(async (userId: string, userData: Partial<User>, profileData?: Partial<FreelancerProfile | ClientProfile>): Promise<boolean> => {
         if (!db) return false;
@@ -323,11 +325,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
     const uploadFile = React.useCallback(async (path: string, file: File): Promise<string> => {
-        if (!storage) throw new Error("Firebase Storage not initialized");
-        const fileRef = storageRef(storage, path);
-        await uploadBytes(fileRef, file);
-        const downloadUrl = await getDownloadURL(fileRef);
-        return downloadUrl;
+        // This is a mocked upload since storage is not enabled.
+        // It returns a data URL for immediate local preview.
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (typeof reader.result === 'string') {
+                    localStorage.setItem(`mock_avatar_${path}`, reader.result);
+                    resolve(reader.result);
+                } else {
+                    reject(new Error("Failed to convert file to data URL"));
+                }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     }, []);
 
     const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, uploadFile }), 
