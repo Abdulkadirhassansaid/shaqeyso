@@ -55,8 +55,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
 
     const q = query(
         collection(db, 'directMessages'), 
-        where('participantIds', '==', sortedIds),
-        orderBy('timestamp', 'asc')
+        where('participantIds', '==', sortedIds)
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -66,6 +65,8 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
           timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
       } as DirectMessage));
       
+      messagesData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
       setDirectMessages(messagesData);
     }, (error) => {
         console.error("Error fetching direct messages:", error);
