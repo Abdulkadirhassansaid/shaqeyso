@@ -45,12 +45,13 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setIsSaving(true);
     
     let avatarUrl = user.avatarUrl;
     if (newAvatarFile) {
         try {
-            const filePath = `avatars/${user.id}/${newAvatarFile.name}`;
+            const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
             avatarUrl = await uploadFile(filePath, newAvatarFile);
         } catch (error) {
             console.error("Error uploading avatar:", error);

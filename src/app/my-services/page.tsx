@@ -150,23 +150,23 @@ export default function MyServicesPage() {
 
     try {
       const serviceId = editingService?.id || `service-${Date.now()}`;
-
-      const uploadPromises: Promise<string>[] = [];
-      const existingUrls: string[] = [];
-
-      serviceImages.forEach((image) => {
-        if (typeof image === 'string') {
-          existingUrls.push(image);
-        } else {
-          const filePath = `services/${user.id}/${serviceId}/${image.name}`;
-          uploadPromises.push(uploadFile(filePath, image));
-        }
-      });
+      
+      const uploadPromises = serviceImages
+        .filter((image): image is File => typeof image !== 'string')
+        .map((file, index) => {
+          const filePath = `services/${user.id}/${serviceId}/${Date.now()}-${index}-${file.name}`;
+          return uploadFile(filePath, file);
+        });
 
       const newImageUrls = await Promise.all(uploadPromises);
-      const allImageUrls = [...existingUrls, ...newImageUrls];
+      const existingImageUrls = serviceImages.filter(
+        (image): image is string => typeof image === 'string'
+      );
+      
+      const allImageUrls = [...existingImageUrls, ...newImageUrls];
 
-      const newService = {
+
+      const newService: Service = {
         id: serviceId,
         title: serviceTitle,
         description: serviceDesc,
@@ -473,7 +473,6 @@ export default function MyServicesPage() {
                       ref={serviceImageInputRef}
                       className="hidden"
                       accept="image/png, image/jpeg"
-                      multiple
                       onChange={handleServiceImageChange}
                       disabled={isServiceSaving}
                     />
