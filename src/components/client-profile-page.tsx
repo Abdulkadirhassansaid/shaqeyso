@@ -124,9 +124,14 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
 
     setIsSaving(true);
     try {
-      const userData = {
+      const userData: Partial<User> = {
         name: companyName,
       };
+
+      if (avatarPreview !== user.avatarUrl && avatarPreview.startsWith('http')) {
+        userData.avatarUrl = avatarPreview;
+        localStorage.removeItem(`mock_avatar_${user.id}`);
+      }
 
       const profileData = {
         companyName,
@@ -166,24 +171,11 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
     }
   };
 
-  const handleAvatarUrlSave = async () => {
+  const handleSetAvatarFromUrl = () => {
     if (!imageUrl || !user) return;
-    setIsSaving(true);
-    try {
-        const success = await updateUserProfile(user.id, { avatarUrl: imageUrl });
-        if (success) {
-            toast({ title: t.profileUpdated, description: 'Your avatar has been updated.' });
-            // The onSnapshot listener in useAuth will update the user object and re-render.
-        } else {
-            throw new Error('Avatar update via URL failed');
-        }
-    } catch(error) {
-         toast({ title: t.updateFailed, description: (error as Error).message, variant: 'destructive' });
-    } finally {
-        setIsUrlDialogOpen(false);
-        setImageUrl('');
-        setIsSaving(false);
-    }
+    setAvatarPreview(imageUrl);
+    setIsUrlDialogOpen(false);
+    setImageUrl('');
   };
 
   return (
@@ -333,8 +325,8 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
             </div>
             <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsUrlDialogOpen(false)}>{t.cancel}</Button>
-                <Button type="button" onClick={handleAvatarUrlSave} disabled={!imageUrl || isSaving}>
-                    {isSaving ? t.saving : t.saveAvatar}
+                <Button type="button" onClick={handleSetAvatarFromUrl} disabled={!imageUrl}>
+                    {t.setAvatar}
                 </Button>
             </DialogFooter>
         </DialogContent>
