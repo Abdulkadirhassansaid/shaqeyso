@@ -523,7 +523,9 @@ export function AdminDashboard() {
                                             <p className="text-sm font-medium leading-none">{tx.user?.name ?? 'Unknown User'}</p>
                                             <p className="text-sm text-muted-foreground">{tx.description}</p>
                                         </div>
-                                        <div className="ml-auto font-medium text-success">+${tx.amount.toFixed(2)}</div>
+                                        <div className={`ml-auto font-medium ${tx.amount > 0 ? 'text-success' : 'text-destructive'}`}>
+                                            {tx.amount > 0 ? `+$${tx.amount.toFixed(2)}` : `-$${Math.abs(tx.amount).toFixed(2)}`}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
