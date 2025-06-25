@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,21 +9,32 @@ import { ClientDashboard } from '@/components/client-dashboard';
 import { FreelancerDashboard } from '@/components/freelancer-dashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLoading } from '@/hooks/use-loading';
 
 export default function ShaqeysoHubApp() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { setIsLoading } = useLoading();
 
   React.useEffect(() => {
     if (isLoading) {
       return;
     }
     if (!user) {
+      setIsLoading(true);
       router.replace('/login');
+      return;
     }
-  }, [isLoading, user, router]);
+    
+    if (user.role !== 'admin' && user.verificationStatus === 'unverified') {
+        setIsLoading(true);
+        router.replace('/onboarding');
+        return;
+    }
 
-  if (isLoading || !user) {
+  }, [isLoading, user, router, setIsLoading]);
+
+  if (isLoading || !user || (user.role !== 'admin' && user.verificationStatus === 'unverified')) {
     return null;
   }
 

@@ -27,6 +27,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Shaqeyso Hub',
   description: 'A freelancer marketplace for Somali users.',
+  icons: null,
 };
 
 export default function RootLayout({
