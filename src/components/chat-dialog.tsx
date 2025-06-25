@@ -111,11 +111,16 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
         size: f.size
     }));
     
-    addMessage({
-      senderId: user.id,
-      text: newMessage,
-      files: fileData.length > 0 ? fileData : undefined,
-    });
+    const messageData: Omit<Message, 'id' | 'timestamp'> = {
+        senderId: user.id,
+        text: newMessage,
+    };
+
+    if (fileData.length > 0) {
+        messageData.files = fileData;
+    }
+
+    addMessage(messageData);
     setNewMessage('');
     setFiles([]);
   };
