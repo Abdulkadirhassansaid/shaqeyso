@@ -50,6 +50,19 @@ import { Textarea } from './ui/textarea';
 import { useUsers } from '@/hooks/use-users';
 import { Skeleton } from './ui/skeleton';
 
+const getFileExtensionFromDataUrl = (dataUrl: string): string => {
+    if (!dataUrl) return 'bin';
+    const mimeMatch = dataUrl.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+    if (!mimeMatch) return 'bin';
+    const mimeType = mimeMatch[1];
+    switch (mimeType) {
+        case 'image/jpeg': return 'jpg';
+        case 'image/png': return 'png';
+        case 'application/pdf': return 'pdf';
+        default: return mimeType.split('/')[1] || 'bin';
+    }
+}
+
 export function AdminDashboard() {
   const { toggleUserBlockStatus, deleteUser, addTransaction, approveVerification, rejectVerification } = useAuth();
   const { users, isUsersLoading } = useUsers();
@@ -919,7 +932,7 @@ export function AdminDashboard() {
                              <div className="space-y-2">
                                 <Label>{t.idUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                    {reviewingUser.passportOrIdUrl.includes('.pdf') ? (
+                                    {reviewingUser.passportOrIdUrl.startsWith('data:application/pdf') ? (
                                         <div className="p-4 flex items-center gap-2 text-foreground">
                                             <FileText className="h-6 w-6 text-muted-foreground" />
                                             <span className="font-medium">PDF Document</span>
@@ -933,12 +946,18 @@ export function AdminDashboard() {
                                             className="object-contain w-full h-auto rounded-md"
                                         />
                                     )}
-                                    <div className="flex justify-end pt-1">
-                                        <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                                            <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer">
-                                                <ExternalLink className="mr-2 h-4 w-4" />
-                                                {t.view} / {t.download}
-                                            </a>
+                                    <div className="flex justify-end gap-2 pt-1">
+                                        <Button asChild size="sm" variant="outline">
+                                           <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer">
+                                               <ExternalLink className="mr-2 h-4 w-4" />
+                                               {t.view}
+                                           </a>
+                                        </Button>
+                                        <Button asChild size="sm">
+                                           <a href={reviewingUser.passportOrIdUrl} download={`id-document-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.passportOrIdUrl)}`}>
+                                               <Download className="mr-2 h-4 w-4" />
+                                               {t.download}
+                                           </a>
                                         </Button>
                                     </div>
                                 </div>
@@ -949,7 +968,7 @@ export function AdminDashboard() {
                             <div className="space-y-2">
                                 <Label>{t.certUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                     {reviewingUser.businessCertificateUrl.includes('.pdf') ? (
+                                     {reviewingUser.businessCertificateUrl.startsWith('data:application/pdf') ? (
                                         <div className="p-4 flex items-center gap-2 text-foreground">
                                             <FileText className="h-6 w-6 text-muted-foreground" />
                                             <span className="font-medium">PDF Document</span>
@@ -963,12 +982,18 @@ export function AdminDashboard() {
                                             className="object-contain w-full h-auto rounded-md"
                                         />
                                     )}
-                                    <div className="flex justify-end pt-1">
-                                        <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                                    <div className="flex justify-end gap-2 pt-1">
+                                        <Button asChild size="sm" variant="outline">
                                              <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer">
                                                 <ExternalLink className="mr-2 h-4 w-4" />
-                                                {t.view} / {t.download}
+                                                {t.view}
                                             </a>
+                                        </Button>
+                                        <Button asChild size="sm">
+                                           <a href={reviewingUser.businessCertificateUrl} download={`business-certificate-${reviewingUser.id}.${getFileExtensionFromDataUrl(reviewingUser.businessCertificateUrl)}`}>
+                                               <Download className="mr-2 h-4 w-4" />
+                                               {t.download}
+                                           </a>
                                         </Button>
                                     </div>
                                 </div>
