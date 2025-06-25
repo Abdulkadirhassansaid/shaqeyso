@@ -59,7 +59,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          'min-h-screen bg-muted/40 font-body antialiased',
+          'min-h-screen bg-muted font-body antialiased',
           inter.variable
         )}
       >
