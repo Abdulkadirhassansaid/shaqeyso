@@ -11,7 +11,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Camera } from 'lucide-react';
+import { Camera, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface AdminProfilePageProps {
   user: User;
@@ -65,7 +66,15 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+            <Button asChild variant="outline" size="sm">
+                <Link href="/admin/dashboard">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {t.adminDashboard}
+                </Link>
+            </Button>
+        </div>
       <Card>
         <CardHeader>
           <CardTitle>{t.adminProfileTitle}</CardTitle>
