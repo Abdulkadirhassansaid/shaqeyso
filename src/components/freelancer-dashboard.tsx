@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Job, User, Proposal, FreelancerProfile } from '@/lib/types';
-import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck } from 'lucide-react';
+import type { Job, User, Proposal, FreelancerProfile, SubmittedFile } from '@/lib/types';
+import { ArrowLeft, DollarSign, Tag, Clock, Search, Wand2, CheckCircle, MessageSquare, ShieldCheck, Star, Edit, Trash2, Calendar, AlertCircle, BadgeCheck, UploadCloud } from 'lucide-react';
 import { ProposalForm } from './proposal-form';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -45,6 +46,8 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
+import { SubmitProjectDialog } from './submit-project-dialog';
+import { fileToDataUrl } from '@/lib/utils';
 
 
 interface FreelancerDashboardProps {
@@ -57,7 +60,7 @@ type RecommendedJob = Job & {
 };
 
 export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
-  const { jobs, markJobAsReviewed } = useJobs();
+  const { jobs, markJobAsReviewed, submitForApproval } = useJobs();
   const { proposals, deleteProposal } = useProposals();
   const { users: allUsers } = useUsers();
   const { toast } = useToast();
@@ -67,6 +70,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   const [editingProposal, setEditingProposal] = React.useState<Proposal | null>(null);
   const [deletingProposal, setDeletingProposal] = React.useState<Proposal | null>(null);
   const [viewingProposal, setViewingProposal] = React.useState<Proposal | null>(null);
+  const [jobToSubmit, setJobToSubmit] = React.useState<Job | null>(null);
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [recommendedJobs, setRecommendedJobs] = React.useState<RecommendedJob[]>([]);
@@ -151,6 +155,26 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
       toast({ title: t.proposalDeleted, description: t.proposalDeletedDesc });
     }
     setDeletingProposal(null);
+  };
+
+  const handleSubmitProject = async (jobId: string, files: File[]) => {
+    const filePromises = files.map(file => fileToDataUrl(file).then(url => ({
+        name: file.name,
+        url,
+        type: file.type,
+        size: file.size,
+    })));
+    
+    const submittedFiles: SubmittedFile[] = await Promise.all(filePromises);
+
+    const success = await submitForApproval(jobId, submittedFiles);
+    
+    if (success) {
+        toast({ title: t.submissionSuccess, description: t.submissionSuccessDesc });
+    } else {
+        toast({ title: t.submissionFailed, description: t.submissionFailedDesc, variant: 'destructive' });
+    }
+    setJobToSubmit(null);
   };
 
 
@@ -240,7 +264,7 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
   );
   
   const myProposals = proposals.filter(p => p.freelancerId === user.id);
-  const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed'].includes(job.status));
+  const myProjects = jobs.filter(job => job.hiredFreelancerId === user.id && ['InProgress', 'Completed', 'PendingApproval'].includes(job.status));
 
   const renderFindWorkContent = () => {
     if (openJobs.length === 0) {
@@ -318,19 +342,22 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
         <div className="grid gap-4 md:grid-cols-2">
             {myProjects.map(job => {
                 const client = allUsers.find(u => u.id === job.clientId);
+                const status = job.status as Job['status'];
+                const statusVariant = status === 'Completed' ? 'default' : status === 'PendingApproval' ? 'accent' : 'secondary';
+                
                 return (
                     <Card key={job.id} className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row justify-between items-start">
                             <CardTitle className="text-lg">{job.title}</CardTitle>
-                            <Badge variant={job.status === 'Completed' ? 'default' : 'secondary'}>
-                              {t[job.status.toLowerCase() as keyof typeof t] || job.status}
+                            <Badge variant={statusVariant}>
+                              {t[status.toLowerCase() as keyof typeof t] || status}
                             </Badge>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground line-clamp-2">{job.description}</p>
                             <div className="mt-4 space-y-2 text-sm">
                                 {client && <p className="font-medium">{t.client}: {client.name}</p>}
-                                {job.status === 'InProgress' && (
+                                {(status === 'InProgress' || status === 'PendingApproval') && (
                                     <div className="flex items-center text-success gap-2 font-medium">
                                         <ShieldCheck className="h-4 w-4"/>
                                         <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
@@ -339,7 +366,13 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                             </div>
                         </CardContent>
                         <CardFooter className="flex-col items-stretch gap-2">
-                            {job.status === 'Completed' && (
+                            {status === 'InProgress' && (
+                                <Button className="w-full" onClick={() => setJobToSubmit(job)}>
+                                    <UploadCloud className="mr-2 h-4 w-4" />
+                                    {t.submitForApproval}
+                                </Button>
+                            )}
+                            {status === 'Completed' && (
                                 <div className="flex flex-col items-stretch gap-2 w-full p-3 bg-success/10 border border-success/20 rounded-lg dark:bg-success/20 dark:border-success/30">
                                     <div className="flex items-center text-sm text-success dark:text-success/90 gap-2">
                                         <CheckCircle className="h-5 w-5"/>
@@ -357,10 +390,12 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                                     </Button>
                                 </div>
                             )}
-                            <Button className="w-full" variant="outline" onClick={() => setJobToChat(job)}>
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                {t.chatWithClient}
-                            </Button>
+                            {(status === 'InProgress' || status === 'PendingApproval') && (
+                                <Button className="w-full" variant="outline" onClick={() => setJobToChat(job)}>
+                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                    {t.chatWithClient}
+                                </Button>
+                            )}
                         </CardFooter>
                     </Card>
                 )
@@ -483,6 +518,14 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
               reviewee={allUsers.find(u => u.id === jobToReview.clientId)}
               job={jobToReview}
               onSubmit={handleReviewSubmit}
+          />
+      )}
+      {jobToSubmit && (
+          <SubmitProjectDialog
+              isOpen={!!jobToSubmit}
+              job={jobToSubmit}
+              onClose={() => setJobToSubmit(null)}
+              onSubmit={handleSubmitProject}
           />
       )}
       {viewingProposal && (

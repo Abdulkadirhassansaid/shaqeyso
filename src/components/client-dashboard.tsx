@@ -257,6 +257,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
     switch (status) {
         case 'Open': return 'default';
         case 'Completed': return 'default';
+        case 'PendingApproval': return 'accent';
         default: return 'secondary';
     }
   };
@@ -374,7 +375,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                   )}
               </div>
               </CardContent>
-              {selectedJob.status === 'InProgress' && hiredFreelancer && (
+              {selectedJob.status === 'PendingApproval' && hiredFreelancer && (
                   <CardFooter>
                       <ApprovePaymentDialog
                           job={selectedJob}
@@ -449,7 +450,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                   <CardFooter className="flex justify-between items-center">
                       <div className="flex items-center gap-4 flex-wrap">
                          <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
-                         {job.status === 'InProgress' && hiredFreelancer && (
+                         {(job.status === 'InProgress' || job.status === 'PendingApproval') && hiredFreelancer && (
                               <Button variant="outline" onClick={() => setJobToChat(job)}>
                                   <MessageSquare className="mr-2 h-4 w-4" />
                                   {t.chatWith} {hiredFreelancer.name}
@@ -461,6 +462,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                   <ShieldCheck className="h-5 w-5 text-success" />
                                   <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
                               </div>
+                          )}
+                          {status === 'PendingApproval' && hiredFreelancer && (
+                            <ApprovePaymentDialog
+                                job={job}
+                                freelancer={hiredFreelancer}
+                                onConfirm={() => handleApproveAndPay(job.id)}
+                            >
+                                <Button>{t.approveAndPay}</Button>
+                            </ApprovePaymentDialog>
                           )}
                           {status === 'Completed' && hiredFreelancer && (
                                 <div className="flex items-center gap-4">
@@ -556,7 +566,7 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                 </CardHeader>
                                 <CardFooter className="flex justify-between items-center">
                                     <div className="flex items-center gap-4 flex-wrap">
-                                        {job.status === 'InProgress' && hiredFreelancer && (
+                                        {(job.status === 'InProgress' || job.status === 'PendingApproval') && hiredFreelancer && (
                                             <Button variant="outline" onClick={() => setJobToChat(job)}>
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 {t.chatWith} {hiredFreelancer.name}
@@ -567,6 +577,15 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                                 <ShieldCheck className="h-5 w-5 text-success" />
                                                 <span>${job.budget.toFixed(2)} {t.inEscrow}</span>
                                             </div>
+                                        )}
+                                        {status === 'PendingApproval' && hiredFreelancer && (
+                                            <ApprovePaymentDialog
+                                                job={job}
+                                                freelancer={hiredFreelancer}
+                                                onConfirm={() => handleApproveAndPay(job.id)}
+                                            >
+                                                <Button>{t.approveAndPay}</Button>
+                                            </ApprovePaymentDialog>
                                         )}
                                         {status === 'Completed' && hiredFreelancer && (
                                             <div className="flex items-center gap-4">

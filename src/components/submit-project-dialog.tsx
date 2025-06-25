@@ -54,6 +54,13 @@ export function SubmitProjectDialog({ job, isOpen, onClose, onSubmit }: SubmitPr
     onSubmit(job.id, files);
   };
 
+  // Reset files when dialog closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setFiles([]);
+    }
+  }, [isOpen]);
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>

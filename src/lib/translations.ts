@@ -58,6 +58,15 @@ export const translations = {
         addImageFromUrlDesc: "Paste an image URL to add it to your service.",
         addImage: "Add Image",
         confirm: "Confirm",
+        pendingapproval: 'Pending Approval',
+        submitForApproval: 'Submit for Approval',
+        submitProject: 'Submit Project',
+        submitFiles: 'Upload your final work files for client review.',
+        dragAndDrop: "Drag 'n' drop some files here, or click to select files",
+        noFilesSelected: 'No files selected.',
+        submissionSuccess: "Project Submitted",
+        submissionSuccessDesc: "Your work has been submitted to the client for approval.",
+
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -520,7 +529,7 @@ export const translations = {
         servicePrice: 'Service Price ($)',
         serviceImages: 'Portfolio Images',
         uploadImages: 'Upload Images',
-        requestService: "Contact About Service",
+        requestService: "Request Service",
         deliveryTime: 'Delivery Time',
         days: 'days',
         standardDelivery: 'Standard Delivery',
@@ -599,6 +608,14 @@ export const translations = {
         addImageFromUrlDesc: "Ku dheji URL sawir si aad ugu darto adeeggaaga.",
         addImage: "Kudar Sawir",
         confirm: "Xaqiiji",
+        pendingapproval: 'Sugaya Ansixinta',
+        submitForApproval: 'U Gudbi Ansixin',
+        submitProject: 'Gudbi Mashruuca',
+        submitFiles: 'Soo geli faylashaada shaqada ee ugu dambeeya si macmiilku u eego.',
+        dragAndDrop: "Faylasha halkan ku soo jiid oo ku rid, ama guji si aad u doorato",
+        noFilesSelected: 'Faylasha lama dooran.',
+        submissionSuccess: "Mashruuca Waa La Gudbiyey",
+        submissionSuccessDesc: "Shaqadaada waxaa loo gudbiyey macmiilka si uu u ansixiyo.",
 
         // Header
         shaqoFinder: 'Shaqeyso Hub',
@@ -1061,7 +1078,7 @@ export const translations = {
         servicePrice: 'Qiimaha Adeegga ($)',
         serviceImages: 'Sawirrada Portfolio',
         uploadImages: 'Soo Geli Sawirro',
-        requestService: "La xiriir Adeegga ku saabsan",
+        requestService: "Request Service",
         deliveryTime: 'Wakhtiga Gudbinta',
         days: 'maalmood',
         standardDelivery: 'Gudbin Caadi ah',
