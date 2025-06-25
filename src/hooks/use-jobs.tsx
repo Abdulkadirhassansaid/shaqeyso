@@ -164,10 +164,11 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     tier: 'standard' | 'fast'
   ): Promise<{ success: boolean; message?: string }> => {
     if (!db) return { success: false, message: "Database not connected." };
+    
+    const price = tier === 'fast' && service.fastDelivery ? service.fastDelivery.price : service.price;
+    const deliveryTime = tier === 'fast' && service.fastDelivery ? service.fastDelivery.days : service.deliveryTime;
 
-    const selectedTier = tier === 'fast' && service.fastDelivery ? service.fastDelivery : { price: service.price, days: service.deliveryTime };
-
-    if (!selectedTier || typeof selectedTier.price !== 'number' || typeof selectedTier.days !== 'number') {
+    if (typeof price !== 'number' || typeof deliveryTime !== 'number' || isNaN(deliveryTime)) {
         return { success: false, message: "Invalid service pricing or delivery information." };
     }
 
@@ -181,21 +182,17 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     const clientData = clientSnap.data() as User;
     const clientBalance = (clientData.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
 
-    if (clientBalance < selectedTier.price) {
+    if (clientBalance < price) {
         return { success: false, message: "Insufficient funds. Please top up your balance." };
     }
 
-    const deliveryDays = Number(selectedTier.days);
-    if (isNaN(deliveryDays)) {
-      return { success: false, message: "Invalid delivery time value." };
-    }
-    const deadline = addDays(new Date(), deliveryDays);
+    const deadline = addDays(new Date(), deliveryTime);
 
     const newJobData = {
         title: `Service Order: ${service.title}`,
         description: `This job was automatically created from a service request.\n\nService Description:\n${service.description}`,
         category: 'Service Request',
-        budget: selectedTier.price,
+        budget: price,
         deadline: format(deadline, 'yyyy-MM-dd'),
         clientId: clientId,
         status: 'InProgress' as Job['status'],
@@ -209,7 +206,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     
     const newTransaction: Omit<Transaction, 'id' | 'date'> = {
         description: `Payment for "${service.title}"`,
-        amount: -selectedTier.price,
+        amount: -price,
         status: 'Completed',
     };
 

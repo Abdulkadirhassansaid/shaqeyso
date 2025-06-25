@@ -41,7 +41,14 @@ export default function FindFreelancersPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const { toast } = useToast();
-
+  
+  // Early exit for roles should happen after hooks
+  React.useEffect(() => {
+    if (!isAuthLoading && user?.role === 'freelancer') {
+      router.replace('/');
+    }
+  }, [user, isAuthLoading, router]);
+  
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
   const [chattingWith, setChattingWith] = React.useState<User | null>(null);
@@ -50,15 +57,6 @@ export default function FindFreelancersPage() {
   const [requestingService, setRequestingService] = React.useState<{ freelancer: User; service: Service } | null>(null);
   const [selectedDeliveryTier, setSelectedDeliveryTier] = React.useState<'standard' | 'fast' | null>(null);
   const [isSubmittingServiceRequest, setIsSubmittingServiceRequest] = React.useState(false);
-  
-  const clientBalance = (user?.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
-
-  // Early exit for roles should happen after hooks
-  React.useEffect(() => {
-    if (!isAuthLoading && user?.role === 'freelancer') {
-      router.replace('/');
-    }
-  }, [user, isAuthLoading, router]);
 
   React.useEffect(() => {
     if (!db) return;
@@ -395,32 +393,14 @@ export default function FindFreelancersPage() {
                                     </Label>
                                 )}
                             </RadioGroup>
-                            
-                            {selectedDeliveryTier && (
-                                <div className="rounded-lg border bg-muted p-3">
-                                    <div className="flex justify-between text-sm font-medium">
-                                        <span>{t.yourBalance}</span>
-                                        <span>${clientBalance.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm font-medium mt-1 text-destructive">
-                                        <span>{t.serviceCost}</span>
-                                        <span>-${(selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price).toFixed(2)}</span>
-                                    </div>
-                                    <Separator className="my-2" />
-                                    <div className="flex justify-between text-sm font-bold">
-                                        <span>{t.remainingBalance}</span>
-                                        <span>${(clientBalance - (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price)).toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
                             <AlertDialogAction 
                                 onClick={handleRequestService} 
-                                disabled={!selectedDeliveryTier || isSubmittingServiceRequest || (clientBalance < (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price))}
+                                disabled={!selectedDeliveryTier || isSubmittingServiceRequest}
                             >
-                                {isSubmittingServiceRequest ? t.processing : (clientBalance < (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price) ? t.insufficientFundsTitle : t.confirmAndPay)}
+                                {isSubmittingServiceRequest ? t.processing : t.confirmAndPay}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
