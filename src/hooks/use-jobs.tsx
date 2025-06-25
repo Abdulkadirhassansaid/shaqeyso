@@ -4,12 +4,12 @@
 import * as React from 'react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs, getDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Job, Service, User, Transaction, SubmittedFile } from '@/lib/types';
+import type { Job, Service, User, Transaction } from '@/lib/types';
 import { addDays, format } from 'date-fns';
 
 interface JobsContextType {
   jobs: Job[];
-  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate' | 'submittedFiles'>) => Promise<boolean>;
+  addJob: (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>) => Promise<boolean>;
   deleteJob: (jobId: string) => Promise<boolean>;
   updateJobStatus: (jobId: string, status: Job['status']) => Promise<boolean>;
   updateJob: (jobId: string, jobData: Partial<Omit<Job, 'id'>>) => Promise<boolean>;
@@ -19,7 +19,6 @@ interface JobsContextType {
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
   createJobFromService: (clientId: string, freelancerId: string, service: Service, tier: 'standard' | 'fast') => Promise<{ success: boolean; message?: string }>;
-  submitForApproval: (jobId: string, files: SubmittedFile[]) => Promise<boolean>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -42,7 +41,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const addJob = React.useCallback(async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate' | 'submittedFiles'>): Promise<boolean> => {
+  const addJob = React.useCallback(async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>): Promise<boolean> => {
     if (!db) return false;
     try {
         await addDoc(collection(db, 'jobs'), {
@@ -233,21 +232,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const submitForApproval = React.useCallback(async (jobId: string, files: SubmittedFile[]): Promise<boolean> => {
-    if (!db) return false;
-    try {
-        await updateDoc(doc(db, 'jobs', jobId), {
-            status: 'PendingApproval',
-            submittedFiles: files,
-        });
-        return true;
-    } catch (error) {
-        console.error("Error submitting project for approval:", error);
-        return false;
-    }
-  }, []);
-
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService, submitForApproval }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService, submitForApproval]);
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

@@ -14,13 +14,6 @@ export type User = {
   businessCertificateUrl?: string;
 };
 
-export type SubmittedFile = {
-  name: string;
-  url: string; // For simulation, this will be a placeholder or blob URL
-  type: string;
-  size: number;
-};
-
 export type Job = {
   id:string;
   title: string;
@@ -29,9 +22,8 @@ export type Job = {
   budget: number;
   deadline: string;
   clientId: string;
-  status: 'Open' | 'Interviewing' | 'InProgress' | 'PendingApproval' | 'Completed';
+  status: 'Open' | 'Interviewing' | 'InProgress' | 'Completed';
   hiredFreelancerId?: string;
-  submittedFiles?: SubmittedFile[];
   clientReviewed?: boolean;
   freelancerReviewed?: boolean;
   postedDate: string;
@@ -107,7 +99,12 @@ export type Message = {
     jobId: string;
     senderId: string;
     text?: string;
-    files?: SubmittedFile[];
+    files?: {
+      name: string;
+      url: string;
+      type: string;
+      size: number;
+    }[];
     timestamp: string; // ISO date string
 };
 
