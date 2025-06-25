@@ -919,7 +919,12 @@ export function AdminDashboard() {
                              <div className="space-y-2">
                                 <Label>{t.idUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                    {reviewingUser.passportOrIdUrl.startsWith('data:image') ? (
+                                    {reviewingUser.passportOrIdUrl.includes('.pdf') ? (
+                                        <div className="p-4 flex items-center gap-2 text-foreground">
+                                            <FileText className="h-6 w-6 text-muted-foreground" />
+                                            <span className="font-medium">PDF Document</span>
+                                        </div>
+                                    ) : (
                                         <Image 
                                             src={reviewingUser.passportOrIdUrl} 
                                             alt="ID Document" 
@@ -927,17 +932,12 @@ export function AdminDashboard() {
                                             height={300} 
                                             className="object-contain w-full h-auto rounded-md"
                                         />
-                                    ) : (
-                                        <div className="p-4 flex items-center gap-2 text-foreground">
-                                            <FileText className="h-6 w-6 text-muted-foreground" />
-                                            <span className="font-medium">PDF Document</span>
-                                        </div>
                                     )}
                                     <div className="flex justify-end pt-1">
                                         <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                                            <a href={reviewingUser.passportOrIdUrl} download={`id_doc_${reviewingUser.id}`}>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                {t.download}
+                                            <a href={reviewingUser.passportOrIdUrl} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="mr-2 h-4 w-4" />
+                                                {t.view} / {t.download}
                                             </a>
                                         </Button>
                                     </div>
@@ -949,7 +949,12 @@ export function AdminDashboard() {
                             <div className="space-y-2">
                                 <Label>{t.certUploadTitle}</Label>
                                 <div className="border rounded-lg p-2 space-y-2 bg-muted/50">
-                                    {reviewingUser.businessCertificateUrl.startsWith('data:image') ? (
+                                     {reviewingUser.businessCertificateUrl.includes('.pdf') ? (
+                                        <div className="p-4 flex items-center gap-2 text-foreground">
+                                            <FileText className="h-6 w-6 text-muted-foreground" />
+                                            <span className="font-medium">PDF Document</span>
+                                        </div>
+                                    ) : (
                                         <Image 
                                             src={reviewingUser.businessCertificateUrl} 
                                             alt="Business Certificate" 
@@ -957,17 +962,12 @@ export function AdminDashboard() {
                                             height={300} 
                                             className="object-contain w-full h-auto rounded-md"
                                         />
-                                    ) : (
-                                        <div className="p-4 flex items-center gap-2 text-foreground">
-                                            <FileText className="h-6 w-6 text-muted-foreground" />
-                                            <span className="font-medium">PDF Document</span>
-                                        </div>
                                     )}
                                     <div className="flex justify-end pt-1">
                                         <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                                            <a href={reviewingUser.businessCertificateUrl} download={`business_cert_${reviewingUser.id}`}>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                {t.download}
+                                             <a href={reviewingUser.businessCertificateUrl} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="mr-2 h-4 w-4" />
+                                                {t.view} / {t.download}
                                             </a>
                                         </Button>
                                     </div>
@@ -977,7 +977,7 @@ export function AdminDashboard() {
                     </div>
                     <DialogFooter>
                         {reviewingUser.verificationStatus === 'pending' ? (
-                            <>
+                            <div className='flex w-full justify-end gap-2'>
                                 <Button variant="ghost" onClick={() => { setReviewingUser(null); setIsRejecting(false); setRejectionReason('')}}>{t.cancel}</Button>
                                 <AlertDialog open={isRejecting} onOpenChange={setIsRejecting}>
                                     <AlertDialogTrigger asChild>
@@ -1002,7 +1002,7 @@ export function AdminDashboard() {
                                     </AlertDialogContent>
                                 </AlertDialog>
                                 <Button onClick={() => handleApprove(reviewingUser.id)}>{t.approve}</Button>
-                            </>
+                            </div>
                         ) : (
                             <Button onClick={() => { setReviewingUser(null); setIsRejecting(false); setRejectionReason('')}}>{t.closed}</Button>
                         )}

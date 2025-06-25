@@ -135,6 +135,9 @@ export const translations = {
         verifyNow: 'Verify Now',
         mustBeVerifiedToPost: 'You must be verified to post a job.',
         mustBeVerifiedToApply: 'You must be verified to apply for a job.',
+        submissionFailed: 'Submission Failed',
+        submissionFailedDesc: 'There was an error submitting your verification documents. Please try again.',
+
 
         // Settings Page
         settingsTitle: 'Settings',
@@ -361,7 +364,6 @@ export const translations = {
         proposalSubmitted: 'Proposal Submitted!',
         proposalSubmittedDesc: 'Your proposal has been successfully sent to the client.',
         submissionFailed: 'Submission Failed',
-        submissionFailedDesc: 'There was an error submitting your proposal. Please try again.',
         missingProposalFields: 'Please provide a cover letter and your hourly rate.',
         proposalGenFailed: 'Generation Failed',
         proposalGenFailedDesc: 'AI generation not available now',
@@ -688,6 +690,8 @@ export const translations = {
         verifyNow: 'Hadda Xaqiiji',
         mustBeVerifiedToPost: 'Waa inaad ahaataa mid la xaqiijiyay si aad shaqo u soo geliso.',
         mustBeVerifiedToApply: 'Waa inaad ahaataa mid la xaqiijiyay si aad shaqo u codsato.',
+        submissionFailed: 'Gudbintu Waa Fashilantay',
+        submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay dukumentiyadaada xaqiijinta. Fadlan isku day mar kale.',
 
         // Settings Page
         settingsTitle: 'Dejinta',
@@ -913,7 +917,6 @@ export const translations = {
         proposalSubmitted: 'Codsiga Waa La Gudbiyey!',
         proposalSubmittedDesc: 'Codsigaaga si guul leh ayaa loogu diray macmiilka.',
         submissionFailed: 'Gudbintu Waa Fashilantay',
-        submissionFailedDesc: 'Cilad ayaa timid markii la gudbinayay codsigaaga.',
         missingProposalFields: 'Fadlan bixi warqad codsi iyo qiimahaaga saacaddii.',
         proposalGenFailed: 'Soosaarista way fashilantay',
         proposalGenFailedDesc: 'Soo saarista AI hadda diyaar maaha',

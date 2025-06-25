@@ -243,6 +243,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
+    const uploadFile = React.useCallback(async (path: string, file: File): Promise<string> => {
+        if (!storage) throw new Error("Firebase Storage not configured.");
+        const fileRef = storageRef(storage, path);
+        await uploadBytes(fileRef, file);
+        return await getDownloadURL(fileRef);
+    }, []);
+    
     const submitVerification = React.useCallback(async (userId: string, documents: { passportOrIdUrl: string; businessCertificateUrl?: string }): Promise<boolean> => {
         if (!db) return false;
         try {
@@ -360,22 +367,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const uploadFile = React.useCallback(async (path: string, file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                    localStorage.setItem(`mock_avatar_${path}`, reader.result);
-                    resolve(reader.result);
-                } else {
-                    reject(new Error("Failed to convert file to data URL"));
-                }
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }, []);
-
     const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, uploadFile }), 
     [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, uploadFile]);
 

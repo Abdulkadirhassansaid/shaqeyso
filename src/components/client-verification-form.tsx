@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,7 +19,7 @@ interface ClientVerificationFormProps {
 }
 
 export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
-  const { submitVerification } = useAuth();
+  const { submitVerification, uploadFile } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const router = useRouter();
@@ -35,18 +36,13 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFile(file);
-      setPreview(URL.createObjectURL(file));
+      if (file.type.startsWith('image/')) {
+        setPreview(URL.createObjectURL(file));
+      } else {
+        setPreview(null);
+      }
     }
   };
-  
-  const fileToDataUrl = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-      });
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,8 +58,8 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
     setIsSubmitting(true);
     
     try {
-        const idDocUrl = await fileToDataUrl(idDoc);
-        const certDocUrl = await fileToDataUrl(certDoc);
+        const idDocUrl = await uploadFile(`verification/${user.id}/id_doc_${idDoc.name}`, idDoc);
+        const certDocUrl = await uploadFile(`verification/${user.id}/cert_doc_${certDoc.name}`, certDoc);
         
         const success = await submitVerification(user.id, {
             passportOrIdUrl: idDocUrl,
@@ -75,14 +71,14 @@ export function ClientVerificationForm({ user }: ClientVerificationFormProps) {
                 title: t.verificationSubmitted,
                 description: t.verificationSubmittedDesc,
             });
-            router.push('/verify'); // Go to pending page
+            router.push('/verify');
         } else {
             throw new Error("Verification submission failed");
         }
     } catch(error) {
         toast({
             title: t.submissionFailed,
-            description: t.submissionFailedDesc,
+            description: (error as Error).message || t.submissionFailedDesc,
             variant: 'destructive',
         });
         setIsSubmitting(false);
