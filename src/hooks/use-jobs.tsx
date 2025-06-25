@@ -17,7 +17,7 @@ interface JobsContextType {
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
-  createJobFromService: (service: Service, freelancerId: string, clientId: string) => Promise<{ success: boolean; jobId?: string }>;
+  createJobFromService: (service: Service, freelancerId: string, clientId: string, selectedTier: { price: number; deliveryTime: number }) => Promise<{ success: boolean; jobId?: string }>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -57,17 +57,17 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const createJobFromService = React.useCallback(async (service: Service, freelancerId: string, clientId: string): Promise<{ success: boolean; jobId?: string }> => {
+  const createJobFromService = React.useCallback(async (service: Service, freelancerId: string, clientId: string, selectedTier: { price: number; deliveryTime: number }): Promise<{ success: boolean; jobId?: string }> => {
     if (!db) return { success: false };
     try {
         const deadline = new Date();
-        deadline.setDate(deadline.getDate() + 7); // Default 1 week deadline
+        deadline.setDate(deadline.getDate() + selectedTier.deliveryTime);
 
         const newJobData: Omit<Job, 'id' | 'postedDate'> = {
             title: `Service: ${service.title}`,
             description: `This job was automatically created from a service request.\n\nOriginal Service Description:\n${service.description}`,
             category: 'Service Request', // Generic category
-            budget: service.price,
+            budget: selectedTier.price,
             deadline: deadline.toISOString().split('T')[0],
             clientId: clientId,
             status: 'InProgress',

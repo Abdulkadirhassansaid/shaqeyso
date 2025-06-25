@@ -51,6 +51,11 @@ export type Service = {
   title: string;
   description: string;
   price: number;
+  deliveryTime: number; // in days
+  fastDelivery?: {
+    days: number;
+    price: number;
+  };
   images?: string[];
 };
 

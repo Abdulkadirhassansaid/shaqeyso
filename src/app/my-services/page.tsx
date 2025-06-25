@@ -14,6 +14,8 @@ import {
   UploadCloud,
   X,
   Link,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import {
@@ -54,6 +56,8 @@ import { LoadingDots } from '@/components/loading-dots';
 import { ImageCropper } from '@/components/image-cropper';
 import { fileToDataUrl } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 export default function MyServicesPage() {
   const { user, isLoading, updateUserProfile } = useAuth();
@@ -76,17 +80,16 @@ export default function MyServicesPage() {
 
   // State for Service Dialog
   const [isServiceDialogOpen, setIsServiceDialogOpen] = React.useState(false);
-  const [editingService, setEditingService] = React.useState<Service | null>(
-    null
-  );
+  const [editingService, setEditingService] = React.useState<Service | null>(null);
   const [serviceTitle, setServiceTitle] = React.useState('');
   const [serviceDesc, setServiceDesc] = React.useState('');
   const [servicePrice, setServicePrice] = React.useState('');
-  const [isGeneratingServiceDesc, setIsGeneratingServiceDesc] =
-    React.useState(false);
-  const [serviceImages, setServiceImages] = React.useState<(string | File)[]>(
-    []
-  );
+  const [deliveryTime, setDeliveryTime] = React.useState('');
+  const [hasFastDelivery, setHasFastDelivery] = React.useState(false);
+  const [fastDeliveryDays, setFastDeliveryDays] = React.useState('');
+  const [fastDeliveryPrice, setFastDeliveryPrice] = React.useState('');
+  const [isGeneratingServiceDesc, setIsGeneratingServiceDesc] = React.useState(false);
+  const [serviceImages, setServiceImages] = React.useState<(string | File)[]>([]);
   const serviceImageInputRef = React.useRef<HTMLInputElement>(null);
   const [isServiceSaving, setIsServiceSaving] = React.useState(false);
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
@@ -152,14 +155,20 @@ export default function MyServicesPage() {
     setServiceTitle(service.title);
     setServiceDesc(service.description);
     setServicePrice(String(service.price));
+    setDeliveryTime(String(service.deliveryTime));
     setServiceImages(service.images || []);
+    if (service.fastDelivery) {
+        setHasFastDelivery(true);
+        setFastDeliveryDays(String(service.fastDelivery.days));
+        setFastDeliveryPrice(String(service.fastDelivery.price));
+    }
     setIsServiceDialogOpen(true);
   };
 
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!serviceTitle || !serviceDesc || !servicePrice) {
+    if (!serviceTitle || !serviceDesc || !servicePrice || !deliveryTime) {
       toast({ title: t.missingFieldsTitle, variant: 'destructive' });
       return;
     }
@@ -182,8 +191,16 @@ export default function MyServicesPage() {
         title: serviceTitle,
         description: serviceDesc,
         price: Number(servicePrice),
+        deliveryTime: Number(deliveryTime),
         images: allImageUrls,
       };
+
+      if (hasFastDelivery && fastDeliveryDays && fastDeliveryPrice) {
+          newService.fastDelivery = {
+              days: Number(fastDeliveryDays),
+              price: Number(fastDeliveryPrice),
+          }
+      }
 
       let updatedServices;
       if (editingService) {
@@ -281,6 +298,10 @@ export default function MyServicesPage() {
     setServiceTitle('');
     setServiceDesc('');
     setServicePrice('');
+    setDeliveryTime('');
+    setHasFastDelivery(false);
+    setFastDeliveryDays('');
+    setFastDeliveryPrice('');
     setServiceImages([]);
   };
 
@@ -341,6 +362,10 @@ export default function MyServicesPage() {
                       <div className="flex justify-between items-start gap-4">
                           <h4 className="font-semibold text-lg line-clamp-2">{service.title}</h4>
                           <Badge variant="secondary" className="text-base shrink-0">${service.price.toFixed(2)}</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{service.deliveryTime} {t.days} {t.deliveryTime}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-3 flex-grow">{service.description}</p>
                       
@@ -486,18 +511,46 @@ export default function MyServicesPage() {
                       />
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="service-price">{t.servicePrice}</Label>
-                    <Input
-                      id="service-price"
-                      type="number"
-                      value={servicePrice}
-                      onChange={(e) => setServicePrice(e.target.value)}
-                      placeholder="e.g., 150"
-                      required
-                      disabled={isServiceSaving}
-                    />
+                  
+                  <div className="space-y-4 rounded-lg border p-4">
+                    <h4 className="font-medium">{t.standardDelivery}</h4>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="delivery-time">{t.standardDeliveryTime}</Label>
+                            <Input id="delivery-time" type="number" placeholder="e.g., 7" value={deliveryTime} onChange={(e) => setDeliveryTime(e.target.value)} required disabled={isServiceSaving} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="service-price">{t.standardPrice}</Label>
+                            <Input id="service-price" type="number" placeholder="e.g., 150" value={servicePrice} onChange={(e) => setServicePrice(e.target.value)} required disabled={isServiceSaving} />
+                        </div>
+                    </div>
                   </div>
+
+                  <div className="space-y-4 rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h4 className="font-medium">{t.fastDeliveryOption}</h4>
+                            <p className="text-sm text-muted-foreground">Offer an expedited option for a higher price.</p>
+                        </div>
+                        <Switch checked={hasFastDelivery} onCheckedChange={setHasFastDelivery} disabled={isServiceSaving} />
+                    </div>
+                    {hasFastDelivery && (
+                        <>
+                        <Separator />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="fast-delivery-days">{t.fastDeliveryTime}</Label>
+                                <Input id="fast-delivery-days" type="number" placeholder="e.g., 2" value={fastDeliveryDays} onChange={(e) => setFastDeliveryDays(e.target.value)} required={hasFastDelivery} disabled={isServiceSaving} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="fast-delivery-price">{t.fastDeliveryPrice}</Label>
+                                <Input id="fast-delivery-price" type="number" placeholder="e.g., 250" value={fastDeliveryPrice} onChange={(e) => setFastDeliveryPrice(e.target.value)} required={hasFastDelivery} disabled={isServiceSaving} />
+                            </div>
+                        </div>
+                        </>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="service-images">{t.serviceImages}</Label>
                     <div className="flex gap-2">

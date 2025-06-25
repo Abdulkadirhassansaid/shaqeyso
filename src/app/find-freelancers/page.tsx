@@ -13,7 +13,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
-import { Search, Star, Contact } from 'lucide-react';
+import { Search, Star, Contact, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +21,12 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 
@@ -42,7 +44,10 @@ export default function FindFreelancersPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
   const [chattingWith, setChattingWith] = React.useState<User | null>(null);
+  
+  // State for service request dialog
   const [requestingService, setRequestingService] = React.useState<Service | null>(null);
+  const [selectedDeliveryTier, setSelectedDeliveryTier] = React.useState<{ price: number; deliveryTime: number } | null>(null);
 
 
   React.useEffect(() => {
@@ -96,11 +101,15 @@ export default function FindFreelancersPage() {
   }, [freelancers, freelancerProfiles, searchQuery]);
   
   const handleRequestService = async () => {
-    if (!requestingService || !user || !selectedFreelancer) return;
+    if (!requestingService || !user || !selectedFreelancer || !selectedDeliveryTier) {
+        toast({ title: t.selectDeliveryOption, variant: 'destructive' });
+        return;
+    }
 
     const clientBalance = (user.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+    const servicePrice = selectedDeliveryTier.price;
 
-    if (clientBalance < requestingService.price) {
+    if (clientBalance < servicePrice) {
         toast({
             title: t.insufficientFundsTitle,
             description: t.insufficientFundsDesc,
@@ -110,12 +119,12 @@ export default function FindFreelancersPage() {
         return;
     }
 
-    const jobResult = await createJobFromService(requestingService, selectedFreelancer.id, user.id);
+    const jobResult = await createJobFromService(requestingService, selectedFreelancer.id, user.id, selectedDeliveryTier);
 
     if (jobResult.success && jobResult.jobId) {
         await addTransaction(user.id, {
             description: `${t.escrowFunding} for service "${requestingService.title}"`,
-            amount: -requestingService.price,
+            amount: -servicePrice,
             status: 'Completed',
         });
 
@@ -141,6 +150,16 @@ export default function FindFreelancersPage() {
   if (!user || user.role === 'freelancer') {
       return null;
   }
+
+  // Effect to reset dialog state when it closes
+  React.useEffect(() => {
+      if (!requestingService) {
+          setSelectedDeliveryTier(null);
+      } else {
+          // Pre-select standard delivery
+          setSelectedDeliveryTier({ price: requestingService.price, deliveryTime: requestingService.deliveryTime });
+      }
+  }, [requestingService])
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
@@ -305,14 +324,16 @@ export default function FindFreelancersPage() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="p-4 flex flex-col flex-grow space-y-2">
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <h4 className="font-semibold text-base line-clamp-2 flex-grow">{service.title}</h4>
-                                                        <Badge variant="secondary" className="shrink-0">${service.price.toFixed(2)}</Badge>
+                                                <div className="p-4 flex flex-col flex-grow">
+                                                    <h4 className="font-semibold text-base line-clamp-2 flex-grow mb-1">{service.title}</h4>
+                                                    <div className="flex items-center text-sm text-muted-foreground gap-2 mb-2">
+                                                      <Clock className="h-4 w-4" />
+                                                      <span>{service.deliveryTime} {t.days}</span>
                                                     </div>
                                                     <p className="text-sm text-muted-foreground line-clamp-2 flex-grow">{service.description}</p>
                                                 </div>
-                                                <CardFooter>
+                                                <CardFooter className="flex-col items-stretch">
+                                                    <div className="text-right font-bold text-lg mb-2">${service.price.toFixed(2)}+</div>
                                                     <Button size="sm" className="w-full" onClick={() => setRequestingService(service)}>
                                                         {t.requestService}
                                                     </Button>
@@ -341,23 +362,44 @@ export default function FindFreelancersPage() {
                     onClose={() => setChattingWith(null)}
                 />
             )}
-            {requestingService && selectedFreelancer && (
-                <AlertDialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>{t.confirmServiceRequest}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {t.confirmServiceRequestDesc
-                                    .replace('{serviceTitle}', requestingService.title)
-                                    .replace('{price}', `$${requestingService.price.toFixed(2)}`)}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleRequestService}>{t.confirm}</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+            {requestingService && (
+                <Dialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{t.confirmServiceRequest}</DialogTitle>
+                            <DialogDescription>{t.chooseDeliveryOption}</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <RadioGroup 
+                            value={JSON.stringify(selectedDeliveryTier)} 
+                            onValueChange={(value) => setSelectedDeliveryTier(JSON.parse(value))}
+                          >
+                            <Label htmlFor="standard-delivery" className={cn("flex items-center justify-between rounded-lg border p-4 cursor-pointer", selectedDeliveryTier?.price === requestingService.price && "border-primary")}>
+                              <div>
+                                <div className="font-semibold">{t.standardDelivery}</div>
+                                <div className="text-sm text-muted-foreground">{requestingService.deliveryTime} {t.days}</div>
+                              </div>
+                              <div className="text-lg font-bold">${requestingService.price.toFixed(2)}</div>
+                              <RadioGroupItem value={JSON.stringify({ price: requestingService.price, deliveryTime: requestingService.deliveryTime })} id="standard-delivery" />
+                            </Label>
+                            {requestingService.fastDelivery && (
+                              <Label htmlFor="fast-delivery" className={cn("flex items-center justify-between rounded-lg border p-4 cursor-pointer", selectedDeliveryTier?.price === requestingService.fastDelivery.price && "border-primary")}>
+                                <div>
+                                    <div className="font-semibold">{t.fastDelivery}</div>
+                                    <div className="text-sm text-muted-foreground">{requestingService.fastDelivery.days} {t.days}</div>
+                                </div>
+                                <div className="text-lg font-bold">${requestingService.fastDelivery.price.toFixed(2)}</div>
+                                <RadioGroupItem value={JSON.stringify({ price: requestingService.fastDelivery.price, deliveryTime: requestingService.fastDelivery.days })} id="fast-delivery" />
+                              </Label>
+                            )}
+                          </RadioGroup>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setRequestingService(null)}>{t.cancel}</Button>
+                            <Button onClick={handleRequestService} disabled={!selectedDeliveryTier}>{t.confirm}</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
         </main>
     </div>
