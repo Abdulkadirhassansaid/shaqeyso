@@ -39,7 +39,7 @@ const commonSkills = [
 ];
 
 export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
-  const { updateUserProfile, uploadFile } = useAuth();
+  const { updateUserProfile } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
@@ -206,12 +206,7 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
 
     setIsSaving(true);
     try {
-      let avatarUrl = user.avatarUrl;
-      if (newAvatarFile) {
-        const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
-        avatarUrl = await uploadFile(filePath, newAvatarFile);
-      }
-
+      // Mock Upload: We only save text data. Image upload is skipped.
       const profileData = {
         bio,
         hourlyRate,
@@ -220,7 +215,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
 
       const userData = {
         name,
-        avatarUrl: avatarUrl,
       };
 
       const success = await updateUserProfile(user.id, userData, profileData);
@@ -230,6 +224,13 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
           title: t.profileUpdated,
           description: t.freelancerProfileUpdatedDesc,
         });
+
+        if (newAvatarFile) {
+          toast({
+            title: "Image Upload Mocked",
+            description: "Profile text saved. Image upload is disabled for now.",
+          });
+        }
         setNewAvatarFile(null);
       } else {
         throw new Error('Profile update failed');

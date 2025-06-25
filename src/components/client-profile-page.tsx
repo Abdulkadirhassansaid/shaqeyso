@@ -27,7 +27,7 @@ interface ClientProfilePageProps {
 }
 
 export function ClientProfilePage({ user }: ClientProfilePageProps) {
-  const { updateUserProfile, uploadFile } = useAuth();
+  const { updateUserProfile } = useAuth();
   const { reviews } = useReviews();
   const { toast } = useToast();
   const router = useRouter();
@@ -108,15 +108,9 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
 
     setIsSaving(true);
     try {
-      let avatarUrl = user.avatarUrl;
-      if (newAvatarFile) {
-        const filePath = `avatars/${user.id}/${Date.now()}-avatar`;
-        avatarUrl = await uploadFile(filePath, newAvatarFile);
-      }
-
+      // Mock Upload: We only save text data. Image upload is skipped.
       const userData = {
         name: companyName, // Keep user.name in sync with company name
-        avatarUrl: avatarUrl,
       };
 
       const profileData = {
@@ -130,6 +124,13 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
           title: t.profileUpdated,
           description: t.profileUpdatedDesc,
         });
+
+        if (newAvatarFile) {
+          toast({
+            title: "Image Upload Mocked",
+            description: "Profile text saved. Image upload is disabled for now.",
+          });
+        }
         setNewAvatarFile(null);
       } else {
         throw new Error('Profile update failed');
