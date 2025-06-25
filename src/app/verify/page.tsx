@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { ClientVerificationForm } from '@/components/client-verification-form';
 import { FreelancerVerificationForm } from '@/components/freelancer-verification-form';
-import Header from '@/components/header';
 import { useLanguage } from '@/hooks/use-language';
 import {
   Card,
@@ -45,7 +44,6 @@ export default function VerifyPage() {
   if (user.verificationStatus === 'pending') {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
-        <Header />
         <main className="flex flex-1 items-center justify-center p-4">
            <Card className="w-full max-w-lg text-center">
               <CardHeader>
@@ -71,7 +69,6 @@ export default function VerifyPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <Header />
       <main className="flex flex-1 items-center justify-center p-4">
         {user.role === 'client' ? (
           <ClientVerificationForm user={user} />
