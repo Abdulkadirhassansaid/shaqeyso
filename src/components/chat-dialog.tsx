@@ -21,7 +21,7 @@ import { useLanguage } from './../hooks/use-language';
 import { Send, Paperclip, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { useUsers } from '@/hooks/use-users';
-import { collection, onSnapshot, addDoc, query, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, query, serverTimestamp, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ChatDialogProps {
@@ -59,6 +59,16 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
     return () => unsubscribe();
   }, [job.id]);
 
+  React.useEffect(() => {
+    if (isOpen && user && db) {
+        const jobRef = doc(db, 'jobs', job.id);
+        updateDoc(jobRef, {
+            [`lastReadBy.${user.id}`]: new Date().toISOString()
+        }).catch(console.error);
+    }
+  }, [isOpen, user, job.id]);
+
+
   const addMessage = React.useCallback(async (messageData: Omit<Message, 'id' | 'timestamp'>): Promise<boolean> => {
     if ((!messageData.text?.trim() && (!messageData.files || messageData.files.length === 0)) || !db) {
         return false;
@@ -69,6 +79,13 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
             ...messageData,
             timestamp: serverTimestamp(),
         });
+
+        const jobRef = doc(db, 'jobs', job.id);
+        await updateDoc(jobRef, {
+            lastMessageTimestamp: new Date().toISOString(),
+            lastMessageSenderId: messageData.senderId,
+        });
+
         return true;
     } catch (error) {
         console.error("Error adding message:", error);

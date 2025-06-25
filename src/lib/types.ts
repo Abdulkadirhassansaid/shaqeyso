@@ -29,6 +29,9 @@ export type Job = {
   postedDate: string;
   sourceServiceId?: string;
   sourceServiceTitle?: string;
+  lastMessageTimestamp?: string;
+  lastMessageSenderId?: string;
+  lastReadBy?: { [userId: string]: string };
 };
 
 export type Proposal = {

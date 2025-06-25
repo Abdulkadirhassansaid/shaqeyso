@@ -432,6 +432,12 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
               const status = job.status || 'Open';
               const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
               const canEdit = status === 'Open' || status === 'Interviewing';
+              
+              const hasUnreadMessages = 
+                !!job.lastMessageTimestamp &&
+                job.lastMessageSenderId !== user.id &&
+                (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
+
 
               return (
                   <Card key={job.id} className="hover:shadow-md transition-shadow">
@@ -450,9 +456,10 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                       <div className="flex items-center gap-4 flex-wrap">
                          <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
                          {(job.status === 'InProgress') && hiredFreelancer && (
-                              <Button variant="outline" onClick={() => setJobToChat(job)}>
+                              <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
                                   <MessageSquare className="mr-2 h-4 w-4" />
                                   {t.chatWith} {hiredFreelancer.name}
+                                  {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                               </Button>
                           )}
 
@@ -552,6 +559,12 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                     {serviceOrderJobs.map((job) => {
                         const status = job.status || 'Open';
                         const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+                        
+                        const hasUnreadMessages = 
+                            !!job.lastMessageTimestamp &&
+                            job.lastMessageSenderId !== user.id &&
+                            (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
+                        
                         return (
                             <Card key={job.id} className="hover:shadow-md transition-shadow">
                                 <CardHeader>
@@ -566,9 +579,10 @@ export function ClientDashboard({ user }: ClientDashboardProps) {
                                 <CardFooter className="flex justify-between items-center">
                                     <div className="flex items-center gap-4 flex-wrap">
                                         {(job.status === 'InProgress') && hiredFreelancer && (
-                                            <Button variant="outline" onClick={() => setJobToChat(job)}>
+                                            <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 {t.chatWith} {hiredFreelancer.name}
+                                                {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                             </Button>
                                         )}
                                         {status === 'InProgress' && hiredFreelancer && (

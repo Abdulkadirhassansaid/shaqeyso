@@ -321,6 +321,11 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                 const status = job.status as Job['status'];
                 const statusVariant = status === 'Completed' ? 'default' : 'secondary';
                 
+                const hasUnreadMessages = 
+                    !!job.lastMessageTimestamp &&
+                    job.lastMessageSenderId !== user.id &&
+                    (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
+                
                 return (
                     <Card key={job.id} className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row justify-between items-start">
@@ -362,9 +367,10 @@ export function FreelancerDashboard({ user }: FreelancerDashboardProps) {
                                 </div>
                             )}
                             {(status === 'InProgress') && (
-                                <Button className="w-full" variant="outline" onClick={() => setJobToChat(job)}>
+                                <Button className="w-full relative" variant="outline" onClick={() => setJobToChat(job)}>
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     {t.chatWithClient}
+                                    {hasUnreadMessages && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                 </Button>
                             )}
                         </CardFooter>

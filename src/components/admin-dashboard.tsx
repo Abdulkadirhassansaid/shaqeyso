@@ -684,6 +684,10 @@ export function AdminDashboard() {
                                     const client = users.find(u => u.id === job.clientId);
                                     const freelancer = job.hiredFreelancerId ? users.find(u => u.id === job.hiredFreelancerId) : null;
                                     const status = job.status || 'Unknown';
+
+                                    const hasUnreadMessages = adminUser && job.lastMessageTimestamp &&
+                                        (!job.lastReadBy?.[adminUser.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[adminUser.id]));
+
                                     return (
                                         <TableRow key={job.id}>
                                             <TableCell className="font-medium">{job.title}</TableCell>
@@ -701,8 +705,10 @@ export function AdminDashboard() {
                                                       onClick={() => setChattingJob(job)}
                                                       disabled={!job.hiredFreelancerId}
                                                       aria-label="View Chat"
+                                                      className="relative"
                                                     >
                                                         <MessageSquare className="h-4 w-4" />
+                                                        {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                                     </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
