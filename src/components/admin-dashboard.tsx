@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download, Search } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, ExternalLink, FileText, Download, Search, Landmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -59,7 +59,7 @@ export function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
-  const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'analytics');
+  const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'financials');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
   const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
@@ -74,23 +74,21 @@ export function AdminDashboard() {
   const adminUser = users.find(u => u.role === 'admin');
   const adminTransactions = adminUser?.transactions || [];
 
-  // This is the true, total cash in the platform account.
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
 
-  // Total fees collected by the platform.
   const totalFeesCollected = adminTransactions
     .filter(tx => tx.description.startsWith('Platform Fee'))
     .reduce((acc, tx) => acc + (tx.amount || 0), 0);
 
-  // Total funds withdrawn by the admin.
   const totalWithdrawals = adminTransactions
-    .filter(tx => tx.amount < 0 && !tx.description.startsWith('Release escrow for'))
+    .filter(tx => tx.amount < 0 && tx.description.startsWith('Withdraw to'))
     .reduce((acc, tx) => acc + Math.abs(tx.amount || 0), 0);
 
-  // This is the actual withdrawable balance for the admin (earnings - withdrawals).
   const withdrawableBalance = totalFeesCollected - totalWithdrawals;
 
-  // Total value of all successfully completed jobs.
+  const inProgressJobs = jobs.filter(j => j.status === 'InProgress');
+  const escrowBalance = inProgressJobs.reduce((acc, job) => acc + (job.budget || 0), 0);
+  
   const totalValueProcessed = jobs
     .filter(j => j.status === 'Completed' && j.budget)
     .reduce((acc, job) => acc + (job.budget || 0), 0);
@@ -210,7 +208,6 @@ export function AdminDashboard() {
     setRejectionReason('');
   };
 
-  // Revenue chart data now correctly only tracks platform fees.
   const revenueChartData = React.useMemo(() => {
     const dataMap = new Map<string, { total: number; date: Date }>();
     let interval: Date[];
@@ -351,7 +348,7 @@ export function AdminDashboard() {
         </header>
         <Tabs value={activeTab} onValueChange={setActiveTab as (value: string) => void} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="analytics">{t.analytics}</TabsTrigger>
+                <TabsTrigger value="financials">{t.analytics}</TabsTrigger>
                 <TabsTrigger value="users">{t.users}</TabsTrigger>
                 <TabsTrigger value="jobs">{t.jobs}</TabsTrigger>
                 <TabsTrigger value="verifications" className="relative">
@@ -361,20 +358,35 @@ export function AdminDashboard() {
                     )}
                 </TabsTrigger>
             </TabsList>
-            <TabsContent value="analytics" className="mt-6 space-y-6">
+            <TabsContent value="financials" className="mt-6 space-y-6">
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <Card className="transition-all hover:-translate-y-1">
-                        <CardHeader>
-                            <CardTitle className="text-sm font-medium">{t.platformBalance}</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                           <CardTitle className="text-sm font-medium">{t.totalPlatformFunds}</CardTitle>
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Landmark className="h-5 w-5 text-primary" />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">${platformBalance.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Total cash in platform account (incl. escrow).</p>
+                            <p className="text-xs text-muted-foreground">{t.totalCashHeld}</p>
                         </CardContent>
-                        <CardFooter>
+                    </Card>
+                    <Card className="transition-all hover:-translate-y-1">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                             <CardTitle className="text-sm font-medium">{t.withdrawableBalance}</CardTitle>
+                             <div className="p-2 rounded-lg bg-green-500/10">
+                                <DollarSign className="h-5 w-5 text-green-500" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">${withdrawableBalance.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">{t.earnedFeesForWithdrawal}</p>
+                        </CardContent>
+                         <CardFooter>
                             <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button disabled={withdrawableBalance <= 0}>
+                                    <Button size="sm" disabled={withdrawableBalance <= 0}>
                                       <Banknote className="mr-2 h-4 w-4" />
                                       {t.withdrawFunds}
                                     </Button>
@@ -383,7 +395,7 @@ export function AdminDashboard() {
                                     <DialogHeader>
                                         <DialogTitle>{t.withdrawDialogTitle}</DialogTitle>
                                         <DialogDescription>
-                                            Your current available balance for withdrawal (earned fees) is ${withdrawableBalance.toFixed(2)}. {t.withdrawDialogDesc}
+                                            {t.availableForWithdrawal.replace('{amount}', withdrawableBalance.toFixed(2))}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <form onSubmit={handleConfirmWithdrawal}>
@@ -427,26 +439,14 @@ export function AdminDashboard() {
                     </Card>
                     <Card className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Fees Collected</CardTitle>
-                             <div className="p-2 rounded-lg bg-primary/10">
-                                <DollarSign className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-sm font-medium">{t.activeEscrows}</CardTitle>
+                             <div className="p-2 rounded-lg bg-info/10">
+                                <Landmark className="h-5 w-5 text-info" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${totalFeesCollected.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Lifetime earnings from 5% platform fee.</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="transition-all hover:-translate-y-1">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Value Processed</CardTitle>
-                            <div className="p-2 rounded-lg bg-info/10">
-                                <TrendingUp className="h-5 w-5 text-info" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">${totalValueProcessed.toFixed(2)}</div>
-                            <p className="text-xs text-muted-foreground">Total value of all completed jobs.</p>
+                            <div className="text-2xl font-bold">${escrowBalance.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">{t.fundsHeldInEscrow}</p>
                         </CardContent>
                     </Card>
                     <Card className="transition-all hover:-translate-y-1">
@@ -462,8 +462,9 @@ export function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
-                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
-                    <Card className="lg:col-span-4">
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                    <Card>
                         <CardHeader>
                             <CardTitle>Revenue Overview</CardTitle>
                              <CardDescription>View platform fee revenue by day, week, month, or year.</CardDescription>
@@ -477,7 +478,7 @@ export function AdminDashboard() {
                                     <TabsTrigger value="yearly">Yearly</TabsTrigger>
                                 </TabsList>
                             </Tabs>
-                            <ChartContainer config={chartConfig} className="h-[300px] w-full pl-2">
+                            <ChartContainer config={chartConfig} className="h-[250px] w-full pl-2">
                                 <BarChart data={revenueChartData}>
                                     <defs>
                                         <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -525,31 +526,40 @@ export function AdminDashboard() {
                             </ChartContainer>
                         </CardContent>
                     </Card>
-                    <Card className="lg:col-span-3">
+                     <Card>
                         <CardHeader>
-                            <CardTitle>{t.recentTransactions}</CardTitle>
-                            <CardDescription>
-                                {t.totalPlatformFees.replace('{count}', String(adminTransactions.length))}
-                            </CardDescription>
+                            <CardTitle>{t.currentEscrowHoldings}</CardTitle>
+                            <CardDescription>{t.currentEscrowHoldingsDesc}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <div className="space-y-6">
-                                {recentTransactionsWithUsers.map(tx => (
-                                    <div key={tx.id} className="flex items-center">
-                                        <Avatar className="h-9 w-9 border-2 border-transparent hover:border-primary transition-colors">
-                                            <AvatarImage src={tx.user?.avatarUrl} alt="Avatar" />
-                                            <AvatarFallback>{tx.user?.name.charAt(0) ?? 'U'}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="ml-4 space-y-1">
-                                            <p className="text-sm font-medium leading-none">{tx.user?.name ?? 'Unknown User'}</p>
-                                            <p className="text-sm text-muted-foreground">{tx.description}</p>
-                                        </div>
-                                        <div className={`ml-auto font-medium ${tx.amount > 0 ? 'text-success' : 'text-destructive'}`}>
-                                            {tx.amount > 0 ? `+$${Number(tx.amount || 0).toFixed(2)}` : `-$${Math.abs(tx.amount || 0).toFixed(2)}`}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                             <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>{t.jobTitle}</TableHead>
+                                        <TableHead>{t.client}</TableHead>
+                                        <TableHead>{t.freelancer}</TableHead>
+                                        <TableHead className="text-right">{t.amount}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {inProgressJobs.length > 0 ? inProgressJobs.map(job => {
+                                        const client = users.find(u => u.id === job.clientId);
+                                        const freelancer = users.find(u => u.id === job.hiredFreelancerId);
+                                        return (
+                                            <TableRow key={job.id}>
+                                                <TableCell className="font-medium">{job.title}</TableCell>
+                                                <TableCell>{client?.name}</TableCell>
+                                                <TableCell>{freelancer?.name}</TableCell>
+                                                <TableCell className="text-right">${(job.budget || 0).toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        )
+                                    }) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">{t.noActiveEscrows}</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
                         </CardContent>
                     </Card>
                 </div>
