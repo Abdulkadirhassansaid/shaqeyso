@@ -53,6 +53,7 @@ import Image from 'next/image';
 import { LoadingDots } from '@/components/loading-dots';
 import { ImageCropper } from '@/components/image-cropper';
 import { fileToDataUrl } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MyServicesPage() {
   const { user, isLoading, updateUserProfile } = useAuth();
@@ -71,6 +72,7 @@ export default function MyServicesPage() {
   const [freelancerProfile, setFreelancerProfile] =
     React.useState<FreelancerProfile | null>(null);
   const [services, setServices] = React.useState<Service[]>([]);
+  const [isServicesLoading, setIsServicesLoading] = React.useState(true);
 
   // State for Service Dialog
   const [isServiceDialogOpen, setIsServiceDialogOpen] = React.useState(false);
@@ -93,7 +95,10 @@ export default function MyServicesPage() {
   const [serviceImageUrl, setServiceImageUrl] = React.useState('');
 
   React.useEffect(() => {
-    if (!user || !db) return;
+    if (!user || !db) {
+      setIsServicesLoading(false);
+      return;
+    }
     const unsub = onSnapshot(
       doc(db, 'freelancerProfiles', user.id),
       (doc) => {
@@ -104,7 +109,14 @@ export default function MyServicesPage() {
           } as FreelancerProfile;
           setFreelancerProfile(profileData);
           setServices(profileData.services || []);
+        } else {
+          setServices([]);
         }
+        setIsServicesLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching services:", error);
+        setIsServicesLoading(false);
       }
     );
     return () => unsub();
@@ -156,7 +168,6 @@ export default function MyServicesPage() {
     try {
       const serviceId = editingService?.id || `service-${Date.now()}`;
       
-      // Mock upload: Convert any new File objects to data URLs directly
       const imagePromises = serviceImages.map(image => {
         if (typeof image === 'string') {
           return Promise.resolve(image); // It's already a URL (http or data)
@@ -302,7 +313,12 @@ export default function MyServicesPage() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {services.length > 0 ? (
+            {isServicesLoading ? (
+              <>
+                <Skeleton className="h-80 w-full" />
+                <Skeleton className="h-80 w-full" />
+              </>
+            ) : services.length > 0 ? (
               services.map((service) => (
                 <Card key={service.id} className="overflow-hidden transition-shadow hover:shadow-lg flex flex-col">
                   <div className="aspect-video bg-muted relative">
