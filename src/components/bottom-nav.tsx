@@ -20,6 +20,7 @@ export function BottomNav() {
   const navItems = [
     { href: '/', label: user.role === 'client' ? t.myJobPostings : t.findWork, icon: Briefcase, roles: ['freelancer', 'client'] },
     { href: '/find-freelancers', label: t.freelancers, icon: UsersIcon, roles: ['client'] },
+    { href: '/my-services', label: t.myServices, icon: LayoutGrid, roles: ['freelancer'] },
     { href: '/profile', label: t.myAccount, icon: User, roles: ['freelancer', 'client'] },
   ];
   

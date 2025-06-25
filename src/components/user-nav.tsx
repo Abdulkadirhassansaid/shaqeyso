@@ -66,6 +66,11 @@ export function UserNav() {
           <DropdownMenuItem asChild>
             <Link href="/profile">{t.profile}</Link>
           </DropdownMenuItem>
+          {user.role === 'freelancer' && (
+            <DropdownMenuItem asChild>
+              <Link href="/my-services">{t.myServices}</Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem asChild>
             <Link href="/billing">{t.billing}</Link>
           </DropdownMenuItem>
