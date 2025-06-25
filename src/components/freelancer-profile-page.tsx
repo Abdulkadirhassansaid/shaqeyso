@@ -230,9 +230,11 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         name,
       };
 
-      if (avatarPreview !== user.avatarUrl && avatarPreview.startsWith('http')) {
-        userData.avatarUrl = avatarPreview;
-        localStorage.removeItem(`mock_avatar_${user.id}`);
+      if (avatarPreview !== user.avatarUrl) {
+        if (avatarPreview.startsWith('http')) {
+          userData.avatarUrl = avatarPreview;
+          localStorage.removeItem(`mock_avatar_${user.id}`);
+        }
       }
 
       const success = await updateUserProfile(user.id, userData, profileData);
@@ -263,7 +265,6 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
         localStorage.setItem(`mock_avatar_${user.id}`, dataUrl);
         setAvatarPreview(dataUrl);
         setImageToCrop(null);
-        toast({ title: t.profileUpdated, description: 'Avatar updated locally. Save changes to update your name and other details.'})
     } catch (error) {
         toast({ title: "Error", description: "Could not process image." });
     }
