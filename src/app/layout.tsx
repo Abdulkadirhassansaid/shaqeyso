@@ -24,6 +24,14 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
+export const metadata: Metadata = {
+  title: 'Shaqeyso Hub',
+  description: 'A freelancer marketplace for Somali users.',
+  icons: {
+    icon: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

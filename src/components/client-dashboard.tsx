@@ -43,7 +43,7 @@ export function ClientDashboard() {
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
-  const [selectedJob, setSelectedJob] = React.useState<Job | null>(null);
+  const [selectedJobId, setSelectedJobId] = React.useState<string | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
   const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
   const [rankedFreelancers, setRankedFreelancers] = React.useState<RankedFreelancer[]>([]);
@@ -71,17 +71,6 @@ export function ClientDashboard() {
   const clientJobs = jobs.filter((job) => job.clientId === user.id);
   const manualJobs = clientJobs.filter(job => !job.sourceServiceId);
   const serviceOrderJobs = clientJobs.filter(job => !!job.sourceServiceId);
-
-
-  React.useEffect(() => {
-    if (selectedJob) {
-        const freshJobData = jobs.find(j => j.id === selectedJob.id);
-        // Use stringify to prevent infinite re-renders from object comparison
-        if (freshJobData && JSON.stringify(freshJobData) !== JSON.stringify(selectedJob)) {
-            setSelectedJob(freshJobData);
-        }
-    }
-  }, [jobs, selectedJob]);
   
   const handleHireFreelancer = async () => {
     if (!proposalToHire || !user || !db) return;
@@ -150,7 +139,7 @@ export function ClientDashboard() {
       });
   
       setProposalToHire(null);
-      setSelectedJob(null);
+      setSelectedJobId(null);
       setRankedFreelancers([]);
   
     } catch (error) {
@@ -214,7 +203,6 @@ export function ClientDashboard() {
             amount: freelancerPayout,
             status: 'Completed' as const,
         };
-        const newFreelancerTransactions = [...currentFreelancerTransactions, payoutTx];
   
         // Prepare new transactions for admin
         const currentAdminTransactions = adminDoc.data().transactions || [];
@@ -232,6 +220,7 @@ export function ClientDashboard() {
             amount: platformFee,
             status: 'Completed' as const,
         };
+        const newFreelancerTransactions = [...currentFreelancerTransactions, payoutTx];
         const newAdminTransactions = [...currentAdminTransactions, releaseTx, feeTx];
   
         // Perform all writes
@@ -355,6 +344,8 @@ export function ClientDashboard() {
       );
   }
   
+  const selectedJob = selectedJobId ? jobs.find((job) => job.id === selectedJobId) : null;
+  
   if (selectedJob) {
     const jobProposals = proposals.filter(p => p.jobId === selectedJob.id);
     const hiredFreelancer = allUsers.find(u => u.id === selectedJob.hiredFreelancerId);
@@ -401,7 +392,7 @@ export function ClientDashboard() {
       <AlertDialog open={!!proposalToHire} onOpenChange={(isOpen) => !isOpen && setProposalToHire(null)}>
           <Card className="w-full">
               <CardHeader>
-                  <Button variant="ghost" size="sm" onClick={() => { setSelectedJob(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedJobId(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       {t.backToJobs}
                   </Button>
@@ -539,7 +530,7 @@ export function ClientDashboard() {
                   </CardHeader>
                   <CardFooter className="flex justify-between items-center">
                       <div className="flex items-center gap-4 flex-wrap">
-                         <Button onClick={() => setSelectedJob(job)}>{t.viewDetailsAndProposals}</Button>
+                         <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
                          {(job.status === 'InProgress') && hiredFreelancer && (
                               <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
                                   <MessageSquare className="mr-2 h-4 w-4" />
