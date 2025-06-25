@@ -87,28 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
     
 
-    const login = React.useCallback(async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
-        if (!auth || !db) return { success: false, message: 'invalid' };
-        try {
-            const usersQuery = query(collection(db, "users"), where("email", "==", email));
-            const querySnapshot = await getDocs(usersQuery);
-            if (!querySnapshot.empty) {
-                const userDoc = querySnapshot.docs[0];
-                const userData = userDoc.data() as User;
-                if (userData.isBlocked) {
-                    return { success: false, message: 'blocked' };
-                }
-            }
-
-            const creds = await signInWithEmailAndPassword(auth, email, pass);
-            const userDocSnap = await getDoc(doc(db, 'users', creds.user.uid));
-            return { success: true, user: userDocSnap.data() as User };
-        } catch (error: any) {
-            return { success: false, message: 'invalid' };
-        }
-    }, []);
-
-    const signup = React.useCallback(async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
+     const signup = React.useCallback(async (name: string, email: string, pass: string, role: 'client' | 'freelancer'): Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }> => {
         if (!auth || !db) return { success: false, message: 'unknown' };
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -168,6 +147,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return { success: false, message: 'unknown' };
         }
     }, []);
+
+    const login = React.useCallback(async (email: string, pass: string): Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }> => {
+        if (!auth || !db) return { success: false, message: 'invalid' };
+        try {
+            const usersQuery = query(collection(db, "users"), where("email", "==", email));
+            const querySnapshot = await getDocs(usersQuery);
+            if (!querySnapshot.empty) {
+                const userDoc = querySnapshot.docs[0];
+                const userData = userDoc.data() as User;
+                if (userData.isBlocked) {
+                    return { success: false, message: 'blocked' };
+                }
+            }
+
+            const creds = await signInWithEmailAndPassword(auth, email, pass);
+            const userDocSnap = await getDoc(doc(db, 'users', creds.user.uid));
+            return { success: true, user: userDocSnap.data() as User };
+        } catch (error: any) {
+             // If login failed because the user doesn't exist, and it's the special admin user, create them.
+            if (error.code === 'auth/user-not-found' && email.toLowerCase() === 'abdikadirhassan2015@gmail.com' && pass === 'Mahir4422') {
+                const signupResult = await signup('Admin', email, pass, 'admin');
+                if (signupResult.success && signupResult.user) {
+                    return { success: true, user: signupResult.user };
+                }
+            }
+            return { success: false, message: 'invalid' };
+        }
+    }, [signup]);
 
     const logout = React.useCallback(async () => {
         if (!auth) return;
