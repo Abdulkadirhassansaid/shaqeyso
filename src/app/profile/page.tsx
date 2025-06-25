@@ -42,37 +42,35 @@ export default function ProfilePage() {
       <Header />
        <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
          <div className="max-w-2xl mx-auto">
-            <div className="flex flex-col items-center sm:flex-row sm:items-center gap-6 p-4">
-                <Avatar className="h-28 w-28 border-4 border-primary/20">
+            <div className="flex flex-col items-center text-center mb-10">
+                <Avatar className="h-28 w-28 border-4 border-primary/20 shadow-md mb-4">
                     <AvatarImage src={user.avatarUrl} alt={user.name} />
                     <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <div className="text-center sm:text-left">
-                    <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
-                    <p className="text-base text-muted-foreground">{user.email}</p>
-                </div>
+                <h1 className="text-3xl font-bold">{user.name}</h1>
+                <p className="text-base text-muted-foreground">{user.email}</p>
             </div>
-            <div className="mt-8 space-y-3">
+            <div className="space-y-3">
                 {userMenuItems.map(item => (
                     <Link 
                         key={item.label} 
                         href={item.href} 
-                        className="group block rounded-xl border bg-card p-4 text-card-foreground shadow-md transition-all duration-300 hover:shadow-xl hover:border-primary/50 hover:-translate-y-1"
+                        className="group block rounded-xl border bg-card p-4 text-card-foreground shadow-sm transition-all duration-300 hover:shadow-lg hover:border-primary/30 hover:scale-[1.02]"
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-secondary rounded-lg text-primary group-hover:bg-primary/20">
-                                    <item.icon className="w-6 h-6" />
+                                <div className="p-3 bg-secondary rounded-lg text-primary group-hover:bg-primary/10">
+                                    <item.icon className="w-5 h-5" />
                                 </div>
-                                <span className="text-lg font-medium">{item.label}</span>
+                                <span className="text-base font-medium">{item.label}</span>
                             </div>
                             <ChevronRight className="w-5 h-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
                         </div>
                     </Link>
                 ))}
-                <div className="pt-4">
-                    <Button onClick={logout} variant="outline" className="w-full justify-center p-6 border-2 text-lg text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50">
-                        <LogOut className="w-6 h-6 mr-3" />
+                <div className="pt-6">
+                    <Button onClick={logout} variant="outline" className="w-full justify-center text-base p-6 border-2 text-destructive hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20">
+                        <LogOut className="w-5 h-5 mr-3" />
                         <span>{t.logOut}</span>
                     </Button>
                 </div>

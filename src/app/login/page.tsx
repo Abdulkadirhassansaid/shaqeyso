@@ -79,9 +79,9 @@ export default function LoginPage() {
   const isDisabled = isSubmitting || isAuthLoading;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background p-4">
-      <Card className="w-full max-w-md overflow-hidden">
-        <CardHeader className="text-center bg-card/80 backdrop-blur-sm p-8">
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
             <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
                 <Icons.logo className="h-10 w-10 text-primary" />
             </Link>
@@ -89,7 +89,7 @@ export default function LoginPage() {
           <CardDescription>{t.loginPrompt}</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">{t.emailLabel}</Label>
               <Input
@@ -115,11 +115,11 @@ export default function LoginPage() {
                 className="h-12"
               />
             </div>
-             <Button type="submit" size="lg" variant="accent" className="w-full mt-4" disabled={isDisabled}>
+          </CardContent>
+          <CardFooter className="flex-col gap-4">
+            <Button type="submit" size="lg" className="w-full" disabled={isDisabled}>
               {isSubmitting ? t.signingIn : t.signIn}
             </Button>
-          </CardContent>
-          <CardFooter className="flex-col gap-4 p-6 bg-secondary/50">
             <p className="text-sm text-muted-foreground">
               {t.noAccount}{' '}
               <Link href="/signup" className="font-semibold text-primary hover:underline">

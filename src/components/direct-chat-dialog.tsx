@@ -117,7 +117,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 bg-secondary/50" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
             {conversationMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -190,7 +190,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose }: DirectChatDialo
                 autoComplete="off"
                 className="h-12 text-base"
                 />
-                <Button type="submit" variant="accent" size="icon" className="h-12 w-12" disabled={!newMessage.trim()}>
+                <Button type="submit" size="icon" className="h-12 w-12" disabled={!newMessage.trim()}>
                 <Send className="h-5 w-5" />
                 <span className="sr-only">{t.sendMessage}</span>
                 </Button>

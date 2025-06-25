@@ -135,7 +135,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 bg-secondary/50" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
             {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -150,7 +150,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                     const messageBgClass = isSender
                       ? 'bg-primary text-primary-foreground'
                       : isAdminMessage
-                        ? 'bg-card border'
+                        ? 'bg-muted'
                         : 'bg-card';
                     
                     const bubbleShape = isSender
@@ -196,11 +196,12 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                                                 key={index}
                                                 href={file.url}
                                                 download={file.name}
-                                                className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-secondary hover:bg-secondary/80")}
+                                                className={cn("flex items-center gap-3 p-2 rounded-md", isSender ? "bg-primary/80 hover:bg-primary/70" : "bg-muted hover:bg-muted/80")}
                                             >
                                                 <FileText className="h-6 w-6 shrink-0" />
                                                 <div className="overflow-hidden">
                                                     <p className="font-medium truncate">{file.name}</p>
+
                                                     <p className={cn("text-xs", isSender ? "text-primary-foreground/80" : "text-muted-foreground")}>{(file.size / 1024).toFixed(2)} KB</p>
                                                 </div>
                                             </a>
@@ -241,7 +242,7 @@ export function ChatDialog({ job, isOpen, onClose }: ChatDialogProps) {
                             <span className="sr-only">{t.attachFile}</span>
                         </Button>
                         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} multiple />
-                        <Button type="submit" variant="accent" size="icon" className="h-12 w-12" disabled={!newMessage.trim() && files.length === 0}>
+                        <Button type="submit" size="icon" className="h-12 w-12" disabled={!newMessage.trim() && files.length === 0}>
                         <Send className="h-5 w-5" />
                         <span className="sr-only">{t.sendMessage}</span>
                         </Button>

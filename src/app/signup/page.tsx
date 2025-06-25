@@ -20,8 +20,8 @@ import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { useLoading } from '@/hooks/use-loading';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Users, Briefcase } from 'lucide-react';
 
 export default function SignupPage() {
   const [name, setName] = React.useState('');
@@ -57,16 +57,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-background p-4">
-      <Card className="w-full max-w-md overflow-hidden">
-        <CardHeader className="text-center bg-card/80 backdrop-blur-sm p-8">
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="text-center">
           <Link href="/" className="mx-auto mb-4 flex items-center justify-center">
             <Icons.logo className="h-10 w-10 text-primary" />
           </Link>
           <CardTitle>{t.createAccount}</CardTitle>
           <CardDescription>{t.signupPrompt}</CardDescription>
         </CardHeader>
-        <CardContent className="p-8">
+        <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">{t.fullNameLabel}</Label>
@@ -114,22 +114,24 @@ export default function SignupPage() {
                   onValueChange={(value) => setRole(value as 'client' | 'freelancer')}
                   disabled={isSubmitting}
                 >
-                  <Label htmlFor="r-freelancer" className={cn("flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-secondary/50 hover:border-accent transition-all", role === 'freelancer' && 'border-accent bg-accent/10')}>
-                    <RadioGroupItem value="freelancer" id="r-freelancer" className="sr-only" />
+                  <Label htmlFor="r-freelancer" className={cn("flex flex-col items-center justify-between rounded-lg border-2 p-4 cursor-pointer transition-all hover:border-primary", role === 'freelancer' && 'border-primary bg-primary/5')}>
+                    <Briefcase className="h-8 w-8 mb-2 text-primary" />
                     <span className="font-semibold text-center">{t.freelancer}</span>
+                    <RadioGroupItem value="freelancer" id="r-freelancer" className="mt-2" />
                   </Label>
-                  <Label htmlFor="r-client" className={cn("flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-secondary/50 hover:border-accent transition-all", role === 'client' && 'border-accent bg-accent/10')}>
-                    <RadioGroupItem value="client" id="r-client" className="sr-only"/>
+                  <Label htmlFor="r-client" className={cn("flex flex-col items-center justify-between rounded-lg border-2 p-4 cursor-pointer transition-all hover:border-primary", role === 'client' && 'border-primary bg-primary/5')}>
+                    <Users className="h-8 w-8 mb-2 text-primary" />
                     <span className="font-semibold text-center">{t.client}</span>
+                    <RadioGroupItem value="client" id="r-client" className="mt-2"/>
                   </Label>
                 </RadioGroup>
               </div>
-               <Button type="submit" size="lg" variant="accent" className="w-full mt-6" disabled={isSubmitting}>
+               <Button type="submit" size="lg" className="w-full mt-6" disabled={isSubmitting}>
                 {isSubmitting ? t.creatingAccount : t.createAccount}
               </Button>
             </form>
         </CardContent>
-        <CardFooter className="flex-col gap-4 p-6 bg-secondary/50">
+        <CardFooter className="flex-col gap-4 p-6 bg-muted/50">
           <p className="text-sm text-muted-foreground">
             {t.alreadyHaveAccount}{' '}
             <Link href="/login" className="font-semibold text-primary hover:underline">
