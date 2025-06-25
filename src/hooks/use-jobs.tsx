@@ -2,9 +2,10 @@
 'use client';
 
 import * as React from 'react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs, getDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Job, Service } from '@/lib/types';
+import type { Job, Service, User, Transaction } from '@/lib/types';
+import { addDays, format } from 'date-fns';
 
 interface JobsContextType {
   jobs: Job[];
@@ -17,6 +18,7 @@ interface JobsContextType {
   markJobAsReviewed: (jobId: string, role: 'client' | 'freelancer') => Promise<boolean>;
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
+  createJobFromService: (clientId: string, freelancerId: string, service: Service, tier: 'standard' | 'fast') => Promise<{ success: boolean; message?: string }>;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -155,7 +157,84 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId]);
+  const createJobFromService = React.useCallback(async (
+    clientId: string,
+    freelancerId: string,
+    service: Service,
+    tier: 'standard' | 'fast'
+  ): Promise<{ success: boolean; message?: string }> => {
+    if (!db) return { success: false, message: "Database not connected." };
+
+    const selectedTier = tier === 'fast' && service.fastDelivery ? service.fastDelivery : { price: service.price, days: service.deliveryTime };
+
+    if (!selectedTier || typeof selectedTier.price !== 'number' || typeof selectedTier.days !== 'number') {
+        return { success: false, message: "Invalid service pricing or delivery information." };
+    }
+
+    const clientRef = doc(db, 'users', clientId);
+    const clientSnap = await getDoc(clientRef);
+
+    if (!clientSnap.exists()) {
+        return { success: false, message: "Client not found." };
+    }
+
+    const clientData = clientSnap.data() as User;
+    const clientBalance = (clientData.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+
+    if (clientBalance < selectedTier.price) {
+        return { success: false, message: "Insufficient funds. Please top up your balance." };
+    }
+
+    const deliveryDays = Number(selectedTier.days);
+    if (isNaN(deliveryDays)) {
+      return { success: false, message: "Invalid delivery time value." };
+    }
+    const deadline = addDays(new Date(), deliveryDays);
+
+    const newJobData = {
+        title: `Service Order: ${service.title}`,
+        description: `This job was automatically created from a service request.\n\nService Description:\n${service.description}`,
+        category: 'Service Request',
+        budget: selectedTier.price,
+        deadline: format(deadline, 'yyyy-MM-dd'),
+        clientId: clientId,
+        status: 'InProgress' as Job['status'],
+        hiredFreelancerId: freelancerId,
+        postedDate: serverTimestamp(),
+        sourceServiceId: service.id,
+        sourceServiceTitle: service.title,
+        clientReviewed: false,
+        freelancerReviewed: false,
+    };
+    
+    const newTransaction: Omit<Transaction, 'id' | 'date'> = {
+        description: `Payment for "${service.title}"`,
+        amount: -selectedTier.price,
+        status: 'Completed',
+    };
+
+    try {
+        const batch = writeBatch(db);
+        const jobRef = doc(collection(db, 'jobs'));
+        batch.set(jobRef, newJobData);
+
+        batch.update(clientRef, {
+            transactions: arrayUnion({
+                ...newTransaction,
+                id: `txn-${Date.now()}`,
+                date: new Date().toISOString(),
+            })
+        });
+
+        await batch.commit();
+        return { success: true };
+    } catch (error) {
+        console.error("Error creating job from service:", error);
+        return { success: false, message: (error as Error).message || "An unexpected error occurred." };
+    }
+  }, []);
+
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, releasePayment, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }
@@ -167,5 +246,3 @@ export const useJobs = () => {
   }
   return context;
 };
-
-    

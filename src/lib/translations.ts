@@ -517,7 +517,7 @@ export const translations = {
         servicePrice: 'Service Price ($)',
         serviceImages: 'Portfolio Images',
         uploadImages: 'Upload Images',
-        contactAboutService: "Contact About Service",
+        requestService: "Request Service",
         deliveryTime: 'Delivery Time',
         days: 'days',
         standardDelivery: 'Standard Delivery',
@@ -528,6 +528,15 @@ export const translations = {
         standardDeliveryTime: 'Standard Delivery Time (days)',
         standardPrice: 'Standard Price ($)',
         fastDeliveryOption: 'Fast Delivery Option',
+        confirmServiceRequest: 'Confirm Service Request',
+        confirmServiceRequestDesc: 'You are about to order "{service}" from {freelancer}. Please select a delivery option.',
+        serviceCost: 'Service Cost',
+        remainingBalance: 'Remaining Balance',
+        confirmAndPay: 'Confirm & Pay',
+        processing: 'Processing...',
+        serviceRequestedTitle: 'Service Requested!',
+        serviceRequestedDesc: 'A new job has been created and {freelancer} has been hired.',
+        requestFailedTitle: 'Request Failed',
     },
     so: {
         // General
@@ -1046,7 +1055,7 @@ export const translations = {
         servicePrice: 'Qiimaha Adeegga ($)',
         serviceImages: 'Sawirrada Portfolio',
         uploadImages: 'Soo Geli Sawirro',
-        contactAboutService: "Adeegan kala xiriir",
+        requestService: "Codso Adeeg",
         deliveryTime: 'Wakhtiga Gudbinta',
         days: 'maalmood',
         standardDelivery: 'Gudbin Caadi ah',
@@ -1057,11 +1066,18 @@ export const translations = {
         standardDeliveryTime: 'Wakhtiga Gudbinta Caadiga ah (maalmo)',
         standardPrice: 'Qiimaha Caadiga ah ($)',
         fastDeliveryOption: 'Ikhtiyaarka Gudbinta Degdegga ah',
+        confirmServiceRequest: 'Xaqiiji Codsiga Adeegga',
+        confirmServiceRequestDesc: 'Waxaad ku dhowdahay inaad dalbato "{service}" ka yimid {freelancer}. Fadlan dooro ikhtiyaar gudbin.',
+        serviceCost: 'Qiimaha Adeegga',
+        remainingBalance: 'Hadhaaga Haray',
+        confirmAndPay: 'Xaqiiji & Bixi',
+        processing: 'Waa la socdaa...',
+        serviceRequestedTitle: 'Adeegga Waa La Codsaday!',
+        serviceRequestedDesc: 'Shaqo cusub ayaa la sameeyay oo {freelancer} waa la shaqaaleysiiyay.',
+        requestFailedTitle: 'Codsigu Wuu Fashilmay',
     }
 };
 
 export type Language = keyof typeof translations;
 
 export type Translations = typeof translations;
-
-    

@@ -21,6 +21,10 @@ import { Button } from '@/components/ui/button';
 import { StarRating } from '@/components/star-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +34,7 @@ type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 export default function FindFreelancersPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { users, isUsersLoading } = useUsers();
-  const { jobs, isJobsLoading } = useJobs();
+  const { jobs, isJobsLoading, createJobFromService } = useJobs();
   const { reviews, isReviewsLoading } = useReviews();
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
   const [profilesLoading, setProfilesLoading] = React.useState(true);
@@ -41,8 +45,15 @@ export default function FindFreelancersPage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
   const [chattingWith, setChattingWith] = React.useState<User | null>(null);
-  const [initialChatMessage, setInitialChatMessage] = React.useState('');
+
+  // State for the new service request flow
+  const [requestingService, setRequestingService] = React.useState<{ freelancer: User; service: Service } | null>(null);
+  const [selectedDeliveryTier, setSelectedDeliveryTier] = React.useState<'standard' | 'fast' | null>(null);
+  const [isSubmittingServiceRequest, setIsSubmittingServiceRequest] = React.useState(false);
   
+  const clientBalance = (user?.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+
+  // Early exit for roles should happen after hooks
   React.useEffect(() => {
     if (!isAuthLoading && user?.role === 'freelancer') {
       router.replace('/');
@@ -97,8 +108,43 @@ export default function FindFreelancersPage() {
   
   const isLoading = isAuthLoading || isUsersLoading || isJobsLoading || isReviewsLoading || profilesLoading;
   
-  const selectedProfile = freelancerProfiles.find(p => p.userId === selectedFreelancer?.id);
+  const handleRequestService = async () => {
+    if (!requestingService || !selectedDeliveryTier || !user) return;
+    setIsSubmittingServiceRequest(true);
 
+    const { freelancer, service } = requestingService;
+    
+    const result = await createJobFromService(user.id, freelancer.id, service, selectedDeliveryTier);
+
+    if (result.success) {
+        toast({
+            title: t.serviceRequestedTitle,
+            description: t.serviceRequestedDesc.replace('{freelancer}', freelancer.name),
+        });
+        setRequestingService(null);
+        setSelectedFreelancer(null); // Close the main dialog too
+    } else {
+        toast({
+            title: t.requestFailedTitle,
+            description: result.message,
+            variant: 'destructive',
+        });
+    }
+    setIsSubmittingServiceRequest(false);
+  };
+  
+  // Effect to reset dialog state when it closes
+  React.useEffect(() => {
+      if (!requestingService) {
+          setSelectedDeliveryTier(null);
+      } else {
+          // Default to standard tier when dialog opens
+          setSelectedDeliveryTier('standard');
+      }
+  }, [requestingService]);
+
+  const selectedProfile = freelancerProfiles.find(p => p.userId === selectedFreelancer?.id);
+  
   if (!user || user.role === 'freelancer') {
       return null;
   }
@@ -287,11 +333,8 @@ export default function FindFreelancersPage() {
                                                 </div>
                                                 <CardFooter className="flex-col items-stretch">
                                                     <div className="text-right font-bold text-lg mb-2">${service.price.toFixed(2)}+</div>
-                                                    <Button size="sm" className="w-full" onClick={() => {
-                                                        setInitialChatMessage(`Hi, I'm interested in your "${service.title}" service.`);
-                                                        setChattingWith(selectedFreelancer);
-                                                    }}>
-                                                        {t.contactAboutService}
+                                                    <Button size="sm" className="w-full" onClick={() => setRequestingService({ freelancer: selectedFreelancer, service })}>
+                                                        {t.requestService}
                                                     </Button>
                                                 </CardFooter>
                                             </Card>
@@ -311,16 +354,77 @@ export default function FindFreelancersPage() {
                     </DialogContent>
                 </Dialog>
             )}
-             {chattingWith && (
+            {chattingWith && (
                 <DirectChatDialog
                     otherUser={chattingWith}
                     isOpen={!!chattingWith}
-                    onClose={() => {
-                        setChattingWith(null);
-                        setInitialChatMessage('');
-                    }}
-                    initialMessage={initialChatMessage}
+                    onClose={() => setChattingWith(null)}
                 />
+            )}
+            {requestingService && (
+                <AlertDialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{t.confirmServiceRequest}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {t.confirmServiceRequestDesc.replace('{service}', requestingService.service.title).replace('{freelancer}', requestingService.freelancer.name)}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="py-4 space-y-4">
+                            <RadioGroup value={selectedDeliveryTier || ''} onValueChange={(value) => setSelectedDeliveryTier(value as 'standard' | 'fast')}>
+                                <Label htmlFor="standard-tier" className="flex items-start gap-4 rounded-lg border p-4 cursor-pointer hover:bg-muted has-[:checked]:border-primary">
+                                    <RadioGroupItem value="standard" id="standard-tier" />
+                                    <div className="grid gap-1.5 w-full">
+                                        <div className="font-semibold">{t.standardDelivery}</div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">{requestingService.service.deliveryTime} {t.days}</span>
+                                            <span className="font-medium">${requestingService.service.price.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </Label>
+                                {requestingService.service.fastDelivery && (
+                                    <Label htmlFor="fast-tier" className="flex items-start gap-4 rounded-lg border p-4 cursor-pointer hover:bg-muted has-[:checked]:border-primary">
+                                        <RadioGroupItem value="fast" id="fast-tier" />
+                                        <div className="grid gap-1.5 w-full">
+                                            <div className="font-semibold text-primary">{t.fastDelivery}</div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">{requestingService.service.fastDelivery.days} {t.days}</span>
+                                                <span className="font-medium">${requestingService.service.fastDelivery.price.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </Label>
+                                )}
+                            </RadioGroup>
+                            
+                            {selectedDeliveryTier && (
+                                <div className="rounded-lg border bg-muted p-3">
+                                    <div className="flex justify-between text-sm font-medium">
+                                        <span>{t.yourBalance}</span>
+                                        <span>${clientBalance.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-medium mt-1 text-destructive">
+                                        <span>{t.serviceCost}</span>
+                                        <span>-${(selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price).toFixed(2)}</span>
+                                    </div>
+                                    <Separator className="my-2" />
+                                    <div className="flex justify-between text-sm font-bold">
+                                        <span>{t.remainingBalance}</span>
+                                        <span>${(clientBalance - (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price)).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                            <AlertDialogAction 
+                                onClick={handleRequestService} 
+                                disabled={!selectedDeliveryTier || isSubmittingServiceRequest || (clientBalance < (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price))}
+                            >
+                                {isSubmittingServiceRequest ? t.processing : (clientBalance < (selectedDeliveryTier === 'fast' && requestingService.service.fastDelivery ? requestingService.service.fastDelivery.price : requestingService.service.price) ? t.insufficientFundsTitle : t.confirmAndPay)}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
         </main>
     </div>
