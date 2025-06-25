@@ -84,7 +84,7 @@ export function ClientDashboard() {
   }, [jobs, selectedJob]);
   
   const handleHireFreelancer = async () => {
-    if (!proposalToHire || !user) return;
+    if (!proposalToHire || !user || !db) return;
   
     const jobToHire = jobs.find(j => j.id === proposalToHire.jobId);
     if (!jobToHire) return;
@@ -179,14 +179,13 @@ export function ClientDashboard() {
     const jobToApprove = jobs.find(j => j.id === jobId);
     if (!jobToApprove || !jobToApprove.hiredFreelancerId) return;
   
-    const adminQuery = query(collection(db, "users"), where("role", "==", "admin"));
-    const adminSnapshot = await getDocs(adminQuery);
-    if (adminSnapshot.empty) {
+    const adminUser = allUsers.find(u => u.role === 'admin');
+    if (!adminUser) {
       console.error("Admin user not found for fee collection.");
       toast({ title: "Error", description: "Admin account not found. Could not process payment.", variant: "destructive" });
       return;
     }
-    const adminUserRef = adminSnapshot.docs[0].ref;
+    const adminUserRef = doc(db, 'users', adminUser.id);
   
     const platformFee = jobToApprove.budget * 0.05;
     const freelancerPayout = jobToApprove.budget - platformFee;
