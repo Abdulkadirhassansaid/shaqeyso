@@ -36,7 +36,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'inline-flex flex-col items-center justify-center px-5 hover:bg-muted group',
+                'inline-flex flex-col items-center justify-center px-5 group transition-colors hover:bg-primary/10 hover:text-primary',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}
             >

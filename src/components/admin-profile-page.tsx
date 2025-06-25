@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Camera, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface AdminProfilePageProps {
   user: User;
@@ -22,6 +22,7 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
   const { updateUserProfile } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const router = useRouter();
   
   const [name, setName] = React.useState(user.name);
   const [avatar, setAvatar] = React.useState<string | null>(null);
@@ -68,11 +69,9 @@ export function AdminProfilePage({ user }: AdminProfilePageProps) {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
         <div>
-            <Button asChild variant="outline" size="sm">
-                <Link href="/admin/dashboard">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t.adminDashboard}
-                </Link>
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.back}
             </Button>
         </div>
       <Card>

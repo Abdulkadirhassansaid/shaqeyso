@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -17,7 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Link from 'next/link';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function BillingPage() {
@@ -161,11 +161,9 @@ export default function BillingPage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <Button asChild variant="outline" size="sm">
-                <Link href="/profile">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t.profile}
-                </Link>
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.back}
             </Button>
           </div>
           <header>

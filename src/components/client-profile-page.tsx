@@ -20,7 +20,6 @@ import { StarRating } from './star-rating';
 import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from './ui/skeleton';
-import Link from 'next/link';
 
 interface ClientProfilePageProps {
   user: User;
@@ -133,11 +132,9 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
         <div>
-            <Button asChild variant="outline" size="sm">
-                <Link href="/">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t.backToHome}
-                </Link>
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {t.back}
             </Button>
         </div>
         <div className="grid md:grid-cols-3 gap-6">

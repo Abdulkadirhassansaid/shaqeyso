@@ -15,7 +15,6 @@ import {
   X,
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -271,11 +270,9 @@ export default function MyServicesPage() {
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/profile">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t.profile}
-              </Link>
+            <Button variant="outline" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t.back}
             </Button>
           </div>
 
