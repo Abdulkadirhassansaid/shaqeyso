@@ -61,17 +61,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
         return;
       }
+      
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
+          let initialLoadComplete = false;
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
               const userData = { ...userDocSnap.data(), id: userDocSnap.id } as User;
               setUser(userData);
-              setIsLoading(false); // Set loading to false only when we have the user doc
+            } else {
+              // This can happen right after signup if the doc creation is slightly delayed
+              // or if a user was deleted from DB but not Auth. Treat as logged out.
+              setUser(null);
             }
-            // If doc doesn't exist yet, we wait. isLoading remains true.
-            // This can happen right after signup.
+             if (!initialLoadComplete) {
+                initialLoadComplete = true;
+                setIsLoading(false);
+            }
           }, (error) => {
             console.error("Error listening to user document:", error);
             setUser(null);
