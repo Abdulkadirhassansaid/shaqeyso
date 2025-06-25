@@ -526,7 +526,7 @@ export function AdminDashboard() {
                                             <p className="text-sm text-muted-foreground">{tx.description}</p>
                                         </div>
                                         <div className={`ml-auto font-medium ${tx.amount > 0 ? 'text-success' : 'text-destructive'}`}>
-                                            {tx.amount > 0 ? `+$${tx.amount.toFixed(2)}` : `-$${Math.abs(tx.amount).toFixed(2)}`}
+                                            {tx.amount > 0 ? `+$${Number(tx.amount || 0).toFixed(2)}` : `-$${Math.abs(tx.amount || 0).toFixed(2)}`}
                                         </div>
                                     </div>
                                 ))}
@@ -688,17 +688,18 @@ export function AdminDashboard() {
                                     const client = users.find(u => u.id === job.clientId);
                                     const freelancer = job.hiredFreelancerId ? users.find(u => u.id === job.hiredFreelancerId) : null;
                                     const status = job.status || 'Unknown';
-
+                                    
+                                    const lastReadTimestamp = adminUser ? job.lastReadBy?.[adminUser.id] : undefined;
                                     const hasUnreadMessages = adminUser && job.lastMessageTimestamp &&
                                         job.lastMessageSenderId !== adminUser.id &&
-                                        (!job.lastReadBy?.[adminUser.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[adminUser.id]));
+                                        (!lastReadTimestamp || new Date(job.lastMessageTimestamp) > new Date(lastReadTimestamp));
 
                                     return (
                                         <TableRow key={job.id}>
                                             <TableCell className="font-medium">{job.title}</TableCell>
                                             <TableCell>{client?.name}</TableCell>
                                             <TableCell>{freelancer?.name || 'N/A'}</TableCell>
-                                            <TableCell>${job.budget.toFixed(2)}</TableCell>
+                                            <TableCell>${(job.budget || 0).toFixed(2)}</TableCell>
                                             <TableCell>
                                                  <Badge variant={getStatusVariant(job.status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
                                             </TableCell>

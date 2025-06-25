@@ -39,7 +39,7 @@ import { useUsers } from '@/hooks/use-users';
 
 export function ClientDashboard() {
   const { user } = useAuth();
-  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } from useJobs();
+  const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } = useJobs();
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
   const [activeTab, setActiveTab] = React.useState('my-jobs');
@@ -352,6 +352,11 @@ export function ClientDashboard() {
     
     const ProposalCard = ({ proposal, isRanked = false, rank, reason }: { proposal: Proposal, isRanked?: boolean, rank?: number, reason?: string }) => {
         const freelancerUser = allUsers.find(u => u.id === proposal.freelancerId);
+        
+        if (!freelancerUser) {
+            return null; // Don't render if the freelancer account was deleted
+        }
+
         const proposalStatus = proposal.status || 'Pending';
         const statusVariant = proposalStatus === 'Accepted' ? 'default' : proposalStatus === 'Rejected' ? 'destructive' : 'secondary';
         
@@ -364,12 +369,12 @@ export function ClientDashboard() {
                         </Badge>
                     )}
                     <Avatar>
-                        <AvatarImage src={freelancerUser?.avatarUrl} alt={freelancerUser?.name} />
-                        <AvatarFallback>{freelancerUser?.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={freelancerUser.avatarUrl} alt={freelancerUser.name} />
+                        <AvatarFallback>{freelancerUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow">
                         <div className="flex justify-between items-center">
-                            <p className="font-semibold">{freelancerUser?.name}</p>
+                            <p className="font-semibold">{freelancerUser.name}</p>
                             <Badge variant={statusVariant}>{t[proposalStatus.toLowerCase() as keyof typeof t] || proposalStatus}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{t.proposedRate}: ${proposal.proposedRate}/hr</p>
