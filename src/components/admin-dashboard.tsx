@@ -19,14 +19,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, MessageCircle, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, FileText, Download, Search, Landmark } from 'lucide-react';
+import { Banknote, MoreVertical, Slash, UserCheck, DollarSign, Users, Briefcase, TrendingUp, MessageSquare, Trash2, CreditCard, Smartphone, Wallet, BadgeCheck, AlertTriangle, ShieldQuestion, FileText, Download, Search, Landmark } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
 import { ChatDialog } from './chat-dialog';
-import { DirectChatDialog } from './direct-chat-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { useReviews } from '@/hooks/use-reviews';
 import {
@@ -85,11 +84,9 @@ export function AdminDashboard() {
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
   const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'financials');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
-  const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
   const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
   const [isRejecting, setIsRejecting] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
-  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
 
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
@@ -98,48 +95,6 @@ export function AdminDashboard() {
 
   const adminUser = users.find(u => u.role === 'admin');
   
-  React.useEffect(() => {
-    if (!adminUser?.id || !db) return;
-    
-    const q = query(collection(db, 'directMessages'), where('participantIds', 'array-contains', adminUser.id));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const messagesData = snapshot.docs.map(doc => ({ 
-            ...doc.data(), 
-            id: doc.id,
-            timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
-        } as DirectMessage));
-        setDirectMessages(messagesData);
-    });
-    
-    return () => unsubscribe();
-  }, [adminUser]);
-
-  const unreadMessagesMap = React.useMemo(() => {
-    const map = new Map<string, boolean>();
-    if (!adminUser || directMessages.length === 0) return map;
-    
-    const conversations = new Map<string, DirectMessage[]>();
-    directMessages.forEach(msg => {
-        const partnerId = msg.participantIds.find(id => id !== adminUser.id);
-        if (partnerId) {
-            if (!conversations.has(partnerId)) {
-                conversations.set(partnerId, []);
-            }
-            conversations.get(partnerId)!.push(msg);
-        }
-    });
-    
-    conversations.forEach((msgs, partnerId) => {
-        const lastMessage = msgs.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-        const lastReadTimestamp = adminUser.directMessageReadTimestamps?.[partnerId];
-        
-        if (lastMessage.senderId !== adminUser.id && (!lastReadTimestamp || new Date(lastMessage.timestamp) > new Date(lastReadTimestamp))) {
-            map.set(partnerId, true);
-        }
-    });
-    return map;
-  }, [directMessages, adminUser]);
-
   const adminTransactions = adminUser?.transactions || [];
 
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
@@ -768,13 +723,6 @@ export function AdminDashboard() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)} className="relative">
-                                                        <MessageCircle className="h-4 w-4" />
-                                                        {unreadMessagesMap.has(user.id) && (
-                                                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />
-                                                        )}
-                                                        <span className="sr-only">Chat with {user.name}</span>
-                                                    </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" size="icon">
@@ -1004,13 +952,7 @@ export function AdminDashboard() {
                 onClose={() => setChattingJob(null)}
             />
         )}
-        {chattingWithUser && (
-            <DirectChatDialog
-                otherUser={chattingWithUser}
-                isOpen={!!chattingWithUser}
-                onClose={() => setChattingWithUser(null)}
-            />
-        )}
+        
         {reviewingUser && (
             <Dialog open={!!reviewingUser} onOpenChange={(isOpen) => {
               if (!isOpen) {
