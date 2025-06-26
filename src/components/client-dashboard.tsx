@@ -412,45 +412,48 @@ export function ClientDashboard() {
     };
 
     return (
-      <AlertDialog open={!!proposalToHire} onOpenChange={(isOpen) => !isOpen && setProposalToHire(null)}>
-          <Card className="w-full">
-              <CardHeader>
-                  <Button variant="ghost" size="sm" onClick={() => { setSelectedJobId(null); setRankedFreelancers([]); }} className="justify-start mb-4 w-fit px-2">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      {t.backToJobs}
-                  </Button>
-                  <div className="flex justify-between items-center">
-                      <CardTitle>{selectedJob.title}</CardTitle>
-                  </div>
-                  <CardDescription>
-                      {selectedJob.category} - {t.budget}: ${selectedJob.budget}
-                  </CardDescription>
-              </CardHeader>
-              <CardContent>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
-              
-              <div className="mt-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                      <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
-                      {selectedJob.status === 'Open' && (
-                           <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
-                              <Wand2 className='mr-2 h-4 w-4' />
-                              {isRanking ? t.ranking : t.findBestMatches}
-                          </Button>
-                      )}
-                  </div>
-                  
-                  {isRanking && (
-                      <div className="flex justify-center items-center py-8">
-                          <LoadingDots />
-                      </div>
-                  )}
-                  
-                  {rankedFreelancers.length > 0 ? (
-                      <div className="space-y-4">
-                          {rankedFreelancers.map((freelancer) => {
-                              if (!freelancer.originalProposal) return null;
-                              return (
+      <div>
+        <div className="mb-6">
+          <Button variant="outline" size="sm" onClick={() => { setSelectedJobId(null); setRankedFreelancers([]); }}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t.backToJobs}
+          </Button>
+        </div>
+        <AlertDialog open={!!proposalToHire} onOpenChange={(isOpen) => !isOpen && setProposalToHire(null)}>
+            <Card className="w-full">
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>{selectedJob.title}</CardTitle>
+                    </div>
+                    <CardDescription>
+                        {selectedJob.category} - {t.budget}: ${selectedJob.budget}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
+                
+                <div className="mt-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
+                        {selectedJob.status === 'Open' && (
+                            <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
+                                <Wand2 className='mr-2 h-4 w-4' />
+                                {isRanking ? t.ranking : t.findBestMatches}
+                            </Button>
+                        )}
+                    </div>
+                    
+                    {isRanking && (
+                        <div className="flex justify-center items-center py-8">
+                            <LoadingDots />
+                        </div>
+                    )}
+                    
+                    {rankedFreelancers.length > 0 ? (
+                        <div className="space-y-4">
+                            {rankedFreelancers.map((freelancer) => {
+                                if (!freelancer.originalProposal) return null;
+                                return (
                                 <ProposalCard 
                                     key={freelancer.originalProposal.id} 
                                     proposal={freelancer.originalProposal}
@@ -459,49 +462,50 @@ export function ClientDashboard() {
                                     reason={freelancer.reason}
                                 />
                             )
-                          })}
-                      </div>
-                  ) : (
-                      jobProposals.length > 0 ? (
-                          <div className="space-y-4">
-                              {jobProposals.map(proposal => (
-                                  <ProposalCard key={proposal.id} proposal={proposal} />
-                              ))}
-                          </div>
-                      ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                              <p>{t.noProposals}</p>
-                          </div>
-                      )
-                  )}
-              </div>
-              </CardContent>
-              {selectedJob.status === 'InProgress' && hiredFreelancer && (
-                  <CardFooter>
-                      <ApprovePaymentDialog
-                          job={selectedJob}
-                          freelancer={hiredFreelancer}
-                          onConfirm={() => handleApproveAndPay(selectedJob.id)}
-                      >
-                          <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
-                      </ApprovePaymentDialog>
-                  </CardFooter>
-              )}
-          </Card>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>{t.chooseNextStep}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      {t.nextStepDesc.replace('{name}', (proposalToHire && allUsers.find(u => u.id === proposalToHire.freelancerId)?.name) || 'this freelancer')}
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setProposalToHire(null)}>{t.cancel}</AlertDialogCancel>
-                  <Button variant="secondary" onClick={handleStartInterview}>{t.startInterview}</Button>
-                  <AlertDialogAction onClick={handleHireFreelancer}>{t.hireDirectly}</AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
+                            })}
+                        </div>
+                    ) : (
+                        jobProposals.length > 0 ? (
+                            <div className="space-y-4">
+                                {jobProposals.map(proposal => (
+                                    <ProposalCard key={proposal.id} proposal={proposal} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                <p>{t.noProposals}</p>
+                            </div>
+                        )
+                    )}
+                </div>
+                </CardContent>
+                {selectedJob.status === 'InProgress' && hiredFreelancer && (
+                    <CardFooter>
+                        <ApprovePaymentDialog
+                            job={selectedJob}
+                            freelancer={hiredFreelancer}
+                            onConfirm={() => handleApproveAndPay(selectedJob.id)}
+                        >
+                            <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
+                        </ApprovePaymentDialog>
+                    </CardFooter>
+                )}
+            </Card>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t.chooseNextStep}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {t.nextStepDesc.replace('{name}', (proposalToHire && allUsers.find(u => u.id === proposalToHire.freelancerId)?.name) || 'this freelancer')}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setProposalToHire(null)}>{t.cancel}</AlertDialogCancel>
+                    <Button variant="secondary" onClick={handleStartInterview}>{t.startInterview}</Button>
+                    <AlertDialogAction onClick={handleHireFreelancer}>{t.hireDirectly}</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </div>
     );
   }
 
@@ -510,22 +514,22 @@ export function ClientDashboard() {
     <div className="space-y-6">
       <Dialog open={isPostJobOpen} onOpenChange={handleDialogChange}>
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <div className="text-left">
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">Manage your job postings and service orders.</p>
             </div>
             <DialogTrigger asChild>
               {user.verificationStatus === 'verified' ? (
-                <Button onClick={handleOpenPostDialog}>
+                <Button onClick={handleOpenPostDialog} className="w-full sm:w-auto">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   {t.postNewJob}
                 </Button>
               ) : (
-                <Button disabled>{t.postNewJob}</Button>
+                <Button disabled className="w-full sm:w-auto">{t.postNewJob}</Button>
               )}
             </DialogTrigger>
         </div>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="w-[90vw] rounded-lg md:w-full md:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingJob ? t.editJobTitle : t.postNewJobTitle}</DialogTitle>
             <DialogDescription>{editingJob ? t.editJobDesc : t.postNewJobDesc}</DialogDescription>
