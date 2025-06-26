@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Language } from '@/lib/translations';
 import { useLanguage } from '@/hooks/use-language';
 import { ArrowLeft } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 export default function SettingsPage() {
   const { user, isLoading, logout } = useAuth();
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const pathname = usePathname();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const [isSaving, setIsSaving] = React.useState(false);
   
@@ -115,6 +117,27 @@ export default function SettingsPage() {
                     </Select>
                     <p className="text-sm text-muted-foreground">
                         {t.languageDescription}
+                    </p>
+                  </div>
+
+                   <div className="space-y-2">
+                    <Label htmlFor="theme">{t.theme}</Label>
+                    <Select
+                      value={theme}
+                      onValueChange={setTheme}
+                      disabled={isSaving}
+                    >
+                      <SelectTrigger id="theme">
+                        <SelectValue placeholder={t.selectTheme} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">{t.light}</SelectItem>
+                        <SelectItem value="dark">{t.dark}</SelectItem>
+                        <SelectItem value="system">{t.system}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      {t.themeDescription}
                     </p>
                   </div>
               </div>

@@ -20,6 +20,7 @@ import { ChatProvider } from '@/hooks/use-chat';
 import { DirectChatDialogController } from '@/components/direct-chat-dialog-controller';
 import { PresenceProvider } from '@/hooks/use-presence';
 import { ReviewsProvider } from '@/hooks/use-reviews';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -68,26 +69,33 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        <LanguageProvider>
-          <LoadingProvider>
-            <AuthProvider>
-              <UsersProvider>
-                <ChatProvider>
-                  <PresenceProvider>
-                    <PageProgress />
-                    <PageLoader />
-                    <div className="relative flex min-h-screen flex-col">
-                        <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                        <BottomNav />
-                    </div>
-                    <Toaster />
-                    <DirectChatDialogController />
-                  </PresenceProvider>
-                </ChatProvider>
-              </UsersProvider>
-            </AuthProvider>
-          </LoadingProvider>
-        </LanguageProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <LanguageProvider>
+            <LoadingProvider>
+              <AuthProvider>
+                <UsersProvider>
+                  <ChatProvider>
+                    <PresenceProvider>
+                      <PageProgress />
+                      <PageLoader />
+                      <div className="relative flex min-h-screen flex-col">
+                          <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                          <BottomNav />
+                      </div>
+                      <Toaster />
+                      <DirectChatDialogController />
+                    </PresenceProvider>
+                  </ChatProvider>
+                </UsersProvider>
+              </AuthProvider>
+            </LoadingProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
