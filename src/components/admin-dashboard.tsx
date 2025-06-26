@@ -48,6 +48,8 @@ import { Textarea } from './ui/textarea';
 import { useUsers } from '@/hooks/use-users';
 import { Skeleton } from './ui/skeleton';
 import { useChat } from '@/hooks/use-chat';
+import { usePresence } from '@/hooks/use-presence';
+import { OnlineIndicator } from './online-indicator';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
     if (!dataUrl) return 'bin';
@@ -80,6 +82,7 @@ export function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { openChat } = useChat();
+  const { isUserOnline } = usePresence();
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
   const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'financials');
   const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
@@ -701,7 +704,10 @@ export function AdminDashboard() {
                                                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <p className="font-medium">{user.name}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-medium">{user.name}</p>
+                                                            <OnlineIndicator isOnline={isUserOnline(user.id)} />
+                                                        </div>
                                                         <p className="text-sm text-muted-foreground">{user.email}</p>
                                                     </div>
                                                 </div>

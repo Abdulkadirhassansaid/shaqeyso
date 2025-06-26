@@ -19,6 +19,8 @@ import { JobsProvider } from '@/hooks/use-jobs';
 import { ProposalsProvider } from '@/hooks/use-proposals';
 import { ChatProvider } from '@/hooks/use-chat';
 import { DirectChatDialogController } from '@/components/direct-chat-dialog-controller';
+import { PresenceProvider } from '@/hooks/use-presence';
+import { ReviewsProvider } from '@/hooks/use-reviews';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -73,18 +75,16 @@ export default function RootLayout({
               <AuthProvider>
                 <UsersProvider>
                   <ChatProvider>
-                    <JobsProvider>
-                        <ProposalsProvider>
-                            <PageProgress />
-                            <PageLoader />
-                            <div className="relative flex min-h-screen flex-col">
-                                <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                                <BottomNav />
-                            </div>
-                            <Toaster />
-                            <DirectChatDialogController />
-                        </ProposalsProvider>
-                    </JobsProvider>
+                    <PresenceProvider>
+                      <PageProgress />
+                      <PageLoader />
+                      <div className="relative flex min-h-screen flex-col">
+                          <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                          <BottomNav />
+                      </div>
+                      <Toaster />
+                      <DirectChatDialogController />
+                    </PresenceProvider>
                   </ChatProvider>
                 </UsersProvider>
               </AuthProvider>

@@ -20,15 +20,19 @@ import { useLanguage } from '@/hooks/use-language';
 import { BadgeCheck, LifeBuoy } from 'lucide-react';
 import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
+import { usePresence } from '@/hooks/use-presence';
+import { OnlineIndicator } from './online-indicator';
 
 export function UserNav() {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { t } = useLanguage();
   const { openChat } = useChat();
   const { users, isUsersLoading } = useUsers();
+  const { isUserOnline } = usePresence();
   const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(user?.avatarUrl);
 
   const adminUser = users.find(u => u.role === 'admin');
+  const isAdminOnline = adminUser ? isUserOnline(adminUser.id) : false;
 
   React.useEffect(() => {
     if (user) {
@@ -102,8 +106,13 @@ export function UserNav() {
         {user.role !== 'admin' && adminUser && (
             <>
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(adminUser); }}>
-                    <LifeBuoy className="mr-2 h-4 w-4" />
-                    <span>{t.supportChat}</span>
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2">
+                           <LifeBuoy className="h-4 w-4" />
+                           <span>{t.supportChat}</span>
+                        </div>
+                        <OnlineIndicator isOnline={isAdminOnline} />
+                    </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
             </>

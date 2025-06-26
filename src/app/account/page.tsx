@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
+import { usePresence } from '@/hooks/use-presence';
+import { OnlineIndicator } from '@/components/online-indicator';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
@@ -28,8 +30,10 @@ export default function AccountPage() {
   const { t } = useLanguage();
   const { openChat } = useChat();
   const { users } = useUsers();
+  const { isUserOnline } = usePresence();
 
   const adminUser = users.find((u) => u.role === 'admin');
+  const isAdminOnline = adminUser ? isUserOnline(adminUser.id) : false;
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -126,7 +130,10 @@ export default function AccountPage() {
                     <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted" onClick={() => openChat(adminUser)}>
                       <div className="relative flex items-center gap-4">
                         <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{t.supportChat}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{t.supportChat}</span>
+                          <OnlineIndicator isOnline={isAdminOnline} />
+                        </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </button>
@@ -140,7 +147,7 @@ export default function AccountPage() {
              <nav>
               <ul>
                 <li>
-                  <button className="w-full flex items-center justify-start p-4 transition-colors text-destructive hover:bg-destructive/10" onClick={logout}>
+                  <button className="w-full flex items-center justify-between p-4 transition-colors text-destructive hover:bg-destructive/10" onClick={logout}>
                     <div className="flex items-center gap-4">
                         <LogOut className="h-5 w-5" />
                         <span className="font-medium">{t.logOut}</span>

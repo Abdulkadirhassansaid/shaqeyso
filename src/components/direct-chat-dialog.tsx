@@ -20,6 +20,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useUsers } from '@/hooks/use-users';
+import { usePresence } from '@/hooks/use-presence';
+import { OnlineIndicator } from './online-indicator';
 
 interface DirectChatDialogProps {
   otherUser: User;
@@ -32,6 +34,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
   const { user: currentUser } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
+  const { isUserOnline } = usePresence();
   
   const [messages, setMessages] = React.useState<LiveChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
@@ -117,13 +120,20 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
   
   if (!currentUser) return null;
 
-  const dialogTitle = `${t.chatWith} ${otherUser.name}`;
+  const isOtherUserOnline = isUserOnline(otherUser.id);
+
+  const dialogTitle = (
+    <div className="flex items-center gap-3">
+        <DialogTitle>{`${t.chatWith} ${otherUser.name}`}</DialogTitle>
+        <OnlineIndicator isOnline={isOtherUserOnline} />
+    </div>
+  );
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl grid-rows-[auto_1fr_auto] p-0 h-[80vh] max-h-[700px]">
         <DialogHeader className="p-4 border-b">
-          <DialogTitle>{dialogTitle}</DialogTitle>
+          {dialogTitle}
         </DialogHeader>
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
