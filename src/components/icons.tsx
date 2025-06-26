@@ -5,14 +5,23 @@ export const Icons = {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}
     >
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+      <title>Shaqeyso Hub Logo</title>
+      <circle cx="12" cy="12" r="10" stroke="#16a34a" strokeWidth="2" fill="none" />
+      <g fill="#1e40af">
+        <circle cx="12" cy="8" r="2.5" />
+        <path d="M16.5 19a4.5 4.5 0 0 0-9 0z" />
+      </g>
+      <path
+        d="M8 14.5c0-3 1.5-5 4-5s4 2 4 5"
+        stroke="#1e40af"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   ),
 };
