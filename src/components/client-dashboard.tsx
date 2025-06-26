@@ -853,7 +853,7 @@ export function ClientDashboard() {
         </Tabs>
       </div>
 
-      <DialogContent className="sm:max-w-2xl w-[90vw] rounded-lg md:w-full">
+      <DialogContent className="w-[95vw] rounded-lg sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {editingJob ? t.editJobTitle : t.postNewJobTitle}
