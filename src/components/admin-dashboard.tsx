@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import { useLanguage } from '@/hooks/use-language';
-import type { Job, User, PaymentMethod, LiveChat } from '@/lib/types';
+import type { Job, User, PaymentMethod } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -48,8 +48,6 @@ import Image from 'next/image';
 import { Textarea } from './ui/textarea';
 import { useUsers } from '@/hooks/use-users';
 import { Skeleton } from './ui/skeleton';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { DirectChatDialog } from './direct-chat-dialog';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
@@ -90,7 +88,6 @@ export function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = React.useState('');
   
   const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
-  const [liveChats, setLiveChats] = React.useState<LiveChat[]>([]);
 
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
@@ -99,15 +96,6 @@ export function AdminDashboard() {
 
   const adminUser = users.find(u => u.role === 'admin');
   
-  React.useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'liveChats'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        setLiveChats(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveChat)));
-    });
-    return () => unsubscribe();
-  }, []);
-
   const adminTransactions = adminUser?.transactions || [];
 
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
@@ -707,11 +695,7 @@ export function AdminDashboard() {
                             </TableHeader>
                             <TableBody>
                                 {filteredUsers.length > 0 ? (
-                                    filteredUsers.map((user) => {
-                                      const liveChat = liveChats.find(lc => lc.id === user.id);
-                                      const hasUnread = adminUser && liveChat && liveChat.lastMessageSenderId === user.id && (!liveChat.adminLastReadTimestamp || new Date(liveChat.lastMessageTimestamp!) > new Date(liveChat.adminLastReadTimestamp));
-
-                                      return (
+                                    filteredUsers.map((user) => (
                                         <TableRow key={user.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
@@ -740,14 +724,8 @@ export function AdminDashboard() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" className="relative" onClick={() => setChattingWithUser(user)}>
+                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
                                                         <MessageSquare className="h-4 w-4" />
-                                                        {hasUnread && (
-                                                            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                                                            </span>
-                                                        )}
                                                     </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
@@ -803,7 +781,7 @@ export function AdminDashboard() {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    )})
+                                    ))
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-24 text-center">

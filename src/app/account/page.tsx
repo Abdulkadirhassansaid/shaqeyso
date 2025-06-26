@@ -23,7 +23,7 @@ import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import { useUsers } from '@/hooks/use-users';
 
 export default function AccountPage() {
-  const { user, logout, isLoading, hasUnreadAdminMessages } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { users } = useUsers();
   const router = useRouter();
   const pathname = usePathname();
@@ -68,7 +68,6 @@ export default function AccountPage() {
       icon: LifeBuoy,
       roles: ['client', 'freelancer'],
       onClick: () => setIsChatOpen(true),
-      notification: hasUnreadAdminMessages,
     },
   ];
 
@@ -104,12 +103,6 @@ export default function AccountPage() {
                       <div className="relative flex items-center gap-4">
                         <item.icon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">{item.label}</span>
-                         {item.notification && (
-                            <span className="absolute left-0 -top-1 flex h-2.5 w-2.5">
-                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
-                            </span>
-                        )}
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </>

@@ -9,7 +9,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 
 export function BottomNav() {
-  const { user, hasUnreadAdminMessages } = useAuth();
+  const { user } = useAuth();
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -21,7 +21,7 @@ export function BottomNav() {
     { href: '/', label: user.role === 'client' ? t.myJobPostings : t.findWork, icon: Briefcase, roles: ['freelancer', 'client'] },
     { href: '/find-freelancers', label: t.freelancers, icon: UsersIcon, roles: ['client'] },
     { href: '/my-services', label: t.myServices, icon: LayoutGrid, roles: ['freelancer'] },
-    { href: '/account', label: t.myAccount, icon: User, roles: ['freelancer', 'client'], notification: hasUnreadAdminMessages },
+    { href: '/account', label: t.myAccount, icon: User, roles: ['freelancer', 'client'] },
   ];
   
   const userNavItems = navItems.filter(item => item.roles.includes(user.role || ''));
@@ -42,9 +42,6 @@ export function BottomNav() {
             >
               <item.icon className="w-5 h-5 mb-1" />
               <span className="text-xs">{item.label}</span>
-              {item.notification && (
-                <span className="absolute top-2 right-4 block h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-card" />
-              )}
             </Link>
           );
         })}

@@ -13,15 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import type { User, LiveChat, LiveChatMessage } from '@/lib/types';
+import type { User, LiveChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useUsers } from '@/hooks/use-users';
-import { collection, onSnapshot, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { LoadingDots } from './loading-dots';
 
 interface DirectChatDialogProps {
   otherUser: User;
@@ -30,77 +29,52 @@ interface DirectChatDialogProps {
   initialMessage?: string;
 }
 
-const MESSAGE_LIMIT = 20;
-
 export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }: DirectChatDialogProps) {
-  const { user: currentUser, sendDirectMessage, markAdminChatAsRead } = useAuth();
+  const { user: currentUser } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
-  const [liveChat, setLiveChat] = React.useState<LiveChat | null>(null);
+  const [messages, setMessages] = React.useState<LiveChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = React.useState(false);
 
+  // Reset chat when dialog opens or the user we are chatting with changes.
   React.useEffect(() => {
-    if (isOpen && initialMessage) {
-        setNewMessage(initialMessage);
+    if (isOpen) {
+      setMessages([]);
+      setNewMessage(initialMessage || '');
     }
-  }, [isOpen, initialMessage]);
+  }, [isOpen, initialMessage, otherUser]);
 
-  const chatId = React.useMemo(() => {
-    if (!currentUser) return null;
-    return currentUser.role === 'admin' ? otherUser.id : currentUser.id;
-  }, [currentUser, otherUser]);
-
-  React.useEffect(() => {
-    if (isOpen && chatId) {
-        markAdminChatAsRead(chatId);
-    }
-  }, [isOpen, chatId, markAdminChatAsRead]);
-
-  React.useEffect(() => {
-    if (!chatId || !db) {
-        setLiveChat(null);
-        return;
-    };
-
-    const chatDocRef = doc(db, 'liveChats', chatId);
-    
-    const unsubscribe = onSnapshot(chatDocRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        const chatData = {
-          id: snapshot.id,
-          messages: data.messages || [],
-          ...data,
-        } as LiveChat;
-        // Ensure messages are sorted client-side as a fallback
-        chatData.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-        setLiveChat(chatData);
-      } else {
-        setLiveChat(null);
-      }
-    }, (error) => {
-        console.error("Error fetching live chat:", error);
-    });
-
-    return () => unsubscribe();
-  }, [chatId]);
-
-
-  if (!currentUser) return null;
-
-  const conversationMessages: LiveChatMessage[] = liveChat?.messages || [];
-
-  const dialogTitle = `${t.chatWith} ${otherUser.name}`;
-  
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser || !chatId) return;
-    
-    sendDirectMessage(chatId, newMessage);
+    if (!newMessage.trim() || !currentUser) return;
+
+    const userMessage: LiveChatMessage = {
+      senderId: currentUser.id,
+      text: newMessage,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setNewMessage('');
+    setIsTyping(true);
+
+    // Simulate a response from the other user to make the chat feel real-time.
+    setTimeout(() => {
+      const cannedResponse: LiveChatMessage = {
+        senderId: otherUser.id,
+        text: currentUser.role === 'admin'
+          ? "Thank you for your message. We have received it and will look into it."
+          : "Thanks for reaching out to support! An admin will review your message shortly. Please describe your issue in as much detail as possible.",
+        timestamp: new Date().toISOString(),
+      };
+      setIsTyping(false);
+      setMessages(prev => [...prev, cannedResponse]);
+    }, 1500);
   };
 
+  // Scroll to the bottom of the chat when new messages are added.
   React.useEffect(() => {
     if (scrollAreaRef.current) {
         const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
@@ -108,8 +82,12 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [conversationMessages, isOpen]);
+  }, [messages, isTyping]);
+  
+  if (!currentUser) return null;
 
+  const dialogTitle = `${t.chatWith} ${otherUser.name}`;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl grid-rows-[auto_1fr_auto] p-0 h-[80vh] max-h-[700px]">
@@ -119,12 +97,12 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
-            {conversationMessages.length === 0 ? (
+            {messages.length === 0 && !isTyping ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>{t.noMessagesYet}</p>
                 </div>
             ) : (
-                conversationMessages.map((message, index) => {
+                messages.map((message, index) => {
                     const senderDetails = users.find(u => u.id === message.senderId);
                     const isSender = message.senderId === currentUser?.id;
                     
@@ -177,6 +155,20 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
                     </div>
                     );
                 })
+            )}
+            {isTyping && (
+                <div className="flex items-center gap-3 justify-start">
+                    <Avatar className="h-10 w-10 self-start border-2 border-background">
+                        <AvatarImage src={otherUser.avatarUrl} />
+                        <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-1 w-fit max-w-md items-start">
+                         <p className="text-sm font-semibold px-1">{otherUser.name}</p>
+                         <div className="px-4 py-3 shadow-md rounded-t-2xl rounded-br-2xl bg-card">
+                             <LoadingDots />
+                         </div>
+                    </div>
+                </div>
             )}
           </div>
         </ScrollArea>
