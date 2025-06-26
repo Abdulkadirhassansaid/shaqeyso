@@ -22,6 +22,7 @@ import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
 import { usePresence } from '@/hooks/use-presence';
 import { OnlineIndicator } from '@/components/online-indicator';
+import { Badge } from '@/components/ui/badge';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
@@ -82,7 +83,11 @@ export default function AccountPage() {
             <div>
                 <div className="flex items-center gap-2">
                     <h1 className="text-xl font-bold">{user.name}</h1>
-                    {user.verificationStatus === 'verified' && <BadgeCheck className="h-5 w-5 text-primary" />}
+                    {user.verificationStatus === 'verified' ? (
+                      <BadgeCheck className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Badge variant="outline">{t.unverified}</Badge>
+                    )}
                 </div>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>

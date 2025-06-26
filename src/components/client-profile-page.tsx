@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Badge } from './ui/badge';
 
 interface ClientProfilePageProps {
   user: User;
@@ -201,11 +202,18 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
           <div className="md:col-span-2">
               <Card>
               <CardHeader>
-                  <div className="flex items-center gap-2">
-                      <CardTitle>{t.companyProfile}</CardTitle>
-                      {user.verificationStatus === 'verified' && (
-                          <BadgeCheck className="h-6 w-6 text-primary" />
-                      )}
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{t.companyProfile}</CardTitle>
+                    <div>
+                        {user.verificationStatus === 'verified' ? (
+                            <Badge variant="default" className="gap-2">
+                                <BadgeCheck className="h-4 w-4" />
+                                {t.verified}
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline">{t.unverified}</Badge>
+                        )}
+                    </div>
                   </div>
                   <CardDescription>{t.companyProfileDesc}</CardDescription>
               </CardHeader>

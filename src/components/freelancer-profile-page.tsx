@@ -299,12 +299,19 @@ export function FreelancerProfilePage({ user }: FreelancerProfilePageProps) {
               <div className="md:col-span-2 space-y-6">
                   <Card>
                       <CardHeader>
-                          <div className="flex items-center gap-2">
+                           <div className="flex items-center justify-between">
                               <CardTitle>{t.freelancerProfileTitle}</CardTitle>
-                              {user.verificationStatus === 'verified' && (
-                                  <BadgeCheck className="h-6 w-6 text-primary" />
-                              )}
-                          </div>
+                              <div>
+                                  {user.verificationStatus === 'verified' ? (
+                                      <Badge variant="default" className="gap-2">
+                                          <BadgeCheck className="h-4 w-4" />
+                                          {t.verified}
+                                      </Badge>
+                                  ) : (
+                                      <Badge variant="outline">{t.unverified}</Badge>
+                                  )}
+                              </div>
+                            </div>
                           <CardDescription>{t.freelancerProfileDesc}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">

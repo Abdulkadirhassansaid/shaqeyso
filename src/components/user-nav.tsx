@@ -22,6 +22,7 @@ import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
 import { usePresence } from '@/hooks/use-presence';
 import { OnlineIndicator } from './online-indicator';
+import { Badge } from './ui/badge';
 
 export function UserNav() {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
@@ -83,7 +84,11 @@ export function UserNav() {
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-1.5">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
-                {user.verificationStatus === 'verified' && <BadgeCheck className="h-4 w-4 text-primary" />}
+                 {user.verificationStatus === 'verified' ? (
+                    <BadgeCheck className="h-4 w-4 text-primary" />
+                 ) : (
+                    <Badge variant="outline" className="text-[10px] h-fit px-1.5">{t.unverified}</Badge>
+                 )}
             </div>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}

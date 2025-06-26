@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
-import { Search, Star, Contact, Clock } from 'lucide-react';
+import { Search, Star, Contact, Clock, BadgeCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -231,7 +231,14 @@ function FindFreelancersPageContent() {
                                         </Avatar>
                                         <div className="flex-grow">
                                             <div className="flex justify-between items-start">
-                                                <CardTitle className="text-lg">{f.name}</CardTitle>
+                                                <div className='flex items-center gap-2'>
+                                                  <h3 className="text-lg font-semibold leading-none tracking-tight">{f.name}</h3>
+                                                  {f.verificationStatus === 'verified' ? (
+                                                      <BadgeCheck className="h-5 w-5 text-primary" />
+                                                  ) : (
+                                                      <Badge variant="outline" className="font-normal">{t.unverified}</Badge>
+                                                  )}
+                                                </div>
                                                 {profile?.hourlyRate && profile.hourlyRate > 0 ? (
                                                     <div className="text-right shrink-0">
                                                         <span className="font-bold text-lg">${profile.hourlyRate.toFixed(2)}</span>
@@ -284,7 +291,14 @@ function FindFreelancersPageContent() {
                                 <AvatarFallback>{selectedFreelancer.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <DialogTitle className="text-2xl">{selectedFreelancer.name}</DialogTitle>
+                                <DialogTitle className="text-2xl flex items-center justify-center gap-2">
+                                    <span>{selectedFreelancer.name}</span>
+                                     {selectedFreelancer.verificationStatus === 'verified' ? (
+                                        <BadgeCheck className="h-6 w-6 text-primary" />
+                                     ) : (
+                                        <Badge variant="secondary">{t.unverified}</Badge>
+                                     )}
+                                </DialogTitle>
                                 <div className="flex justify-center items-center gap-2 mt-1">
                                     <Badge variant={getFreelancerLevel(selectedFreelancer.id) === 'Top Rated' ? 'default' : 'secondary'}>{t[getFreelancerLevel(selectedFreelancer.id).replace(' ', '').toLowerCase() as keyof typeof t]}</Badge>
                                     <div className="flex items-center gap-1">
