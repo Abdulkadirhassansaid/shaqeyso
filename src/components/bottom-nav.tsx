@@ -9,7 +9,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 
 export function BottomNav() {
-  const { user } = useAuth();
+  const { user, hasUnreadAdminMessages } = useAuth();
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -21,7 +21,7 @@ export function BottomNav() {
     { href: '/', label: user.role === 'client' ? t.myJobPostings : t.findWork, icon: Briefcase, roles: ['freelancer', 'client'] },
     { href: '/find-freelancers', label: t.freelancers, icon: UsersIcon, roles: ['client'] },
     { href: '/my-services', label: t.myServices, icon: LayoutGrid, roles: ['freelancer'] },
-    { href: '/account', label: t.myAccount, icon: User, roles: ['freelancer', 'client'] },
+    { href: '/account', label: t.myAccount, icon: User, roles: ['freelancer', 'client'], notification: hasUnreadAdminMessages },
   ];
   
   const userNavItems = navItems.filter(item => item.roles.includes(user.role || ''));
@@ -36,12 +36,15 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'inline-flex flex-col items-center justify-center px-5 group transition-colors hover:bg-primary/10 hover:text-primary',
+                'inline-flex flex-col items-center justify-center px-5 group transition-colors hover:bg-primary/10 hover:text-primary relative',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               <item.icon className="w-5 h-5 mb-1" />
               <span className="text-xs">{item.label}</span>
+              {item.notification && (
+                <span className="absolute top-2 right-4 block h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-card" />
+              )}
             </Link>
           );
         })}

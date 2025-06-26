@@ -58,7 +58,7 @@ export const translations = {
         addImageFromUrlDesc: "Paste an image URL to add it to your service.",
         addImage: "Add Image",
         confirm: "Confirm",
-        
+        supportChat: "Support Chat",
 
 
         // Header
@@ -622,6 +622,7 @@ export const translations = {
         addImageFromUrlDesc: "Ku dheji URL sawir si aad ugu darto adeeggaaga.",
         addImage: "Kudar Sawir",
         confirm: "Xaqiiji",
+        supportChat: "Taageerada Wada-hadalka",
         
 
         // Header

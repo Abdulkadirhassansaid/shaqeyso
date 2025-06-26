@@ -24,16 +24,20 @@ import {
   arrayUnion,
   arrayRemove,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction } from '@/lib/types';
+import type { User, FreelancerProfile, ClientProfile, PaymentMethod, Transaction, LiveChat, LiveChatMessage } from '@/lib/types';
 import { useLoading } from './use-loading';
 import { useToast } from './use-toast';
 import { useLanguage } from './use-language';
 
+const MESSAGE_LIMIT = 20;
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  hasUnreadAdminMessages: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; user?: User; message?: 'invalid' | 'blocked' }>;
   signup: (name: string, email: string, pass: string, role: 'client' | 'freelancer' | 'admin') => Promise<{ success: boolean; user?: User; message?: 'email-in-use' | 'weak-password' | 'unknown' }>;
   logout: () => void;
@@ -46,7 +50,8 @@ interface AuthContextType {
   submitVerification: (userId: string, document: { type: 'personalId' | 'businessCertificate'; url: string; }) => Promise<boolean>;
   approveVerification: (userId: string) => Promise<boolean>;
   rejectVerification: (userId: string, reason: string) => Promise<boolean>;
-  markDirectMessagesAsRead: (partnerId: string) => Promise<boolean>;
+  sendDirectMessage: (chatId: string, text: string) => Promise<boolean>;
+  markAdminChatAsRead: (chatId: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -55,6 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = React.useState<User | null>(null);
     const [authHasLoaded, setAuthHasLoaded] = React.useState(false);
     const [dbUserLoaded, setDbUserLoaded] = React.useState(false);
+    const [hasUnreadAdminMessages, setHasUnreadAdminMessages] = React.useState(false);
+    const liveChatUnsubscribeRef = React.useRef<(() => void) | null>(null);
 
     const isLoading = !authHasLoaded || !dbUserLoaded;
 
@@ -65,10 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const prevUserRef = React.useRef<User | null>(null);
 
     React.useEffect(() => {
-        // This effect runs when the user object changes.
-        // It checks if the user object exists and if the previous user object existed.
         if (prevUserRef.current && user) {
-            // Check if the verification status has changed from something else to 'verified'.
             if (prevUserRef.current.verificationStatus !== 'verified' && user.verificationStatus === 'verified') {
                 toast({
                     title: t.verificationApprovedTitle,
@@ -76,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
             }
         }
-        // Update the ref to the current user for the next render.
         prevUserRef.current = user;
     }, [user, toast, t]);
 
@@ -88,17 +91,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
         setAuthHasLoaded(true);
+
+        if (liveChatUnsubscribeRef.current) {
+            liveChatUnsubscribeRef.current();
+            liveChatUnsubscribeRef.current = null;
+        }
+
         if (firebaseUser) {
-          setDbUserLoaded(false); // Reset DB loaded status for new user
+          setDbUserLoaded(false);
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const unsubDoc = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
               const userData = { ...userDocSnap.data(), id: userDocSnap.id } as User;
               setUser(userData);
+              
+              if (userData.role !== 'admin') {
+                  const liveChatDocRef = doc(db, 'liveChats', userData.id);
+                  liveChatUnsubscribeRef.current = onSnapshot(liveChatDocRef, (chatSnap) => {
+                      if (chatSnap.exists()) {
+                          const chatData = chatSnap.data() as LiveChat;
+                          const isUnread = chatData.lastMessageSenderId !== userData.id &&
+                              (!chatData.userLastReadTimestamp || new Date(chatData.lastMessageTimestamp!) > new Date(chatData.userLastReadTimestamp));
+                          setHasUnreadAdminMessages(isUnread);
+                      } else {
+                          setHasUnreadAdminMessages(false);
+                      }
+                  });
+              } else {
+                  setHasUnreadAdminMessages(false);
+              }
+
             } else {
               setUser(null);
+              setHasUnreadAdminMessages(false);
             }
             setDbUserLoaded(true);
           }, (error) => {
@@ -109,10 +136,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return () => unsubDoc();
         } else {
           setUser(null);
-          setDbUserLoaded(true); // No user, so DB loading is complete
+          setDbUserLoaded(true);
         }
       });
-      return () => unsubscribe();
+      return () => {
+          unsubscribeAuth();
+          if (liveChatUnsubscribeRef.current) {
+            liveChatUnsubscribeRef.current();
+          }
+      };
     }, []);
     
 
@@ -398,22 +430,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const markDirectMessagesAsRead = React.useCallback(async (partnerId: string) => {
-        if (!db || !user) return false;
+    const sendDirectMessage = React.useCallback(async (chatId: string, text: string): Promise<boolean> => {
+        if (!db || !user || !text.trim()) return false;
+        const chatDocRef = doc(db, 'liveChats', chatId);
+        
         try {
-            const userRef = doc(db, 'users', user.id);
-            await updateDoc(userRef, {
-                [`directMessageReadTimestamps.${partnerId}`]: new Date().toISOString()
+            await runTransaction(db, async (transaction) => {
+                const chatDoc = await transaction.get(chatDocRef);
+                
+                const newMessage: LiveChatMessage = {
+                    senderId: user.id,
+                    text: text,
+                    timestamp: new Date().toISOString(),
+                };
+
+                if (!chatDoc.exists()) {
+                    transaction.set(chatDocRef, {
+                        messages: [newMessage],
+                        lastMessageTimestamp: newMessage.timestamp,
+                        lastMessageSenderId: user.id,
+                    });
+                } else {
+                    const currentMessages: LiveChatMessage[] = chatDoc.data().messages || [];
+                    const updatedMessages = [...currentMessages, newMessage];
+                    
+                    if (updatedMessages.length > MESSAGE_LIMIT) {
+                        updatedMessages.splice(0, updatedMessages.length - MESSAGE_LIMIT);
+                    }
+
+                    transaction.update(chatDocRef, {
+                        messages: updatedMessages,
+                        lastMessageTimestamp: newMessage.timestamp,
+                        lastMessageSenderId: user.id,
+                    });
+                }
             });
             return true;
         } catch (error) {
-            console.error("Error marking direct messages as read:", error);
+            console.error("Error sending direct message:", error);
+            return false;
+        }
+    }, [user]);
+
+    const markAdminChatAsRead = React.useCallback(async (chatId: string) => {
+        if (!db || !user) return false;
+        try {
+            const chatDocRef = doc(db, 'liveChats', chatId);
+            const fieldToUpdate = user.role === 'admin' ? 'adminLastReadTimestamp' : 'userLastReadTimestamp';
+            await updateDoc(chatDocRef, {
+                [fieldToUpdate]: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            // It's okay if the document doesn't exist yet
+            if ((error as any).code !== 'not-found') {
+                console.error("Error marking chat as read:", error);
+            }
             return false;
         }
     }, [user]);
     
-    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, markDirectMessagesAsRead }), 
-    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, markDirectMessagesAsRead]);
+    const value = React.useMemo(() => ({ user, isLoading, hasUnreadAdminMessages, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, sendDirectMessage, markAdminChatAsRead }), 
+    [user, isLoading, hasUnreadAdminMessages, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, sendDirectMessage, markAdminChatAsRead]);
 
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

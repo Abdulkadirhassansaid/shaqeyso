@@ -13,7 +13,6 @@ export type User = {
   verificationDocumentType?: 'personalId' | 'businessCertificate';
   passportOrIdUrl?: string; // This will hold the data URL
   businessCertificateUrl?: string; // This will hold the data URL
-  directMessageReadTimestamps?: { [conversationPartnerId: string]: string };
 };
 
 export type Job = {
@@ -124,10 +123,17 @@ export type Review = {
     date: string; // ISO date string
 };
 
-export type DirectMessage = {
-    id: string;
-    participantIds: string[]; // [adminId, userId]
+export type LiveChatMessage = {
     senderId: string;
     text: string;
     timestamp: string; // ISO date string
+};
+
+export type LiveChat = {
+    id: string; // Corresponds to the user's ID
+    messages: LiveChatMessage[];
+    lastMessageTimestamp?: string;
+    lastMessageSenderId?: string;
+    userLastReadTimestamp?: string;
+    adminLastReadTimestamp?: string;
 };

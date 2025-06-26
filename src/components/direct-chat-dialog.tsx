@@ -13,14 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import type { User, DirectMessage } from '@/lib/types';
+import type { User, LiveChat, LiveChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useUsers } from '@/hooks/use-users';
-import { collection, onSnapshot, addDoc, query, where, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface DirectChatDialogProps {
@@ -30,12 +30,13 @@ interface DirectChatDialogProps {
   initialMessage?: string;
 }
 
+const MESSAGE_LIMIT = 20;
+
 export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }: DirectChatDialogProps) {
-  const { user: currentUser, markDirectMessagesAsRead } = useAuth();
+  const { user: currentUser, sendDirectMessage, markAdminChatAsRead } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
-  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
-
+  const [liveChat, setLiveChat] = React.useState<LiveChat | null>(null);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
@@ -45,81 +46,58 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     }
   }, [isOpen, initialMessage]);
 
-  React.useEffect(() => {
-    if (isOpen && currentUser) {
-        markDirectMessagesAsRead(otherUser.id);
-    }
-  }, [isOpen, currentUser, otherUser.id, markDirectMessagesAsRead]);
+  const chatId = React.useMemo(() => {
+    if (!currentUser) return null;
+    return currentUser.role === 'admin' ? otherUser.id : currentUser.id;
+  }, [currentUser, otherUser]);
 
   React.useEffect(() => {
-    if (!currentUser?.id || !otherUser.id || !db) {
-        setDirectMessages([]);
+    if (isOpen && chatId) {
+        markAdminChatAsRead(chatId);
+    }
+  }, [isOpen, chatId, markAdminChatAsRead]);
+
+  React.useEffect(() => {
+    if (!chatId || !db) {
+        setLiveChat(null);
         return;
     };
 
-    const sortedIds = [currentUser.id, otherUser.id].sort();
+    const chatDocRef = doc(db, 'liveChats', chatId);
     
-    // This query now includes orderBy('timestamp'), which enables efficient real-time updates.
-    // This will require a composite index in Firestore. The browser console will provide a link to create it.
-    const q = query(
-        collection(db, 'directMessages'), 
-        where('participantIds', '==', sortedIds),
-        orderBy('timestamp', 'asc')
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => {
-          const data = doc.data();
-          // Handle Firestore server timestamp which might be pending on the client
-          const timestamp = data.timestamp?.toDate()?.toISOString() || new Date().toISOString();
-          return { 
-              ...data, 
-              id: doc.id,
-              timestamp,
-          } as DirectMessage
-      });
-      // No client-side sorting needed, Firestore delivers messages in order.
-      setDirectMessages(messagesData);
+    const unsubscribe = onSnapshot(chatDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        const chatData = {
+          id: snapshot.id,
+          messages: data.messages || [],
+          ...data,
+        } as LiveChat;
+        // Ensure messages are sorted client-side as a fallback
+        chatData.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setLiveChat(chatData);
+      } else {
+        setLiveChat(null);
+      }
     }, (error) => {
-        console.error("Error fetching direct messages:", error);
-        console.error("This probably means you need to create a Firestore index. Check the browser console for a link to create it automatically.");
+        console.error("Error fetching live chat:", error);
     });
 
     return () => unsubscribe();
-  }, [currentUser?.id, otherUser.id, db]);
+  }, [chatId]);
 
-
-  const addDirectMessage = React.useCallback(async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
-    if (!messageData.text?.trim() || !db) {
-        return false;
-    }
-    try {
-        await addDoc(collection(db, 'directMessages'), {
-            ...messageData,
-            timestamp: serverTimestamp(),
-        });
-        return true;
-    } catch(error) {
-        console.error("Error adding direct message:", error);
-        return false;
-    }
-  }, []);
 
   if (!currentUser) return null;
 
-  const conversationMessages = directMessages;
+  const conversationMessages: LiveChatMessage[] = liveChat?.messages || [];
 
   const dialogTitle = `${t.chatWith} ${otherUser.name}`;
   
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser) return;
+    if (!newMessage.trim() || !currentUser || !chatId) return;
     
-    addDirectMessage({
-      participantIds: [currentUser.id, otherUser.id].sort(),
-      senderId: currentUser.id,
-      text: newMessage,
-    });
+    sendDirectMessage(chatId, newMessage);
     setNewMessage('');
   };
 
@@ -146,7 +124,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
                     <p>{t.noMessagesYet}</p>
                 </div>
             ) : (
-                conversationMessages.map((message) => {
+                conversationMessages.map((message, index) => {
                     const senderDetails = users.find(u => u.id === message.senderId);
                     const isSender = message.senderId === currentUser?.id;
                     
@@ -160,7 +138,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
 
                     return (
                     <div
-                        key={message.id}
+                        key={`${message.timestamp}-${index}`}
                         className={cn(
                         'flex items-start gap-3',
                         isSender ? 'justify-end' : 'justify-start'

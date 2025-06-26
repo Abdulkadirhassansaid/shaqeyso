@@ -16,15 +16,20 @@ import {
   LogOut,
   ChevronRight,
   BadgeCheck,
+  LifeBuoy,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { DirectChatDialog } from '@/components/direct-chat-dialog';
+import { useUsers } from '@/hooks/use-users';
 
 export default function AccountPage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, hasUnreadAdminMessages } = useAuth();
+  const { users } = useUsers();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -35,6 +40,8 @@ export default function AccountPage() {
   if (isLoading || !user) {
     return null; // Or a loading skeleton
   }
+  
+  const adminUser = users.find(u => u.role === 'admin');
 
   const menuItems = [
     {
@@ -54,6 +61,14 @@ export default function AccountPage() {
       label: t.settings,
       icon: Settings,
       roles: ['client', 'freelancer', 'admin'],
+    },
+    {
+      id: 'support-chat',
+      label: t.supportChat,
+      icon: LifeBuoy,
+      roles: ['client', 'freelancer'],
+      onClick: () => setIsChatOpen(true),
+      notification: hasUnreadAdminMessages,
     },
   ];
 
@@ -89,6 +104,12 @@ export default function AccountPage() {
                       <div className="relative flex items-center gap-4">
                         <item.icon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">{item.label}</span>
+                         {item.notification && (
+                            <span className="absolute left-0 -top-1 flex h-2.5 w-2.5">
+                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                            </span>
+                        )}
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </>
@@ -101,7 +122,7 @@ export default function AccountPage() {
                         </Link>
                       ) : (
                         'onClick' in item && (
-                            <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
+                            <button onClick={item.onClick} className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
                                 {itemContent}
                             </button>
                         )
@@ -128,6 +149,13 @@ export default function AccountPage() {
         </div>
       </main>
     </div>
+    {adminUser && (
+        <DirectChatDialog
+            otherUser={adminUser}
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+        />
+    )}
     </>
   );
 }
