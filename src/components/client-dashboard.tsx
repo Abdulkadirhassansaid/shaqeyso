@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
 import { useJobs } from '@/hooks/use-jobs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
@@ -513,27 +513,23 @@ export function ClientDashboard() {
   return (
     <div className="space-y-6">
       <Dialog open={isPostJobOpen} onOpenChange={handleDialogChange}>
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-left">
+        <div className="flex flex-col items-start gap-4 text-left sm:flex-row sm:items-center sm:justify-between">
+            <div className="w-full">
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">Manage your job postings and service orders.</p>
             </div>
             <DialogTrigger asChild>
               {user.verificationStatus === 'verified' ? (
-                <Button onClick={handleOpenPostDialog} className="w-full sm:w-auto">
+                <Button onClick={handleOpenPostDialog} className="w-full flex-shrink-0 sm:w-auto">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   {t.postNewJob}
                 </Button>
               ) : (
-                <Button disabled className="w-full sm:w-auto">{t.postNewJob}</Button>
+                <Button disabled className="w-full flex-shrink-0 sm:w-auto">{t.postNewJob}</Button>
               )}
             </DialogTrigger>
         </div>
-        <DialogContent className="w-[90vw] rounded-lg md:w-full md:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingJob ? t.editJobTitle : t.postNewJobTitle}</DialogTitle>
-            <DialogDescription>{editingJob ? t.editJobDesc : t.postNewJobDesc}</DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-2xl w-[90vw] rounded-lg md:w-full">
           <JobPostForm onFinished={handleDialogChange.bind(null, false)} jobToEdit={editingJob} />
         </DialogContent>
       </Dialog>
