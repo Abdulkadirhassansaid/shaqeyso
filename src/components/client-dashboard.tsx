@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,7 +23,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/hooks/use-language';
 import { useJobs } from '@/hooks/use-jobs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
@@ -508,7 +509,7 @@ export function ClientDashboard() {
   return (
     <div className="space-y-6">
       <Dialog open={isPostJobOpen} onOpenChange={handleDialogChange}>
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">Manage your job postings and service orders.</p>
@@ -524,12 +525,12 @@ export function ClientDashboard() {
               )}
             </DialogTrigger>
         </div>
-        <DialogContent className="w-full max-w-full sm:max-w-2xl sm:h-auto overflow-y-auto max-h-screen">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingJob ? t.editJobTitle : t.postNewJobTitle}</DialogTitle>
             <DialogDescription>{editingJob ? t.editJobDesc : t.postNewJobDesc}</DialogDescription>
           </DialogHeader>
-          <JobPostForm jobToEdit={editingJob} onFinished={handleDialogChange.bind(null, false)} />
+          <JobPostForm onFinished={handleDialogChange.bind(null, false)} jobToEdit={editingJob} />
         </DialogContent>
       </Dialog>
 
