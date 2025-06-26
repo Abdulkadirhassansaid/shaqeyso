@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
 import { useLanguage } from '@/hooks/use-language';
-import { BadgeCheck, LifeBuoy } from 'lucide-react';
+import { BadgeCheck, LifeBuoy, LogOut, User, LayoutGrid, Briefcase, CreditCard, Settings, UserCircle, Star, BarChart, Shield } from 'lucide-react';
 import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
 import { usePresence } from '@/hooks/use-presence';
@@ -58,6 +58,16 @@ export function UserNav() {
     );
   }
 
+  const menuItems = [
+    { href: '/profile', label: t.profile, icon: User, roles: ['client', 'freelancer', 'admin'] },
+    { href: '/my-services', label: t.myServices, icon: LayoutGrid, roles: ['freelancer'] },
+    { href: '/billing', label: t.billing, icon: CreditCard, roles: ['client', 'freelancer'] },
+    { href: '/settings', label: t.settings, icon: Settings, roles: ['client', 'freelancer', 'admin'] },
+    { href: '/admin/dashboard', label: t.adminDashboard, icon: Shield, roles: ['admin'] },
+  ];
+
+  const userMenuItems = menuItems.filter(item => user.role && item.roles.includes(user.role));
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -82,42 +92,32 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/profile">{t.profile}</Link>
-          </DropdownMenuItem>
-          {user.role === 'freelancer' && (
-            <DropdownMenuItem asChild>
-              <Link href="/my-services">{t.myServices}</Link>
+          {userMenuItems.map(item => (
+            <DropdownMenuItem key={item.href} asChild>
+              <Link href={item.href} className="flex items-center gap-2">
+                <item.icon className="h-4 w-4 text-muted-foreground" />
+                <span>{item.label}</span>
+              </Link>
             </DropdownMenuItem>
-          )}
-          <DropdownMenuItem asChild>
-            <Link href="/billing">{t.billing}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">{t.settings}</Link>
-          </DropdownMenuItem>
-          {user.role === 'admin' && (
-            <DropdownMenuItem asChild>
-              <Link href="/admin/dashboard">{t.adminDashboard}</Link>
-            </DropdownMenuItem>
-          )}
+          ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {user.role !== 'admin' && adminUser && (
             <>
-                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(adminUser); }}>
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                           <LifeBuoy className="h-4 w-4" />
-                           <span>{t.supportChat}</span>
-                        </div>
-                        <OnlineIndicator isOnline={isAdminOnline} />
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(adminUser); }} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+                       <span>{t.supportChat}</span>
                     </div>
+                    <OnlineIndicator isOnline={isAdminOnline} />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
             </>
         )}
-        <DropdownMenuItem onClick={logout}>{t.logOut}</DropdownMenuItem>
+        <DropdownMenuItem onClick={logout} className="flex items-center gap-2">
+            <LogOut className="h-4 w-4 text-muted-foreground" />
+            <span>{t.logOut}</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

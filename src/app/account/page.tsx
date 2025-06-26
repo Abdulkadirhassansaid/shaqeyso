@@ -67,11 +67,10 @@ export default function AccountPage() {
   ];
 
   const userMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user.role)
+    user.role && item.roles.includes(user.role)
   );
 
   return (
-    <>
     <div className="flex min-h-screen w-full flex-col bg-background">
       <main className="flex-1 container mx-auto py-4 px-2 sm:px-4">
         <div className="max-w-md mx-auto space-y-6">
@@ -92,60 +91,43 @@ export default function AccountPage() {
           <Card className="overflow-hidden">
             <nav>
               <ul className="divide-y">
-                {userMenuItems.map((item) => {
-                  const itemContent = (
-                    <>
-                      <div className="relative flex items-center gap-4">
-                        <item.icon className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{item.label}</span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </>
-                  );
-                  return (
-                    <li key={item.label}>
-                      {'href' in item && item.href ? (
-                        <Link href={item.href} className="flex items-center justify-between p-4 transition-colors hover:bg-muted">
-                            {itemContent}
-                        </Link>
-                      ) : (
-                        'onClick' in item && (
-                            <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
-                                {itemContent}
-                            </button>
-                        )
-                      )}
-                    </li>
-                  )
-                })}
+                {userMenuItems.map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="flex items-center justify-between p-4 transition-colors hover:bg-muted">
+                        <div className="relative flex items-center gap-4">
+                          <item.icon className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-medium">{item.label}</span>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </nav>
           </Card>
-
-          {user.role !== 'admin' && adminUser && (
-            <Card className="overflow-hidden">
-              <nav>
-                <ul>
-                  <li>
-                    <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted" onClick={() => openChat(adminUser)}>
-                      <div className="relative flex items-center gap-4">
-                        <LifeBuoy className="h-5 w-5 text-muted-foreground" />
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{t.supportChat}</span>
-                          <OnlineIndicator isOnline={isAdminOnline} />
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </Card>
-          )}
-
+          
           <Card className="overflow-hidden">
-             <nav>
-              <ul>
+            <nav>
+              <ul className="divide-y">
+                 {user.role !== 'admin' && adminUser && (
+                   <li>
+                     <button 
+                        className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted" 
+                        onClick={() => openChat(adminUser)}
+                      >
+                       <div className="relative flex items-center gap-4">
+                         <LifeBuoy className="h-5 w-5 text-muted-foreground" />
+                         <div className="flex items-center gap-2">
+                           <span className="font-medium">{t.supportChat}</span>
+                         </div>
+                       </div>
+                       <div className='flex items-center gap-2'>
+                        <OnlineIndicator isOnline={isAdminOnline} />
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                       </div>
+                     </button>
+                   </li>
+                 )}
                 <li>
                   <button className="w-full flex items-center justify-between p-4 transition-colors text-destructive hover:bg-destructive/10" onClick={logout}>
                     <div className="flex items-center gap-4">
@@ -160,6 +142,5 @@ export default function AccountPage() {
         </div>
       </main>
     </div>
-    </>
   );
 }

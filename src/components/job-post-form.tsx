@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -155,7 +156,6 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
   }
 
   return (
-    <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
             <CardTitle>{isEditMode ? t.editJobTitle : t.postNewJobTitle}</CardTitle>
@@ -226,9 +226,8 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
         </CardContent>
         <CardFooter className="flex gap-2">
             <Button type="submit" disabled={isSubmitting || isGenerating}>{isSubmitting ? t.saving : (isEditMode ? t.saveChanges : t.postJob)}</Button>
-            {isEditMode && <Button type="button" variant="ghost" onClick={onFinished} disabled={isSubmitting || isGenerating}>{t.cancel}</Button>}
+            {onFinished && <Button type="button" variant="ghost" onClick={onFinished} disabled={isSubmitting || isGenerating}>{t.cancel}</Button>}
         </CardFooter>
       </form>
-    </Card>
   );
 }

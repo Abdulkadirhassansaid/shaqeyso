@@ -11,10 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
-import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search, Wand2 } from 'lucide-react';
+import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search, Wand2, PlusCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { rankMatchingFreelancers } from '@/app/actions';
@@ -41,7 +41,6 @@ export function ClientDashboard() {
   const { jobs, deleteJob, updateJobStatus, hireFreelancerForJob, markJobAsReviewed } = useJobs();
   const { proposals, acceptProposal } = useProposals();
   const { addReview } = useReviews();
-  const [activeTab, setActiveTab] = React.useState('my-jobs');
   const [selectedJobId, setSelectedJobId] = React.useState<string | null>(null);
   const [editingJob, setEditingJob] = React.useState<Job | null>(null);
   const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
@@ -53,6 +52,7 @@ export function ClientDashboard() {
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
   const { openChat } = useChat();
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
+  const [isPostJobOpen, setIsPostJobOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!db) return;
@@ -345,10 +345,14 @@ export function ClientDashboard() {
 
   if (editingJob) {
       return (
-          <JobPostForm 
-              jobToEdit={editingJob} 
-              onFinished={() => setEditingJob(null)} 
-          />
+          <Dialog open={!!editingJob} onOpenChange={() => setEditingJob(null)}>
+              <DialogContent>
+                <JobPostForm 
+                    jobToEdit={editingJob} 
+                    onFinished={() => setEditingJob(null)} 
+                />
+              </DialogContent>
+          </Dialog>
       );
   }
   
@@ -498,236 +502,234 @@ export function ClientDashboard() {
 
   // Main Dashboard View
   return (
-    <>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="my-jobs">{t.myJobPostings}</TabsTrigger>
-          <TabsTrigger value="service-orders">{t.myServiceOrders}</TabsTrigger>
-          <TabsTrigger value="post-job">{t.postNewJob}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="my-jobs" className="mt-6">
-          <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>{t.myJobPostings}</CardTitle>
-                        <CardDescription>{t.clientJobDesc}</CardDescription>
-                    </div>
-                    <Button asChild>
-                        <Link href="/find-freelancers">
-                            <Search className="mr-2 h-4 w-4" />
-                            {t.findFreelancers}
-                        </Link>
-                    </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">Manage your job postings and service orders.</p>
+          </div>
+          <Dialog open={isPostJobOpen} onOpenChange={setIsPostJobOpen}>
+            <DialogTrigger asChild>
+              {user.verificationStatus === 'verified' ? (
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {t.postNewJob}
+                </Button>
+              ) : (
+                <Button disabled>{t.postNewJob}</Button>
+              )}
+            </DialogTrigger>
+            <DialogContent>
+               <JobPostForm onFinished={() => setIsPostJobOpen(false)} />
+            </DialogContent>
+          </Dialog>
+      </div>
+
+      {user.verificationStatus !== 'verified' && (
+        <Alert variant="default">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t.verificationRequiredTitle}</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            {t.mustBeVerifiedToPost}
+            <Button asChild variant="link" className="p-0 h-auto">
+              <Link href="/verify">{t.verifyNow}</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+            <div className="flex justify-between items-center">
+                <div>
+                    <CardTitle>{t.myJobPostings}</CardTitle>
+                    <CardDescription>{t.clientJobDesc}</CardDescription>
                 </div>
-            </CardHeader>
-          <CardContent className="space-y-4">
-              {manualJobs.map((job) => {
-                  const status = job.status || 'Open';
-                  const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
-                  const canEdit = status === 'Open' || status === 'Interviewing';
+                <Button asChild variant="outline">
+                    <Link href="/find-freelancers">
+                        <Search className="mr-2 h-4 w-4" />
+                        {t.findFreelancers}
+                    </Link>
+                </Button>
+            </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {manualJobs.map((job) => {
+                const status = job.status || 'Open';
+                const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+                const canEdit = status === 'Open' || status === 'Interviewing';
 
-                  return (
-                      <Card key={job.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader>
-                          <div className="flex justify-between items-start">
-                          <div>
-                              <CardTitle className="text-lg">{job.title}</CardTitle>
-                              <CardDescription>
-                              {t.budget}: ${job.budget ? job.budget.toFixed(2) : '0.00'}
-                              </CardDescription>
-                          </div>
-                          <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
-                          </div>
-                      </CardHeader>
-                      <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div className="flex items-center gap-4 flex-wrap">
-                             <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
+                return (
+                    <Card key={job.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle className="text-lg">{job.title}</CardTitle>
+                            <CardDescription>
+                            {t.budget}: ${job.budget ? job.budget.toFixed(2) : '0.00'}
+                            </CardDescription>
+                        </div>
+                        <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
+                        </div>
+                    </CardHeader>
+                    <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex items-center gap-4 flex-wrap">
+                           <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
+                           {status === 'InProgress' && hiredFreelancer && (
+                                <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
+                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                    {t.chatWith} {hiredFreelancer.name}
+                                </Button>
+                            )}
                              {status === 'InProgress' && hiredFreelancer && (
-                                  <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
-                                      <MessageSquare className="mr-2 h-4 w-4" />
-                                      {t.chatWith} {hiredFreelancer.name}
-                                  </Button>
-                              )}
-
-                               {status === 'InProgress' && hiredFreelancer && (
-                                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                      <ShieldCheck className="h-5 w-5 text-success" />
-                                      <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
-                                  </div>
-                              )}
-
-                              {status === 'Completed' && hiredFreelancer && (
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center text-sm text-success gap-2">
-                                        <CheckCircle className="h-5 w-5"/>
-                                        <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                                    </div>
-                                    <Button 
-                                        variant="secondary" 
-                                        size="sm" 
-                                        onClick={() => setJobToReview(job)}
-                                        disabled={job.clientReviewed}
-                                    >
-                                        <Star className="mr-2 h-4 w-4" />
-                                        {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
-                                    </Button>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <ShieldCheck className="h-5 w-5 text-success" />
+                                    <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
                                 </div>
                             )}
-                          </div>
+                            {status === 'Completed' && hiredFreelancer && (
+                              <div className="flex items-center gap-4">
+                                  <div className="flex items-center text-sm text-success gap-2">
+                                      <CheckCircle className="h-5 w-5"/>
+                                      <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                                  </div>
+                                  <Button 
+                                      variant="secondary" 
+                                      size="sm" 
+                                      onClick={() => setJobToReview(job)}
+                                      disabled={job.clientReviewed}
+                                  >
+                                      <Star className="mr-2 h-4 w-4" />
+                                      {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
+                                  </Button>
+                              </div>
+                          )}
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">{t.actions}</span>
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>{t.editJob}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger disabled={status === 'Completed' || status === 'InProgress'}>{t.changeStatus}</DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
+                                    <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
+                                    {t.deleteJob}
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
+                                        <AlertDialogDescription>{t.deleteJobConfirmDesc}</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.deleteJob}</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </CardFooter>
+                    </Card>
+                );
+            })}
+            {manualJobs.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
+            )}
+        </CardContent>
+      </Card>
 
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">{t.actions}</span>
-                              </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  <span>{t.editJob}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSub>
-                                  <DropdownMenuSubTrigger disabled={status === 'Completed' || status === 'InProgress'}>{t.changeStatus}</DropdownMenuSubTrigger>
-                                  <DropdownMenuPortal>
-                                  <DropdownMenuSubContent>
-                                      <DropdownMenuItem disabled={status === 'Open'} onClick={() => handleUpdateStatus(job.id, 'Open')}>{t.open}</DropdownMenuItem>
-                                      <DropdownMenuItem disabled={status === 'Interviewing'} onClick={() => handleUpdateStatus(job.id, 'Interviewing')}>{t.interviewing}</DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                                  </DropdownMenuPortal>
-                              </DropdownMenuSub>
-                              <DropdownMenuSeparator />
-                              <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive" disabled={!canEdit}>
-                                      {t.deleteJob}
-                                      </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                          <AlertDialogTitle>{t.deleteJobConfirmTitle}</AlertDialogTitle>
-                                          <AlertDialogDescription>{t.deleteJobConfirmDesc}</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                          <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleDeleteJob(job.id)} className="bg-destructive hover:bg-destructive/90">{t.deleteJob}</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                  </AlertDialogContent>
-                              </AlertDialog>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-                      </CardFooter>
+      <Card>
+          <CardHeader>
+              <CardTitle>{t.myServiceOrders}</CardTitle>
+              <CardDescription>{t.myServiceOrdersDesc}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              {serviceOrderJobs.map((job) => {
+                  const status = job.status || 'Open';
+                  const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
+                  
+                  if (!hiredFreelancer) return null;
+                  
+                  return (
+                      <Card key={job.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader>
+                              <div className="flex justify-between items-start">
+                                  <div>
+                                      <CardTitle className="text-lg">{job.title}</CardTitle>
+                                      <CardDescription>{t.budget}: ${(job.budget || 0).toFixed(2)}</CardDescription>
+                                  </div>
+                                  <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
+                              </div>
+                          </CardHeader>
+                          <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <div className="flex items-center gap-4 flex-wrap">
+                                  {status === 'InProgress' && (
+                                      <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
+                                          <MessageSquare className="mr-2 h-4 w-4" />
+                                          {t.chatWith} {hiredFreelancer.name}
+                                      </Button>
+                                  )}
+                                  {status === 'InProgress' && (
+                                      <>
+                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                            <ShieldCheck className="h-5 w-5 text-success" />
+                                            <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
+                                        </div>
+                                         <ApprovePaymentDialog
+                                            job={job}
+                                            freelancer={hiredFreelancer}
+                                            onConfirm={() => handleApproveAndPay(job.id)}
+                                        >
+                                            <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
+                                        </ApprovePaymentDialog>
+                                      </>
+                                  )}
+                                  {status === 'Completed' && (
+                                      <div className="flex items-center gap-4">
+                                          <div className="flex items-center text-sm text-success gap-2">
+                                              <CheckCircle className="h-5 w-5"/>
+                                              <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
+                                          </div>
+                                          <Button 
+                                              variant="secondary" 
+                                              size="sm" 
+                                              onClick={() => setJobToReview(job)}
+                                              disabled={job.clientReviewed}
+                                          >
+                                              <Star className="mr-2 h-4 w-4" />
+                                              {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
+                                          </Button>
+                                      </div>
+                                  )}
+                              </div>
+                          </CardFooter>
                       </Card>
                   );
               })}
-              {manualJobs.length === 0 && (
-              <p className="text-muted-foreground text-center py-4">{t.noJobsPosted}</p>
+              {serviceOrderJobs.length === 0 && (
+                  <p className="text-muted-foreground text-center py-4">{t.noServiceOrders}</p>
               )}
           </CardContent>
-          </Card>
-      </TabsContent>
-      <TabsContent value="service-orders" className="mt-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t.myServiceOrders}</CardTitle>
-                    <CardDescription>{t.myServiceOrdersDesc}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {serviceOrderJobs.map((job) => {
-                        const status = job.status || 'Open';
-                        const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
-                        
-                        if (!hiredFreelancer) return null;
-                        
-                        return (
-                            <Card key={job.id} className="hover:shadow-md transition-shadow">
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="text-lg">{job.title}</CardTitle>
-                                            <CardDescription>{t.budget}: ${(job.budget || 0).toFixed(2)}</CardDescription>
-                                        </div>
-                                        <Badge variant={getStatusVariant(status)}>{t[status.toLowerCase() as keyof typeof t] || status}</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div className="flex items-center gap-4 flex-wrap">
-                                        {status === 'InProgress' && (
-                                            <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
-                                                <MessageSquare className="mr-2 h-4 w-4" />
-                                                {t.chatWith} {hiredFreelancer.name}
-                                            </Button>
-                                        )}
-                                        {status === 'InProgress' && (
-                                            <>
-                                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                  <ShieldCheck className="h-5 w-5 text-success" />
-                                                  <span>${(job.budget || 0).toFixed(2)} {t.inEscrow}</span>
-                                              </div>
-                                               <ApprovePaymentDialog
-                                                  job={job}
-                                                  freelancer={hiredFreelancer}
-                                                  onConfirm={() => handleApproveAndPay(job.id)}
-                                              >
-                                                  <Button disabled={isUsersLoading}>{t.approveAndPay}</Button>
-                                              </ApprovePaymentDialog>
-                                            </>
-                                        )}
-                                        {status === 'Completed' && (
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex items-center text-sm text-success gap-2">
-                                                    <CheckCircle className="h-5 w-5"/>
-                                                    <span>{t.paidTo} <span className="font-semibold">{hiredFreelancer.name}</span></span>
-                                                </div>
-                                                <Button 
-                                                    variant="secondary" 
-                                                    size="sm" 
-                                                    onClick={() => setJobToReview(job)}
-                                                    disabled={job.clientReviewed}
-                                                >
-                                                    <Star className="mr-2 h-4 w-4" />
-                                                    {job.clientReviewed ? t.reviewSubmitted : t.leaveReview}
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardFooter>
-                            </Card>
-                        );
-                    })}
-                    {serviceOrderJobs.length === 0 && (
-                        <p className="text-muted-foreground text-center py-4">{t.noServiceOrders}</p>
-                    )}
-                </CardContent>
-            </Card>
-      </TabsContent>
-      <TabsContent value="post-job" className="mt-6">
-        {user.verificationStatus === 'verified' ? (
-          <JobPostForm onFinished={() => setActiveTab('my-jobs')} />
-        ) : (
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t.postNewJobTitle}</CardTitle>
-                    <CardDescription>{t.postNewJobDesc}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Alert variant="default" className="w-full flex flex-col items-center text-center p-6">
-                      <AlertCircle className="h-6 w-6 mb-2" />
-                      <AlertTitle className="text-lg font-semibold">{t.verificationRequiredTitle}</AlertTitle>
-                      <AlertDescription className="mt-1">
-                        {t.verificationRequiredClientDesc}
-                      </AlertDescription>
-                      <Button asChild className="mt-4">
-                        <Link href="/verify">{t.verifyNow}</Link>
-                      </Button>
-                    </Alert>
-                </CardContent>
-            </Card>
-        )}
-      </TabsContent>
-      </Tabs>
+      </Card>
       
       {jobToReview && jobToReview.hiredFreelancerId && (
             <ReviewFormDialog
@@ -738,6 +740,6 @@ export function ClientDashboard() {
                 onSubmit={handleReviewSubmit}
             />
         )}
-    </>
+    </div>
   );
 }
