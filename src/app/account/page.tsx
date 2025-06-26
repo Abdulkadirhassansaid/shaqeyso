@@ -16,13 +16,20 @@ import {
   LogOut,
   ChevronRight,
   BadgeCheck,
+  LifeBuoy,
 } from 'lucide-react';
+import { useChat } from '@/hooks/use-chat';
+import { useUsers } from '@/hooks/use-users';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { openChat } = useChat();
+  const { users } = useUsers();
+
+  const adminUser = users.find((u) => u.role === 'admin');
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -110,6 +117,21 @@ export default function AccountPage() {
               </ul>
             </nav>
           </Card>
+
+          {user.role !== 'admin' && adminUser && (
+            <Card>
+              <div className="p-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-foreground"
+                  onClick={() => openChat(adminUser)}
+                >
+                  <LifeBuoy className="mr-4 h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">{t.supportChat}</span>
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <Card>
              <div className="p-2">
