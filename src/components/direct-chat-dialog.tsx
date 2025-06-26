@@ -31,7 +31,7 @@ interface DirectChatDialogProps {
 }
 
 export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }: DirectChatDialogProps) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, markDirectMessagesAsRead } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
   const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
@@ -44,6 +44,12 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
         setNewMessage(initialMessage);
     }
   }, [isOpen, initialMessage]);
+
+  React.useEffect(() => {
+    if (isOpen && currentUser) {
+        markDirectMessagesAsRead(otherUser.id);
+    }
+  }, [isOpen, currentUser, otherUser.id, markDirectMessagesAsRead]);
 
   React.useEffect(() => {
     if (!currentUser?.id || !otherUser.id || !db) {

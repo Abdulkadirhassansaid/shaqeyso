@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import { useLanguage } from '@/hooks/use-language';
-import type { Job, User, PaymentMethod } from '@/lib/types';
+import type { Job, User, PaymentMethod, DirectMessage } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -49,6 +49,8 @@ import Image from 'next/image';
 import { Textarea } from './ui/textarea';
 import { useUsers } from '@/hooks/use-users';
 import { Skeleton } from './ui/skeleton';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
     if (!dataUrl) return 'bin';
@@ -87,6 +89,7 @@ export function AdminDashboard() {
   const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
   const [isRejecting, setIsRejecting] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
+  const [directMessages, setDirectMessages] = React.useState<DirectMessage[]>([]);
 
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
@@ -94,6 +97,49 @@ export function AdminDashboard() {
   const [userSearchQuery, setUserSearchQuery] = React.useState('');
 
   const adminUser = users.find(u => u.role === 'admin');
+  
+  React.useEffect(() => {
+    if (!adminUser?.id || !db) return;
+    
+    const q = query(collection(db, 'directMessages'), where('participantIds', 'array-contains', adminUser.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const messagesData = snapshot.docs.map(doc => ({ 
+            ...doc.data(), 
+            id: doc.id,
+            timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
+        } as DirectMessage));
+        setDirectMessages(messagesData);
+    });
+    
+    return () => unsubscribe();
+  }, [adminUser]);
+
+  const unreadMessagesMap = React.useMemo(() => {
+    const map = new Map<string, boolean>();
+    if (!adminUser || directMessages.length === 0) return map;
+    
+    const conversations = new Map<string, DirectMessage[]>();
+    directMessages.forEach(msg => {
+        const partnerId = msg.participantIds.find(id => id !== adminUser.id);
+        if (partnerId) {
+            if (!conversations.has(partnerId)) {
+                conversations.set(partnerId, []);
+            }
+            conversations.get(partnerId)!.push(msg);
+        }
+    });
+    
+    conversations.forEach((msgs, partnerId) => {
+        const lastMessage = msgs.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        const lastReadTimestamp = adminUser.directMessageReadTimestamps?.[partnerId];
+        
+        if (lastMessage.senderId !== adminUser.id && (!lastReadTimestamp || new Date(lastMessage.timestamp) > new Date(lastReadTimestamp))) {
+            map.set(partnerId, true);
+        }
+    });
+    return map;
+  }, [directMessages, adminUser]);
+
   const adminTransactions = adminUser?.transactions || [];
 
   const platformBalance = adminTransactions.reduce((acc, tx) => acc + (tx.amount || 0), 0);
@@ -722,8 +768,11 @@ export function AdminDashboard() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
+                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)} className="relative">
                                                         <MessageCircle className="h-4 w-4" />
+                                                        {unreadMessagesMap.has(user.id) && (
+                                                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />
+                                                        )}
                                                         <span className="sr-only">Chat with {user.name}</span>
                                                     </Button>
                                                     <DropdownMenu>

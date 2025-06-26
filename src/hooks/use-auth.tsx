@@ -46,6 +46,7 @@ interface AuthContextType {
   submitVerification: (userId: string, document: { type: 'personalId' | 'businessCertificate'; url: string; }) => Promise<boolean>;
   approveVerification: (userId: string) => Promise<boolean>;
   rejectVerification: (userId: string, reason: string) => Promise<boolean>;
+  markDirectMessagesAsRead: (partnerId: string) => Promise<boolean>;
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null);
@@ -396,9 +397,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return false;
         }
     }, []);
+
+    const markDirectMessagesAsRead = React.useCallback(async (partnerId: string) => {
+        if (!db || !user) return false;
+        try {
+            const userRef = doc(db, 'users', user.id);
+            await updateDoc(userRef, {
+                [`directMessageReadTimestamps.${partnerId}`]: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            console.error("Error marking direct messages as read:", error);
+            return false;
+        }
+    }, [user]);
     
-    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification }), 
-    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification]);
+    const value = React.useMemo(() => ({ user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, markDirectMessagesAsRead }), 
+    [user, isLoading, login, logout, signup, updateUserProfile, addPaymentMethod, removePaymentMethod, addTransaction, toggleUserBlockStatus, deleteUser, submitVerification, approveVerification, rejectVerification, markDirectMessagesAsRead]);
 
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

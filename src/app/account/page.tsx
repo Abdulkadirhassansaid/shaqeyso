@@ -21,6 +21,9 @@ import {
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import { useUsers } from '@/hooks/use-users';
 import { useToast } from '@/hooks/use-toast';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { DirectMessage } from '@/lib/types';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
@@ -31,12 +34,52 @@ export default function AccountPage() {
   const { toast } = useToast();
   const [isChatOpen, setIsChatOpen] = React.useState(false);
   const adminUser = users.find(u => u.role === 'admin');
+  const [hasUnreadAdminMessages, setHasUnreadAdminMessages] = React.useState(false);
 
   React.useEffect(() => {
     if (!isLoading && !user) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [isLoading, user, router, pathname]);
+
+  React.useEffect(() => {
+    if (!user || !adminUser || !db) {
+        setHasUnreadAdminMessages(false);
+        return;
+    }
+
+    const sortedIds = [user.id, adminUser.id].sort();
+    const q = query(
+        collection(db, 'directMessages'), 
+        where('participantIds', '==', sortedIds)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({ 
+          ...doc.data(), 
+          id: doc.id,
+          timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
+      } as DirectMessage));
+      
+      const adminMessages = messagesData.filter(m => m.senderId === adminUser.id);
+
+      if (adminMessages.length > 0) {
+          const lastAdminMessage = adminMessages.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+          const lastReadTimestamp = user.directMessageReadTimestamps?.[adminUser.id];
+          
+          if (!lastReadTimestamp || new Date(lastAdminMessage.timestamp) > new Date(lastReadTimestamp)) {
+              setHasUnreadAdminMessages(true);
+          } else {
+              setHasUnreadAdminMessages(false);
+          }
+      } else {
+          setHasUnreadAdminMessages(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user, adminUser]);
+
 
   if (isLoading || !user) {
     return null; // Or a loading skeleton
@@ -104,11 +147,18 @@ export default function AccountPage() {
             <nav>
               <ul className="divide-y">
                 {userMenuItems.map((item) => {
+                  const isReportProblemItem = item.label === t.reportProblem;
                   const itemContent = (
                     <>
-                      <div className="flex items-center gap-4">
+                      <div className="relative flex items-center gap-4">
                         <item.icon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">{item.label}</span>
+                         {isReportProblemItem && hasUnreadAdminMessages && (
+                            <span className="absolute left-0 top-0 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                            </span>
+                        )}
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </>

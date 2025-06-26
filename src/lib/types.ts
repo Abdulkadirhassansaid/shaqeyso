@@ -13,6 +13,7 @@ export type User = {
   verificationDocumentType?: 'personalId' | 'businessCertificate';
   passportOrIdUrl?: string; // This will hold the data URL
   businessCertificateUrl?: string; // This will hold the data URL
+  directMessageReadTimestamps?: { [conversationPartnerId: string]: string };
 };
 
 export type Job = {
