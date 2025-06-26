@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
-import { Search, Star, Contact, Clock, BadgeCheck } from 'lucide-react';
+import { Search, Star, Contact, Clock, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -200,7 +200,13 @@ function FindFreelancersPageContent() {
     <div className="flex min-h-screen w-full flex-col bg-background">
         <Header />
         <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="space-y-6">
+            <div className="space-y-8">
+                <div>
+                  <Button variant="outline" size="sm" onClick={() => router.back()}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      {t.back}
+                  </Button>
+                </div>
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight">{t.findFreelancers}</h1>
                     <p className="text-muted-foreground">{t.findFreelancersDesc}</p>
@@ -433,3 +439,5 @@ export default function FindFreelancersPage() {
         </JobsProvider>
     );
 }
+
+    
