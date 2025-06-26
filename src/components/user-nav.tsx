@@ -17,12 +17,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
 import { useLanguage } from '@/hooks/use-language';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, LifeBuoy } from 'lucide-react';
+import { useChat } from '@/hooks/use-chat';
+import { useUsers } from '@/hooks/use-users';
 
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
   const { t } = useLanguage();
+  const { openChat } = useChat();
+  const { users } = useUsers();
   const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(user?.avatarUrl);
+
+  const adminUser = users.find(u => u.role === 'admin');
 
   React.useEffect(() => {
     if (user) {
@@ -93,6 +99,15 @@ export function UserNav() {
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        {user.role !== 'admin' && adminUser && (
+            <>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(); }}>
+                    <LifeBuoy className="mr-2 h-4 w-4" />
+                    <span>{t.supportChat}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+            </>
+        )}
         <DropdownMenuItem onClick={logout}>{t.logOut}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

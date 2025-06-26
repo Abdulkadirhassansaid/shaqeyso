@@ -16,20 +16,13 @@ import {
   LogOut,
   ChevronRight,
   BadgeCheck,
-  LifeBuoy,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { DirectChatDialog } from '@/components/direct-chat-dialog';
-import { useUsers } from '@/hooks/use-users';
 
 export default function AccountPage() {
   const { user, logout, isLoading } = useAuth();
-  const { users } = useUsers();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [isChatOpen, setIsChatOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -41,8 +34,6 @@ export default function AccountPage() {
     return null; // Or a loading skeleton
   }
   
-  const adminUser = users.find(u => u.role === 'admin');
-
   const menuItems = [
     {
       href: '/profile',
@@ -61,13 +52,6 @@ export default function AccountPage() {
       label: t.settings,
       icon: Settings,
       roles: ['client', 'freelancer', 'admin'],
-    },
-    {
-      id: 'support-chat',
-      label: t.supportChat,
-      icon: LifeBuoy,
-      roles: ['client', 'freelancer'],
-      onClick: () => setIsChatOpen(true),
     },
   ];
 
@@ -115,7 +99,7 @@ export default function AccountPage() {
                         </Link>
                       ) : (
                         'onClick' in item && (
-                            <button onClick={item.onClick} className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
+                            <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted">
                                 {itemContent}
                             </button>
                         )
@@ -142,13 +126,6 @@ export default function AccountPage() {
         </div>
       </main>
     </div>
-    {adminUser && (
-        <DirectChatDialog
-            otherUser={adminUser}
-            isOpen={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
-        />
-    )}
     </>
   );
 }
