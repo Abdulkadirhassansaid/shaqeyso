@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
 import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search, Wand2, PlusCircle } from 'lucide-react';
@@ -525,7 +524,7 @@ export function ClientDashboard() {
               )}
             </DialogTrigger>
         </div>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="w-full max-w-full sm:max-w-2xl sm:h-auto overflow-y-auto max-h-screen">
           <DialogHeader>
             <DialogTitle>{editingJob ? t.editJobTitle : t.postNewJobTitle}</DialogTitle>
             <DialogDescription>{editingJob ? t.editJobDesc : t.postNewJobDesc}</DialogDescription>
