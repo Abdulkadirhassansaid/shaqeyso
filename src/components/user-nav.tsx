@@ -22,10 +22,10 @@ import { useChat } from '@/hooks/use-chat';
 import { useUsers } from '@/hooks/use-users';
 
 export function UserNav() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { t } = useLanguage();
   const { openChat } = useChat();
-  const { users } = useUsers();
+  const { users, isUsersLoading } = useUsers();
   const [avatarUrl, setAvatarUrl] = React.useState<string | undefined>(user?.avatarUrl);
 
   const adminUser = users.find(u => u.role === 'admin');
@@ -37,7 +37,7 @@ export function UserNav() {
     }
   }, [user]);
 
-  if (isLoading) {
+  if (isAuthLoading || isUsersLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
   }
   
