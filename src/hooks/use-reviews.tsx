@@ -20,17 +20,20 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (!db) return;
-    const unsubscribe = onSnapshot(collection(db, 'reviews'), (snapshot) => {
-        const reviewsData = snapshot.docs.map(doc => ({ 
-            ...doc.data(), 
-            id: doc.id,
-            date: doc.data().date?.toDate()?.toISOString() || new Date().toISOString()
-        } as Review));
-        setReviews(reviewsData);
-    }, (error) => {
-        console.error("Error fetching reviews:", error);
-    });
-    return () => unsubscribe();
+    const fetchReviews = async () => {
+        try {
+            const snapshot = await getDocs(collection(db, 'reviews'));
+            const reviewsData = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                date: doc.data().date?.toDate()?.toISOString() || new Date().toISOString()
+            } as Review));
+            setReviews(reviewsData);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+        }
+    };
+    fetchReviews();
   }, []);
 
   const addReview = React.useCallback(async (reviewData: Omit<Review, 'id' | 'date'>): Promise<boolean> => {
