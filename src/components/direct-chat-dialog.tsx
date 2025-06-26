@@ -58,24 +58,31 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     };
 
     const sortedIds = [currentUser.id, otherUser.id].sort();
-
+    
+    // This query now includes orderBy('timestamp'), which enables efficient real-time updates.
+    // This will require a composite index in Firestore. The browser console will provide a link to create it.
     const q = query(
         collection(db, 'directMessages'), 
-        where('participantIds', '==', sortedIds)
+        where('participantIds', '==', sortedIds),
+        orderBy('timestamp', 'asc')
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({ 
-          ...doc.data(), 
-          id: doc.id,
-          timestamp: doc.data().timestamp?.toDate()?.toISOString() || new Date().toISOString()
-      } as DirectMessage));
-      
-      messagesData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
+      const messagesData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Handle Firestore server timestamp which might be pending on the client
+          const timestamp = data.timestamp?.toDate()?.toISOString() || new Date().toISOString();
+          return { 
+              ...data, 
+              id: doc.id,
+              timestamp,
+          } as DirectMessage
+      });
+      // No client-side sorting needed, Firestore delivers messages in order.
       setDirectMessages(messagesData);
     }, (error) => {
         console.error("Error fetching direct messages:", error);
+        console.error("This probably means you need to create a Firestore index. Check the browser console for a link to create it automatically.");
     });
 
     return () => unsubscribe();
