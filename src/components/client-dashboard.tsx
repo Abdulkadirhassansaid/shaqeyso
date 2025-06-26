@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import type { Job, User, Proposal, RankedFreelancer, FreelancerProfile } from '@/lib/types';
 import { JobPostForm } from './job-post-form';
 import { ArrowLeft, Users, MoreVertical, Edit, UserCheck, CheckCircle, MessageSquare, ShieldCheck, Star, AlertCircle, Search, Wand2, PlusCircle } from 'lucide-react';
@@ -344,23 +344,23 @@ export function ClientDashboard() {
     }
   };
 
-  if (editingJob) {
-      return (
-          <Dialog open={!!editingJob} onOpenChange={() => setEditingJob(null)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>{t.editJobTitle}</DialogTitle>
-                    <DialogDescription>{t.editJobDesc}</DialogDescription>
-                </DialogHeader>
-                <JobPostForm 
-                    jobToEdit={editingJob} 
-                    onFinished={() => setEditingJob(null)} 
-                />
-              </DialogContent>
-          </Dialog>
-      );
-  }
+  const handleOpenEditDialog = (job: Job) => {
+    setEditingJob(job);
+    setIsPostJobOpen(true);
+  };
   
+  const handleOpenPostDialog = () => {
+    setEditingJob(null);
+    setIsPostJobOpen(true);
+  };
+  
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+        setEditingJob(null);
+    }
+    setIsPostJobOpen(open);
+  };
+
   const selectedJob = selectedJobId ? clientJobs.find((job) => job.id === selectedJobId) : null;
   
   // Single Job View
@@ -430,7 +430,7 @@ export function ClientDashboard() {
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedJob.description}</p>
               
               <div className="mt-6">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                       <h3 className="text-lg font-semibold flex items-center"><Users className="mr-2 h-5 w-5" /> {t.proposals}</h3>
                       {selectedJob.status === 'Open' && (
                            <Button onClick={() => handleRankFreelancers(selectedJob)} disabled={isRanking}>
@@ -508,15 +508,15 @@ export function ClientDashboard() {
   // Main Dashboard View
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Manage your job postings and service orders.</p>
-          </div>
-          <Dialog open={isPostJobOpen} onOpenChange={setIsPostJobOpen}>
+      <Dialog open={isPostJobOpen} onOpenChange={handleDialogChange}>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+              <p className="text-muted-foreground">Manage your job postings and service orders.</p>
+            </div>
             <DialogTrigger asChild>
               {user.verificationStatus === 'verified' ? (
-                <Button>
+                <Button onClick={handleOpenPostDialog}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   {t.postNewJob}
                 </Button>
@@ -524,15 +524,16 @@ export function ClientDashboard() {
                 <Button disabled>{t.postNewJob}</Button>
               )}
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>{t.postNewJobTitle}</DialogTitle>
-                    <DialogDescription>{t.postNewJobDesc}</DialogDescription>
-                </DialogHeader>
-               <JobPostForm onFinished={() => setIsPostJobOpen(false)} />
-            </DialogContent>
-          </Dialog>
-      </div>
+        </div>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingJob ? t.editJobTitle : t.postNewJobTitle}</DialogTitle>
+            <DialogDescription>{editingJob ? t.editJobDesc : t.postNewJobDesc}</DialogDescription>
+          </DialogHeader>
+          <JobPostForm jobToEdit={editingJob} onFinished={handleDialogChange.bind(null, false)} />
+        </DialogContent>
+      </Dialog>
+
 
       {user.verificationStatus !== 'verified' && (
         <Alert variant="default">
@@ -629,7 +630,7 @@ export function ClientDashboard() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => setEditingJob(job)} disabled={!canEdit}>
+                                    <DropdownMenuItem onClick={() => handleOpenEditDialog(job)} disabled={!canEdit}>
                                         <Edit className="mr-2 h-4 w-4" />
                                         <span>{t.editJob}</span>
                                     </DropdownMenuItem>
