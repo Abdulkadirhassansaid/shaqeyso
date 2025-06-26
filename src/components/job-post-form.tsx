@@ -4,12 +4,8 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -157,13 +153,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
 
   return (
       <form onSubmit={handleSubmit}>
-        <CardHeader>
-            <CardTitle>{isEditMode ? t.editJobTitle : t.postNewJobTitle}</CardTitle>
-            <CardDescription>
-            {isEditMode ? t.editJobDesc : t.postNewJobDesc}
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="job-title">{t.jobTitle}</Label>

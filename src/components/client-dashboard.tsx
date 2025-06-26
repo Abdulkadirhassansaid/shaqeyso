@@ -348,6 +348,10 @@ export function ClientDashboard() {
       return (
           <Dialog open={!!editingJob} onOpenChange={() => setEditingJob(null)}>
               <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t.editJobTitle}</DialogTitle>
+                    <DialogDescription>{t.editJobDesc}</DialogDescription>
+                </DialogHeader>
                 <JobPostForm 
                     jobToEdit={editingJob} 
                     onFinished={() => setEditingJob(null)} 
@@ -521,6 +525,10 @@ export function ClientDashboard() {
               )}
             </DialogTrigger>
             <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t.postNewJobTitle}</DialogTitle>
+                    <DialogDescription>{t.postNewJobDesc}</DialogDescription>
+                </DialogHeader>
                <JobPostForm onFinished={() => setIsPostJobOpen(false)} />
             </DialogContent>
           </Dialog>
