@@ -292,6 +292,7 @@ export const translations = {
         budgetLabel: 'Budget ($)',
         budgetPlaceholder: 'e.g., 500',
         deadlineLabel: 'Deadline',
+        pickADate: 'Pick a date',
         jobSummaryPrompt: 'Job summary prompt',
         jobSummaryPlaceholder: 'e.g., I need a logo for my new coffee shop. It should be modern and minimalist.',
         generateWithAI: 'Generate Description with AI',
@@ -793,6 +794,7 @@ export const translations = {
         noWithdrawalMethodTitle: "Hab Lacag Bixineed Lama Darin",
         noWithdrawalMethodDesc: "Waa inaad ku dartaa hab lacag bixineed ka hor intaadan lacagta la bixin.",
 
+
         // Client Dashboard
         myJobPostings: 'Shaqooyinkayga',
         postNewJob: 'Soo Geli Shaqo Cusub',
@@ -855,6 +857,7 @@ export const translations = {
         budgetLabel: 'Miisaaniyadda ($)',
         budgetPlaceholder: 'Tusaale, 500',
         deadlineLabel: 'Wakhtiga Kama Dambaysta ah',
+        pickADate: 'Dooro taariikh',
         jobSummaryPrompt: 'Soo koobidda shaqada',
         jobSummaryPlaceholder: 'Tusaale, Waxaan u baahanahay astaan (logo) dukaankayga cusub ee qaxwada. Waa inuu noqdaa mid casri ah oo fudud.',
         generateWithAI: 'Ku Samee Sharaxaad AI',
@@ -910,7 +913,7 @@ export const translations = {
         chatWithClient: 'La sheekeyso Macmiilka',
         myProposals: "Codsiyadayda",
         myProposalsDesc: "View and manage all your submitted job proposals.",
-        noProposalsSubmitted: "Wali wax codsiyo ah ma aadan gudbin.",
+        noProposalsSubmitted: "Weli wax codsiyo ah ma aadan gudbin.",
         yourProposal: "Codsigaaga",
         editProposal: "Wax ka Beddel Codsiga",
         deleteProposal: "Tirtir Codsiga",

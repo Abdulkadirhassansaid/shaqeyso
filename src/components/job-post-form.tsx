@@ -19,12 +19,16 @@ import {
 } from '@/components/ui/select';
 import { generateJobDescription } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Wand2 } from 'lucide-react';
+import { Wand2, Calendar as CalendarIcon } from 'lucide-react';
 import { LoadingDots } from './loading-dots';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/hooks/use-auth';
 import { useJobs } from '@/hooks/use-jobs';
 import type { Job } from '@/lib/types';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Calendar } from './ui/calendar';
 
 
 interface JobPostFormProps {
@@ -44,7 +48,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
   const [title, setTitle] = React.useState('');
   const [category, setCategory] = React.useState('');
   const [budget, setBudget] = React.useState('');
-  const [deadline, setDeadline] = React.useState('');
+  const [deadline, setDeadline] = React.useState<Date | undefined>(undefined);
   const [description, setDescription] = React.useState('');
   const promptRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -55,7 +59,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
       setTitle(jobToEdit.title);
       setCategory(jobToEdit.category);
       setBudget(String(jobToEdit.budget));
-      setDeadline(jobToEdit.deadline);
+      setDeadline(new Date(jobToEdit.deadline));
       setDescription(jobToEdit.description);
     }
   }, [jobToEdit, isEditMode]);
@@ -114,7 +118,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
         title,
         category,
         budget: Number(budget),
-        deadline,
+        deadline: format(deadline, 'yyyy-MM-dd'),
         description,
     };
 
@@ -137,7 +141,7 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
             setTitle('');
             setCategory('');
             setBudget('');
-            setDeadline('');
+            setDeadline(undefined);
             setDescription('');
             if(promptRef.current) promptRef.current.value = '';
         }
@@ -153,36 +157,53 @@ export function JobPostForm({ jobToEdit, onFinished }: JobPostFormProps) {
 
   return (
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6 pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="job-title">{t.jobTitle}</Label>
-                    <Input id="job-title" placeholder={t.jobTitlePlaceholder} value={title} onChange={e => setTitle(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="category">{t.category}</Label>
-                    <Select value={category} onValueChange={setCategory} required>
-                        <SelectTrigger id="category">
-                            <SelectValue placeholder={t.selectCategory} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Web Development">{t.webDev}</SelectItem>
-                            <SelectItem value="Mobile Development">{t.mobileDev}</SelectItem>
-                            <SelectItem value="Design">{t.design}</SelectItem>
-                            <SelectItem value="Writing">{t.writing}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+        <CardContent className="space-y-4 pt-6">
+            <div className="space-y-2">
+                <Label htmlFor="job-title">{t.jobTitle}</Label>
+                <Input id="job-title" placeholder={t.jobTitlePlaceholder} value={title} onChange={e => setTitle(e.target.value)} required />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="budget">{t.budgetLabel}</Label>
-                    <Input id="budget" type="number" placeholder={t.budgetPlaceholder} value={budget} onChange={e => setBudget(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="deadline">{t.deadlineLabel}</Label>
-                    <Input id="deadline" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required />
-                </div>
+            <div className="space-y-2">
+                <Label htmlFor="category">{t.category}</Label>
+                <Select value={category} onValueChange={setCategory} required>
+                    <SelectTrigger id="category">
+                        <SelectValue placeholder={t.selectCategory} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Web Development">{t.webDev}</SelectItem>
+                        <SelectItem value="Mobile Development">{t.mobileDev}</SelectItem>
+                        <SelectItem value="Design">{t.design}</SelectItem>
+                        <SelectItem value="Writing">{t.writing}</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="budget">{t.budgetLabel}</Label>
+                <Input id="budget" type="number" placeholder={t.budgetPlaceholder} value={budget} onChange={e => setBudget(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="deadline">{t.deadlineLabel}</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !deadline && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {deadline ? format(deadline, "PPP") : <span>{t.pickADate}</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={deadline}
+                            onSelect={setDeadline}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="ai-prompt">{t.jobSummaryPrompt}</Label>

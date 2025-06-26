@@ -347,7 +347,7 @@ export function ClientDashboard() {
   if (editingJob) {
       return (
           <Dialog open={!!editingJob} onOpenChange={() => setEditingJob(null)}>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{t.editJobTitle}</DialogTitle>
                     <DialogDescription>{t.editJobDesc}</DialogDescription>
@@ -524,7 +524,7 @@ export function ClientDashboard() {
                 <Button disabled>{t.postNewJob}</Button>
               )}
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{t.postNewJobTitle}</DialogTitle>
                     <DialogDescription>{t.postNewJobDesc}</DialogDescription>
