@@ -15,6 +15,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { ReviewsProvider } from '@/hooks/use-reviews';
+import { JobsProvider } from '@/hooks/use-jobs';
+import { ProposalsProvider } from '@/hooks/use-proposals';
 
 
 export default function ShaqeysoHubApp() {
@@ -70,10 +72,14 @@ export default function ShaqeysoHubApp() {
             </Alert>
         )}
         
-        <ReviewsProvider>
-          {user.role === 'client' && <ClientDashboard />}
-          {user.role === 'freelancer' && <FreelancerDashboard />}
-        </ReviewsProvider>
+        <JobsProvider>
+          <ProposalsProvider>
+            <ReviewsProvider>
+              {user.role === 'client' && <ClientDashboard />}
+              {user.role === 'freelancer' && <FreelancerDashboard />}
+            </ReviewsProvider>
+          </ProposalsProvider>
+        </JobsProvider>
         
         {user.role === 'admin' && (
           <Card className="max-w-md mx-auto mt-10">

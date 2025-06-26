@@ -15,8 +15,6 @@ import { LoadingProvider } from '@/hooks/use-loading';
 import { PageLoader } from '@/components/page-loader';
 import { PageProgress } from '@/components/page-progress';
 import { UsersProvider } from '@/hooks/use-users';
-import { JobsProvider } from '@/hooks/use-jobs';
-import { ProposalsProvider } from '@/hooks/use-proposals';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -70,17 +68,13 @@ export default function RootLayout({
             <LoadingProvider>
               <AuthProvider>
                 <UsersProvider>
-                  <JobsProvider>
-                    <ProposalsProvider>
-                      <PageProgress />
-                      <PageLoader />
-                      <div className="relative flex min-h-screen flex-col">
-                        <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                        <BottomNav />
-                      </div>
-                      <Toaster />
-                    </ProposalsProvider>
-                  </JobsProvider>
+                  <PageProgress />
+                  <PageLoader />
+                  <div className="relative flex min-h-screen flex-col">
+                    <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                    <BottomNav />
+                  </div>
+                  <Toaster />
                 </UsersProvider>
               </AuthProvider>
             </LoadingProvider>
