@@ -11,17 +11,10 @@ export const Icons = {
     >
       <title>Shaqeyso Hub Logo</title>
       <circle cx="12" cy="12" r="10" stroke="#16a34a" strokeWidth="2" fill="none" />
-      <g fill="#1e40af">
-        <circle cx="12" cy="8" r="2.5" />
-        <path d="M16.5 19a4.5 4.5 0 0 0-9 0z" />
+      <g fill="#1e40af" stroke="none">
+        <circle cx="9.5" cy="8" r="2.5" />
+        <path d="M8,18 C10,13 15,14 16,11 C14.5,15 11.5,16.5 8,18 Z" />
       </g>
-      <path
-        d="M8 14.5c0-3 1.5-5 4-5s4 2 4 5"
-        stroke="#1e40af"
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
     </svg>
   ),
 };
