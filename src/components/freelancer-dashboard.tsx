@@ -24,7 +24,6 @@ import { recommendJobsForFreelancer } from '@/app/actions';
 import { cn } from '@/lib/utils';
 import { LoadingDots } from './loading-dots';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ChatDialog } from './chat-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
 import { useProposals } from '@/hooks/use-proposals';
@@ -45,6 +44,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
+import { useChat } from '@/hooks/use-chat';
 
 
 type RecommendedJob = Job & {
@@ -70,9 +70,9 @@ export function FreelancerDashboard() {
   const [isRecommending, setIsRecommending] = React.useState(false);
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = React.useState('find-work');
-  const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
   const [jobToReview, setJobToReview] = React.useState<Job | null>(null);
   const [freelancerProfile, setFreelancerProfile] = React.useState<FreelancerProfile | null>(null);
+  const { openChat } = useChat();
 
   React.useEffect(() => {
     if (!user || !db) return;
@@ -332,10 +332,6 @@ export function FreelancerDashboard() {
                 const status = job.status as Job['status'];
                 const statusVariant = status === 'Completed' ? 'default' : 'secondary';
                 
-                const hasUnreadMessages = user && job.lastMessageTimestamp &&
-                    job.lastMessageSenderId !== user.id &&
-                    (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
-                
                 return (
                     <Card key={job.id} className="transition-all hover:-translate-y-1">
                         <CardHeader className="flex flex-row justify-between items-start">
@@ -377,10 +373,9 @@ export function FreelancerDashboard() {
                                 </div>
                             )}
                             {(status === 'InProgress') && (
-                                <Button className="w-full relative" variant="outline" onClick={() => setJobToChat(job)}>
+                                <Button className="w-full" variant="outline" onClick={() => openChat(client)}>
                                     <MessageSquare className="mr-2 h-4 w-4" />
                                     {t.chatWithClient}
-                                    {hasUnreadMessages && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                 </Button>
                             )}
                         </CardFooter>
@@ -485,13 +480,6 @@ export function FreelancerDashboard() {
         </TabsContent>
       </Tabs>
       
-      {jobToChat && (
-          <ChatDialog
-              job={jobToChat}
-              isOpen={!!jobToChat}
-              onClose={() => setJobToChat(null)}
-          />
-      )}
       {jobToReview && (
           <ReviewFormDialog
               isOpen={!!jobToReview}

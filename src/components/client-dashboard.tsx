@@ -25,7 +25,6 @@ import { useJobs } from '@/hooks/use-jobs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useProposals } from '@/hooks/use-proposals';
-import { ChatDialog } from './chat-dialog';
 import { ApprovePaymentDialog } from './approve-payment-dialog';
 import { ReviewFormDialog } from './review-form-dialog';
 import { useReviews } from '@/hooks/use-reviews';
@@ -35,7 +34,7 @@ import { collection, onSnapshot, doc, query, where, getDocs, runTransaction } fr
 import { db } from '@/lib/firebase';
 import { useUsers } from '@/hooks/use-users';
 import { LoadingDots } from './loading-dots';
-
+import { useChat } from '@/hooks/use-chat';
 
 export function ClientDashboard() {
   const { user } = useAuth();
@@ -52,7 +51,7 @@ export function ClientDashboard() {
   const { users: allUsers, isUsersLoading } = useUsers();
   const { t } = useLanguage();
   const [proposalToHire, setProposalToHire] = React.useState<Proposal | null>(null);
-  const [jobToChat, setJobToChat] = React.useState<Job | null>(null);
+  const { openChat } = useChat();
   const [freelancerProfiles, setFreelancerProfiles] = React.useState<FreelancerProfile[]>([]);
 
   React.useEffect(() => {
@@ -527,10 +526,6 @@ export function ClientDashboard() {
                   const status = job.status || 'Open';
                   const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
                   const canEdit = status === 'Open' || status === 'Interviewing';
-                  
-                  const hasUnreadMessages = user && job.lastMessageTimestamp &&
-                    job.lastMessageSenderId !== user.id &&
-                    (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
 
                   return (
                       <Card key={job.id} className="hover:shadow-md transition-shadow">
@@ -549,10 +544,9 @@ export function ClientDashboard() {
                           <div className="flex items-center gap-4 flex-wrap">
                              <Button onClick={() => setSelectedJobId(job.id)}>{t.viewDetailsAndProposals}</Button>
                              {status === 'InProgress' && hiredFreelancer && (
-                                  <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
+                                  <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
                                       <MessageSquare className="mr-2 h-4 w-4" />
                                       {t.chatWith} {hiredFreelancer.name}
-                                      {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                   </Button>
                               )}
 
@@ -646,10 +640,6 @@ export function ClientDashboard() {
                         const hiredFreelancer = job.hiredFreelancerId ? allUsers.find(u => u.id === job.hiredFreelancerId) : undefined;
                         
                         if (!hiredFreelancer) return null;
-
-                        const hasUnreadMessages = user && job.lastMessageTimestamp &&
-                            job.lastMessageSenderId !== user.id &&
-                            (!job.lastReadBy?.[user.id] || new Date(job.lastMessageTimestamp) > new Date(job.lastReadBy[user.id]));
                         
                         return (
                             <Card key={job.id} className="hover:shadow-md transition-shadow">
@@ -665,10 +655,9 @@ export function ClientDashboard() {
                                 <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div className="flex items-center gap-4 flex-wrap">
                                         {status === 'InProgress' && (
-                                            <Button variant="outline" onClick={() => setJobToChat(job)} className="relative">
+                                            <Button variant="outline" onClick={() => openChat(hiredFreelancer)}>
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 {t.chatWith} {hiredFreelancer.name}
-                                                {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
                                             </Button>
                                         )}
                                         {status === 'InProgress' && (
@@ -739,13 +728,7 @@ export function ClientDashboard() {
         )}
       </TabsContent>
       </Tabs>
-      {jobToChat && (
-          <ChatDialog 
-              job={jobToChat}
-              isOpen={!!jobToChat}
-              onClose={() => setJobToChat(null)}
-          />
-      )}
+      
       {jobToReview && jobToReview.hiredFreelancerId && (
             <ReviewFormDialog
                 isOpen={!!jobToReview}

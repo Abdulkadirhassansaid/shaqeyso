@@ -25,7 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { DirectChatDialog } from '@/components/direct-chat-dialog';
+import { useChat } from '@/hooks/use-chat';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
@@ -51,7 +51,7 @@ export default function FindFreelancersPage() {
   
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedFreelancer, setSelectedFreelancer] = React.useState<User | null>(null);
-  const [chattingWith, setChattingWith] = React.useState<User | null>(null);
+  const { openChat } = useChat();
 
   // State for the new service request flow
   const [requestingService, setRequestingService] = React.useState<{ freelancer: User; service: Service } | null>(null);
@@ -350,20 +350,13 @@ export default function FindFreelancersPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button className="w-full" onClick={() => setChattingWith(selectedFreelancer)}>
+                            <Button className="w-full" onClick={() => openChat(selectedFreelancer)}>
                                 <Contact className="mr-2 h-4 w-4" />
                                 {t.contact} {selectedFreelancer.name}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            )}
-            {chattingWith && (
-                <DirectChatDialog
-                    otherUser={chattingWith}
-                    isOpen={!!chattingWith}
-                    onClose={() => setChattingWith(null)}
-                />
             )}
             {requestingService && (
                 <AlertDialog open={!!requestingService} onOpenChange={(isOpen) => !isOpen && setRequestingService(null)}>

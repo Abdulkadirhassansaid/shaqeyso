@@ -25,7 +25,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { format, startOfWeek, subDays, eachWeekOfInterval, parseISO, isThisMonth, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, eachYearOfInterval, startOfMonth, startOfYear } from 'date-fns';
-import { ChatDialog } from './chat-dialog';
 import { useProposals } from '@/hooks/use-proposals';
 import { useReviews } from '@/hooks/use-reviews';
 import {
@@ -83,7 +82,6 @@ export function AdminDashboard() {
   const { openChat } = useChat();
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
   const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'financials');
-  const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
   const [reviewingUser, setReviewingUser] = React.useState<User | null>(null);
   const [isRejecting, setIsRejecting] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
@@ -817,11 +815,6 @@ export function AdminDashboard() {
                                     const freelancer = job.hiredFreelancerId ? users.find(u => u.id === job.hiredFreelancerId) : null;
                                     const status = job.status || 'Unknown';
                                     
-                                    const lastReadTimestamp = adminUser ? job.lastReadBy?.[adminUser.id] : undefined;
-                                    const hasUnreadMessages = adminUser && job.lastMessageTimestamp &&
-                                        job.lastMessageSenderId !== adminUser.id &&
-                                        (!lastReadTimestamp || new Date(job.lastMessageTimestamp) > new Date(lastReadTimestamp));
-
                                     return (
                                         <TableRow key={job.id}>
                                             <TableCell className="font-medium">{job.title}</TableCell>
@@ -833,17 +826,6 @@ export function AdminDashboard() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button
-                                                      variant="outline"
-                                                      size="icon"
-                                                      onClick={() => setChattingJob(job)}
-                                                      disabled={!job.hiredFreelancerId}
-                                                      aria-label="View Chat"
-                                                      className="relative"
-                                                    >
-                                                        <MessageSquare className="h-4 w-4" />
-                                                        {hasUnreadMessages && <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-primary ring-2 ring-card" />}
-                                                    </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" size="icon">
@@ -948,14 +930,6 @@ export function AdminDashboard() {
             </TabsContent>
         </Tabs>
 
-        {chattingJob && (
-            <ChatDialog
-                job={chattingJob}
-                isOpen={!!chattingJob}
-                onClose={() => setChattingJob(null)}
-            />
-        )}
-        
         {reviewingUser && (
             <Dialog open={!!reviewingUser} onOpenChange={(isOpen) => {
               if (!isOpen) {
