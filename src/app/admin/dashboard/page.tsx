@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import Header from '@/components/header';
 import { AdminDashboard } from '@/components/admin-dashboard';
+import { ReviewsProvider } from '@/hooks/use-reviews';
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -31,7 +31,9 @@ export default function AdminPage() {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <AdminDashboard />
+        <ReviewsProvider>
+          <AdminDashboard />
+        </ReviewsProvider>
       </main>
     </div>
   );

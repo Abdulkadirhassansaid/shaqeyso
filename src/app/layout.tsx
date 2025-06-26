@@ -17,7 +17,6 @@ import { PageProgress } from '@/components/page-progress';
 import { UsersProvider } from '@/hooks/use-users';
 import { JobsProvider } from '@/hooks/use-jobs';
 import { ProposalsProvider } from '@/hooks/use-proposals';
-import { ReviewsProvider } from '@/hooks/use-reviews';
 import { NotificationHandler } from '@/components/notification-handler';
 
 const inter = Inter({
@@ -74,16 +73,14 @@ export default function RootLayout({
                 <UsersProvider>
                   <JobsProvider>
                     <ProposalsProvider>
-                      <ReviewsProvider>
-                        <NotificationHandler />
-                        <PageProgress />
-                        <PageLoader />
-                        <div className="relative flex min-h-screen flex-col">
-                          <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                          <BottomNav />
-                        </div>
-                        <Toaster />
-                      </ReviewsProvider>
+                      <NotificationHandler />
+                      <PageProgress />
+                      <PageLoader />
+                      <div className="relative flex min-h-screen flex-col">
+                        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                        <BottomNav />
+                      </div>
+                      <Toaster />
                     </ProposalsProvider>
                   </JobsProvider>
                 </UsersProvider>

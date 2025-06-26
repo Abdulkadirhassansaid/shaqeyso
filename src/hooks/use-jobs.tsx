@@ -5,6 +5,7 @@ import * as React from 'react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, query, where, getDocs, getDoc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Job, Service, User, Transaction } from '@/lib/types';
+import { useAuth } from './use-auth';
 import { addDays, format } from 'date-fns';
 
 interface JobsContextType {
@@ -23,22 +24,67 @@ interface JobsContextType {
 const JobsContext = React.createContext<JobsContextType | null>(null);
 
 export function JobsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [jobs, setJobs] = React.useState<Job[]>([]);
 
   React.useEffect(() => {
-    if (!db) return;
-    const unsubscribe = onSnapshot(collection(db, 'jobs'), (snapshot) => {
-        const jobsData = snapshot.docs.map(doc => ({ 
-            ...doc.data(), 
-            id: doc.id,
-            postedDate: doc.data().postedDate?.toDate()?.toISOString() || new Date().toISOString()
-        } as Job));
-        setJobs(jobsData);
-    }, (error) => {
-        console.error("Error fetching jobs:", error);
-    });
+    if (!db || !user) {
+        setJobs([]);
+        return;
+    };
+
+    let unsubscribe: () => void = () => {};
+    
+    // Helper function to map Firestore doc to Job type
+    const mapDocToJob = (doc: any): Job => ({
+        ...doc.data(), 
+        id: doc.id,
+        postedDate: doc.data().postedDate?.toDate()?.toISOString() || new Date().toISOString()
+    } as Job);
+
+    if (user.role === 'admin') {
+        const q = query(collection(db, 'jobs'));
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            const jobsData = snapshot.docs.map(mapDocToJob);
+            setJobs(jobsData);
+        });
+    } else if (user.role === 'client') {
+        const q = query(collection(db, 'jobs'), where('clientId', '==', user.id));
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            const jobsData = snapshot.docs.map(mapDocToJob);
+            setJobs(jobsData);
+        });
+    } else if (user.role === 'freelancer') {
+        let openJobsData: Job[] = [];
+        let myJobsData: Job[] = [];
+
+        const updateJobsState = () => {
+            const allJobsData = [...myJobsData, ...openJobsData];
+            // Use a Map to easily handle duplicates, ensuring hired jobs overwrite open ones if they appear in both lists
+            const uniqueJobs = Array.from(new Map(allJobsData.map(j => [j.id, j])).values());
+            setJobs(uniqueJobs);
+        };
+
+        const qOpen = query(collection(db, 'jobs'), where('status', '==', 'Open'));
+        const unsubOpen = onSnapshot(qOpen, (snapshot) => {
+            openJobsData = snapshot.docs.map(mapDocToJob);
+            updateJobsState();
+        });
+
+        const qMy = query(collection(db, 'jobs'), where('hiredFreelancerId', '==', user.id));
+        const unsubMy = onSnapshot(qMy, (snapshot) => {
+            myJobsData = snapshot.docs.map(mapDocToJob);
+            updateJobsState();
+        });
+        
+        unsubscribe = () => {
+            unsubOpen();
+            unsubMy();
+        };
+    }
+    
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const addJob = React.useCallback(async (jobData: Omit<Job, 'id' | 'status' | 'hiredFreelancerId' | 'clientReviewed' | 'freelancerReviewed' | 'postedDate'>): Promise<boolean> => {
     if (!db) return false;
