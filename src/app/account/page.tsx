@@ -119,31 +119,36 @@ export default function AccountPage() {
           </Card>
 
           {user.role !== 'admin' && adminUser && (
-            <Card>
-              <div className="p-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-foreground"
-                  onClick={() => openChat(adminUser)}
-                >
-                  <LifeBuoy className="mr-4 h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">{t.supportChat}</span>
-                </Button>
-              </div>
+            <Card className="overflow-hidden">
+              <nav>
+                <ul>
+                  <li>
+                    <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted" onClick={() => openChat(adminUser)}>
+                      <div className="relative flex items-center gap-4">
+                        <LifeBuoy className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-medium">{t.supportChat}</span>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  </li>
+                </ul>
+              </nav>
             </Card>
           )}
 
-          <Card>
-             <div className="p-2">
-                <Button
-                    variant="ghost"
-                    className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={logout}
-                >
-                    <LogOut className="mr-4 h-5 w-5" />
-                    <span className="font-medium">{t.logOut}</span>
-                </Button>
-            </div>
+          <Card className="overflow-hidden">
+             <nav>
+              <ul>
+                <li>
+                  <button className="w-full flex items-center justify-start p-4 transition-colors text-destructive hover:bg-destructive/10" onClick={logout}>
+                    <div className="flex items-center gap-4">
+                        <LogOut className="h-5 w-5" />
+                        <span className="font-medium">{t.logOut}</span>
+                    </div>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </Card>
         </div>
       </main>
