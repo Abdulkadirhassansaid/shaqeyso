@@ -29,23 +29,50 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
         return;
     };
 
-    let q;
-    // For freelancers, we can scope the query to only their proposals, which is a huge performance gain.
-    if (user.role === 'freelancer') {
-        q = query(collection(db, 'proposals'), where('freelancerId', '==', user.id));
-    } else {
-        // For clients and admins, we fetch all for now.
-        // A more advanced implementation for clients would involve fetching their job IDs first,
-        // then fetching proposals for those job IDs.
-        q = query(collection(db, 'proposals'));
-    }
+    let unsubscribe: () => void = () => {};
+
+    const setupListener = async () => {
+        if (user.role === 'freelancer') {
+            const q = query(collection(db, 'proposals'), where('freelancerId', '==', user.id));
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
+                setProposals(proposalsData);
+            }, (error) => {
+                console.error("Error fetching freelancer proposals:", error);
+            });
+        } else if (user.role === 'client') {
+            // First, fetch the client's job IDs to optimize the proposal query
+            const jobsQuery = query(collection(db, 'jobs'), where('clientId', '==', user.id));
+            const jobsSnapshot = await getDocs(jobsQuery);
+            const clientJobIds = jobsSnapshot.docs.map(doc => doc.id);
+
+            if (clientJobIds.length > 0) {
+                // Now, listen for proposals related to those jobs
+                // Note: Firestore 'in' query is limited to 30 items. We slice to prevent errors.
+                const q = query(collection(db, 'proposals'), where('jobId', 'in', clientJobIds.slice(0, 30)));
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
+                    setProposals(proposalsData);
+                }, (error) => {
+                    console.error("Error fetching client proposals:", error);
+                });
+            } else {
+                setProposals([]); // No jobs, so no proposals to listen for
+            }
+        } else { // Admin role fetches all proposals
+            const q = query(collection(db, 'proposals'));
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
+                setProposals(proposalsData);
+            }, (error) => {
+                console.error("Error fetching all proposals:", error);
+            });
+        }
+    };
+
+    setupListener();
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
-        setProposals(proposalsData);
-    }, (error) => {
-        console.error("Error fetching proposals:", error);
-    });
+    // Cleanup the listener when the component unmounts or the user changes
     return () => unsubscribe();
   }, [user]);
 
