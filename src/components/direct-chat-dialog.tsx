@@ -79,7 +79,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     });
 
     return () => unsubscribe();
-  }, [currentUser?.id, otherUser.id]);
+  }, [currentUser?.id, otherUser.id, db]);
 
 
   const addDirectMessage = React.useCallback(async (messageData: Omit<DirectMessage, 'id' | 'timestamp'>): Promise<boolean> => {
