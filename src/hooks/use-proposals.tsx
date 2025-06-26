@@ -57,14 +57,14 @@ export function ProposalsProvider({ children }: { children: React.ReactNode }) {
                 setProposals([]);
             }
         } else { // Admin role fetches all proposals
-            const fetchAdminProposals = async () => {
-                const q = query(collection(db, 'proposals'));
-                const snapshot = await getDocs(q);
+             const q = query(collection(db, 'proposals'));
+             getDocs(q).then(snapshot => {
                 const proposalsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Proposal));
                 setProposals(proposalsData);
-            };
-            fetchAdminProposals();
-            unsubscribe = () => {};
+             }).catch(error => {
+                console.error("Error fetching proposals for admin:", error);
+             })
+             unsubscribe = () => {};
         }
     };
 

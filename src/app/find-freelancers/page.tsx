@@ -4,9 +4,8 @@
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useUsers } from '@/hooks/use-users';
-import { useJobs } from '@/hooks/use-jobs';
-import { useReviews } from '@/hooks/use-reviews';
-import { useLanguage } from '@/hooks/use-language';
+import { JobsProvider, useJobs } from '@/hooks/use-jobs';
+import { ReviewsProvider, useReviews } from '@/hooks/use-reviews';
 import type { User, FreelancerProfile, Service } from '@/lib/types';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -28,10 +27,11 @@ import { Separator } from '@/components/ui/separator';
 import { useChat } from '@/hooks/use-chat';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
 
 type FreelancerLevel = 'New' | 'Rising Talent' | 'Top Rated';
 
-export default function FindFreelancersPage() {
+function FindFreelancersPageContent() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { users, isUsersLoading } = useUsers();
   const { jobs, isJobsLoading, createJobFromService } = useJobs();
@@ -408,4 +408,14 @@ export default function FindFreelancersPage() {
         </main>
     </div>
   );
+}
+
+export default function FindFreelancersPage() {
+    return (
+        <JobsProvider>
+            <ReviewsProvider>
+                <FindFreelancersPageContent />
+            </ReviewsProvider>
+        </JobsProvider>
+    );
 }

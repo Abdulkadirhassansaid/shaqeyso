@@ -8,6 +8,7 @@ import type { Review } from '@/lib/types';
 
 interface ReviewsContextType {
   reviews: Review[];
+  isReviewsLoading: boolean;
   addReview: (reviewData: Omit<Review, 'id' | 'date'>) => Promise<boolean>;
   deleteReviewsByJobId: (jobId: string) => Promise<boolean>;
   deleteReviewsForUser: (userId: string) => Promise<boolean>;
@@ -17,9 +18,14 @@ const ReviewsContext = React.createContext<ReviewsContextType | null>(null);
 
 export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = React.useState<Review[]>([]);
+  const [isReviewsLoading, setIsReviewsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!db) return;
+    if (!db) {
+        setIsReviewsLoading(false);
+        return;
+    };
+    setIsReviewsLoading(true);
     const fetchReviews = async () => {
         try {
             const snapshot = await getDocs(collection(db, 'reviews'));
@@ -31,6 +37,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
             setReviews(reviewsData);
         } catch (error) {
             console.error("Error fetching reviews:", error);
+        } finally {
+            setIsReviewsLoading(false);
         }
     };
     fetchReviews();
@@ -87,7 +95,7 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
       }
   }, []);
 
-  const value = React.useMemo(() => ({ reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser }), [reviews, addReview, deleteReviewsByJobId, deleteReviewsForUser]);
+  const value = React.useMemo(() => ({ reviews, isReviewsLoading, addReview, deleteReviewsByJobId, deleteReviewsForUser }), [reviews, isReviewsLoading, addReview, deleteReviewsByJobId, deleteReviewsForUser]);
 
   return <ReviewsContext.Provider value={value}>{children}</ReviewsContext.Provider>;
 }

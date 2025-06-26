@@ -19,6 +19,7 @@ interface JobsContextType {
   deleteJobsByClientId: (clientId: string) => Promise<boolean>;
   deleteMessagesByJobId: (jobId: string) => Promise<boolean>;
   createJobFromService: (clientId: string, freelancerId: string, service: Service, tier: 'standard' | 'fast') => Promise<{ success: boolean; message?: string }>;
+  isJobsLoading: boolean;
 }
 
 const JobsContext = React.createContext<JobsContextType | null>(null);
@@ -26,12 +27,16 @@ const JobsContext = React.createContext<JobsContextType | null>(null);
 export function JobsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [jobs, setJobs] = React.useState<Job[]>([]);
+  const [isJobsLoading, setIsJobsLoading] = React.useState(true);
 
   React.useEffect(() => {
     if (!db || !user) {
         setJobs([]);
+        setIsJobsLoading(false);
         return;
     };
+    
+    setIsJobsLoading(true);
 
     let unsubscribe: () => void = () => {};
     
@@ -43,46 +48,56 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     } as Job);
 
     if (user.role === 'admin') {
-        const fetchAdminJobs = async () => {
-            const q = query(collection(db, 'jobs'));
-            const snapshot = await getDocs(q);
+        const q = query(collection(db, 'jobs'));
+        // For admin, we fetch once to prevent performance issues, not real-time
+        getDocs(q).then(snapshot => {
             const jobsData = snapshot.docs.map(mapDocToJob);
             setJobs(jobsData);
-        };
-        fetchAdminJobs();
-        unsubscribe = () => {}; // No-op since it's a one-time fetch
+            setIsJobsLoading(false);
+        }).catch(error => {
+            console.error("Error fetching jobs for admin:", error);
+            setIsJobsLoading(false);
+        });
+        unsubscribe = () => {};
     } else if (user.role === 'client') {
         const q = query(collection(db, 'jobs'), where('clientId', '==', user.id));
         unsubscribe = onSnapshot(q, (snapshot) => {
             const jobsData = snapshot.docs.map(mapDocToJob);
             setJobs(jobsData);
+            setIsJobsLoading(false);
+        }, (error) => {
+            console.error("Error fetching jobs for client:", error);
+            setIsJobsLoading(false);
         });
     } else if (user.role === 'freelancer') {
-        const qMy = query(collection(db, 'jobs'), where('hiredFreelancerId', '==', user.id));
-        
-        const fetchAndCombine = async (myJobsData: Job[]) => {
-            try {
-                const qOpen = query(collection(db, 'jobs'), where('status', '==', 'Open'));
-                const openJobsSnapshot = await getDocs(qOpen);
+        const myJobsQuery = query(collection(db, 'jobs'), where('hiredFreelancerId', '==', user.id));
+        const openJobsQuery = query(collection(db, 'jobs'), where('status', '==', 'Open'));
+
+        const unsubMyJobs = onSnapshot(myJobsQuery, (myJobsSnapshot) => {
+            const myJobsData = myJobsSnapshot.docs.map(mapDocToJob);
+
+            // Fetch open jobs and combine, avoiding a second listener
+            getDocs(openJobsQuery).then(openJobsSnapshot => {
                 const openJobsData = openJobsSnapshot.docs.map(mapDocToJob);
-                
                 const allJobsData = [...myJobsData, ...openJobsData];
                 const uniqueJobs = Array.from(new Map(allJobsData.map(j => [j.id, j])).values());
                 setJobs(uniqueJobs);
-            } catch(error) {
+                setIsJobsLoading(false);
+            }).catch(error => {
                 console.error("Error fetching open jobs for freelancer:", error);
-                setJobs(myJobsData);
-            }
-        };
-
-        const unsubMy = onSnapshot(qMy, (myJobsSnapshot) => {
-            const myJobsData = myJobsSnapshot.docs.map(mapDocToJob);
-            fetchAndCombine(myJobsData);
+                setJobs(myJobsData); // Fallback to only my jobs
+                setIsJobsLoading(false);
+            });
+        }, (error) => {
+            console.error("Error fetching freelancer's jobs:", error);
+            setIsJobsLoading(false);
         });
         
         unsubscribe = () => {
-            unsubMy();
+            unsubMyJobs();
         };
+    } else {
+        setIsJobsLoading(false);
     }
     
     return () => unsubscribe();
@@ -291,7 +306,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService]);
+  const value = React.useMemo(() => ({ jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService, isJobsLoading }), [jobs, addJob, deleteJob, updateJobStatus, updateJob, hireFreelancerForJob, markJobAsReviewed, deleteJobsByClientId, deleteMessagesByJobId, createJobFromService, isJobsLoading]);
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }
