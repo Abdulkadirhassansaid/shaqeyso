@@ -48,7 +48,7 @@ import Image from 'next/image';
 import { Textarea } from './ui/textarea';
 import { useUsers } from '@/hooks/use-users';
 import { Skeleton } from './ui/skeleton';
-import { DirectChatDialog } from './direct-chat-dialog';
+import { useChat } from '@/hooks/use-chat';
 
 const getFileExtensionFromDataUrl = (dataUrl: string): string => {
     if (!dataUrl) return 'bin';
@@ -80,6 +80,7 @@ export function AdminDashboard() {
   const { deleteReviewsByJobId, deleteReviewsForUser } = useReviews();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { openChat } = useChat();
   const [revenuePeriod, setRevenuePeriod] = useLocalStorageState<'daily' | 'weekly' | 'monthly' | 'yearly'>('admin-revenue-period', 'weekly');
   const [activeTab, setActiveTab] = useLocalStorageState('admin-active-tab', 'financials');
   const [chattingJob, setChattingJob] = React.useState<Job | null>(null);
@@ -87,8 +88,6 @@ export function AdminDashboard() {
   const [isRejecting, setIsRejecting] = React.useState(false);
   const [rejectionReason, setRejectionReason] = React.useState('');
   
-  const [chattingWithUser, setChattingWithUser] = React.useState<User | null>(null);
-
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = React.useState('');
   const [selectedWithdrawalMethodId, setSelectedWithdrawalMethodId] = React.useState<string | undefined>(undefined);
@@ -724,7 +723,7 @@ export function AdminDashboard() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => setChattingWithUser(user)}>
+                                                    <Button variant="outline" size="icon" onClick={() => openChat(user)}>
                                                         <MessageSquare className="h-4 w-4" />
                                                     </Button>
                                                     <DropdownMenu>
@@ -954,13 +953,6 @@ export function AdminDashboard() {
                 job={chattingJob}
                 isOpen={!!chattingJob}
                 onClose={() => setChattingJob(null)}
-            />
-        )}
-         {chattingWithUser && (
-            <DirectChatDialog
-                otherUser={chattingWithUser}
-                isOpen={!!chattingWithUser}
-                onClose={() => setChattingWithUser(null)}
             />
         )}
         

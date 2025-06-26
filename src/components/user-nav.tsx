@@ -101,7 +101,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         {user.role !== 'admin' && adminUser && (
             <>
-                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(); }}>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openChat(adminUser); }}>
                     <LifeBuoy className="mr-2 h-4 w-4" />
                     <span>{t.supportChat}</span>
                 </DropdownMenuItem>

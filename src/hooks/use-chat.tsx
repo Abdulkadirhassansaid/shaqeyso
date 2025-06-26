@@ -2,26 +2,29 @@
 'use client';
 
 import * as React from 'react';
+import type { User } from '@/lib/types';
 
 interface ChatContextType {
   isChatOpen: boolean;
-  openChat: () => void;
+  chattingWith: User | null;
+  openChat: (user: User) => void;
   closeChat: () => void;
 }
 
 const ChatContext = React.createContext<ChatContextType | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [chattingWith, setChattingWith] = React.useState<User | null>(null);
 
-  const openChat = () => setIsChatOpen(true);
-  const closeChat = () => setIsChatOpen(false);
+  const openChat = (user: User) => setChattingWith(user);
+  const closeChat = () => setChattingWith(null);
 
   const value = React.useMemo(() => ({
-    isChatOpen,
+    isChatOpen: !!chattingWith,
+    chattingWith,
     openChat,
     closeChat,
-  }), [isChatOpen]);
+  }), [chattingWith]);
 
   return (
     <ChatContext.Provider value={value}>

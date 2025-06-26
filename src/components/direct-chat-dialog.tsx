@@ -33,18 +33,42 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
   const { user: currentUser } = useAuth();
   const { users } = useUsers();
   const { t } = useLanguage();
+  
   const [messages, setMessages] = React.useState<LiveChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = React.useState(false);
 
-  // Reset chat when dialog opens or the user we are chatting with changes.
+  // Derive a consistent key for localStorage based on participant IDs
+  const chatKey = React.useMemo(() => {
+    if (!currentUser || !otherUser) return null;
+    return `mock-chat-${[currentUser.id, otherUser.id].sort().join('-')}`;
+  }, [currentUser, otherUser]);
+
+  // Load messages from localStorage when the chat is opened
   React.useEffect(() => {
-    if (isOpen) {
-      setMessages([]);
-      setNewMessage(initialMessage || '');
+    if (chatKey && isOpen) {
+      try {
+        const storedMessages = localStorage.getItem(chatKey);
+        if (storedMessages) {
+          setMessages(JSON.parse(storedMessages));
+        } else {
+          setMessages([]); // Start fresh if no history
+        }
+        setNewMessage(initialMessage || '');
+      } catch (error) {
+        console.error("Failed to parse chat history from localStorage", error);
+        setMessages([]);
+      }
     }
-  }, [isOpen, initialMessage, otherUser]);
+  }, [chatKey, isOpen, initialMessage]);
+
+  // Save messages to localStorage whenever they change
+  React.useEffect(() => {
+    if (chatKey && messages.length > 0) {
+      localStorage.setItem(chatKey, JSON.stringify(messages));
+    }
+  }, [messages, chatKey]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,24 +80,32 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Use a functional update to get the most recent state
+    setMessages(prevMessages => [...prevMessages, userMessage]);
     setNewMessage('');
-    setIsTyping(true);
+    
+    // Check if the other user should reply
+    const lastMessage = messages[messages.length - 1];
+    const shouldReply = !lastMessage || lastMessage.senderId === currentUser.id;
 
-    // Simulate a response from the other user to make the chat feel real-time.
-    setTimeout(() => {
-      const cannedResponse: LiveChatMessage = {
-        senderId: otherUser.id,
-        text: currentUser.role === 'admin'
-          ? "Thank you for your message. We have received it and will look into it."
-          : "Thanks for reaching out to support! An admin will review your message shortly. Please describe your issue in as much detail as possible.",
-        timestamp: new Date().toISOString(),
-      };
-      setIsTyping(false);
-      setMessages(prev => [...prev, cannedResponse]);
-    }, 1500);
+    if (shouldReply) {
+        setIsTyping(true);
+
+        // Simulate a response from the other user
+        setTimeout(() => {
+          const cannedResponse: LiveChatMessage = {
+            senderId: otherUser.id,
+            text: currentUser.role === 'admin'
+              ? `Hi ${otherUser.name}, I have received your message and will look into it.`
+              : `Hi ${currentUser.name}, thanks for reaching out to support! An admin is reviewing your message.`,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, cannedResponse]);
+          setIsTyping(false);
+        }, 1500);
+    }
   };
-
+  
   // Scroll to the bottom of the chat when new messages are added.
   React.useEffect(() => {
     if (scrollAreaRef.current) {
