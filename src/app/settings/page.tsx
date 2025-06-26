@@ -25,7 +25,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Language } from '@/lib/translations';
 import { useLanguage } from '@/hooks/use-language';
-import { useTheme } from '@/hooks/use-theme';
 import { ArrowLeft } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -34,7 +33,6 @@ export default function SettingsPage() {
   const pathname = usePathname();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
 
   const [isSaving, setIsSaving] = React.useState(false);
   
@@ -118,19 +116,6 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted-foreground">
                         {t.languageDescription}
                     </p>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">{t.darkMode}</Label>
-                        <p className="text-sm text-muted-foreground">
-                            {t.darkModeDescription}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={theme === 'dark'}
-                        onCheckedChange={toggleTheme}
-                        disabled={isSaving}
-                      />
                   </div>
               </div>
               

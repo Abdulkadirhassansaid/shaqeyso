@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/hooks/use-auth';
 import { LanguageProvider } from '@/hooks/use-language';
-import { ThemeProvider } from '@/hooks/use-theme';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -65,32 +64,30 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          'min-h-screen bg-muted font-body antialiased',
+          'min-h-screen bg-background font-body antialiased',
           inter.variable
         )}
       >
-        <ThemeProvider>
-          <LanguageProvider>
-            <LoadingProvider>
-              <AuthProvider>
-                <UsersProvider>
-                  <ChatProvider>
-                    <PresenceProvider>
-                      <PageProgress />
-                      <PageLoader />
-                      <div className="relative flex min-h-screen flex-col">
-                          <main className="flex-1 pb-20 md:pb-0">{children}</main>
-                          <BottomNav />
-                      </div>
-                      <Toaster />
-                      <DirectChatDialogController />
-                    </PresenceProvider>
-                  </ChatProvider>
-                </UsersProvider>
-              </AuthProvider>
-            </LoadingProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <LoadingProvider>
+            <AuthProvider>
+              <UsersProvider>
+                <ChatProvider>
+                  <PresenceProvider>
+                    <PageProgress />
+                    <PageLoader />
+                    <div className="relative flex min-h-screen flex-col">
+                        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+                        <BottomNav />
+                    </div>
+                    <Toaster />
+                    <DirectChatDialogController />
+                  </PresenceProvider>
+                </ChatProvider>
+              </UsersProvider>
+            </AuthProvider>
+          </LoadingProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
