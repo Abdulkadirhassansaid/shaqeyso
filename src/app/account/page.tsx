@@ -16,7 +16,7 @@ import {
   LogOut,
   ChevronRight,
   BadgeCheck,
-  AlertTriangle,
+  LifeBuoy,
 } from 'lucide-react';
 import { DirectChatDialog } from '@/components/direct-chat-dialog';
 import { useUsers } from '@/hooks/use-users';
@@ -85,7 +85,7 @@ export default function AccountPage() {
     return null; // Or a loading skeleton
   }
 
-  const handleReportProblemClick = () => {
+  const handleChatSupportClick = () => {
     if (adminUser) {
         setIsChatOpen(true);
     } else {
@@ -113,9 +113,9 @@ export default function AccountPage() {
       roles: ['client', 'freelancer', 'admin'],
     },
     {
-      label: t.reportProblem,
-      icon: AlertTriangle,
-      onClick: handleReportProblemClick,
+      label: t.chatSupport,
+      icon: LifeBuoy,
+      onClick: handleChatSupportClick,
       roles: ['client', 'freelancer'],
     },
   ];
@@ -147,13 +147,13 @@ export default function AccountPage() {
             <nav>
               <ul className="divide-y">
                 {userMenuItems.map((item) => {
-                  const isReportProblemItem = item.label === t.reportProblem;
+                  const isChatSupportItem = item.label === t.chatSupport;
                   const itemContent = (
                     <>
                       <div className="relative flex items-center gap-4">
                         <item.icon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">{item.label}</span>
-                         {isReportProblemItem && hasUnreadAdminMessages && (
+                         {isChatSupportItem && hasUnreadAdminMessages && (
                             <span className="absolute left-0 top-0 flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>

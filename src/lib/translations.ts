@@ -510,7 +510,7 @@ export const translations = {
         searchUsersPlaceholder: 'Search by name or email...',
         noUsersFound: 'No users found.',
         reasoning: 'Reasoning',
-        reportProblem: 'Report a Problem',
+        chatSupport: 'Chat Support',
 
         // New Freelancer Marketplace & Services
         findFreelancers: 'Find Freelancers',
@@ -838,7 +838,7 @@ export const translations = {
         insufficientFundsTitle: 'Dhaqaale Kugu Filan Majiro',
         insufficientFundsDesc: 'Akoonkaaga kuma jiraan dhaqaale kugu filan oo aad ku shaqaaleysiin karto shaqadan. Fadlan ku shubo hadhaagaaga.',
         myServiceOrders: "Dalabyada Adeegyadayda",
-        myServiceOrdersDesc: "La soco heerka adeegyada aad ka dalbatay xirfadlayaasha madaxbannaan.",
+        myServiceOrdersDesc: "Track the status of services you have ordered from freelancers.",
         noServiceOrders: "Weli wax adeeg ah kama aadan dalban.",
 
         // Job Post Form
@@ -908,7 +908,7 @@ export const translations = {
         noActiveProjects: "You don't have any active projects yet.",
         chatWithClient: 'La sheekeyso Macmiilka',
         myProposals: "Codsiyadayda",
-        myProposalsDesc: "Eeg oo maamul dhammaan codsiyadaada shaqo ee aad gudbisay.",
+        myProposalsDesc: "View and manage all your submitted job proposals.",
         noProposalsSubmitted: "Wali wax codsiyo ah ma aadan gudbin.",
         yourProposal: "Codsigaaga",
         editProposal: "Wax ka Beddel Codsiga",
@@ -1072,7 +1072,7 @@ export const translations = {
         searchUsersPlaceholder: 'Ku raadi magac ama iimayl...',
         noUsersFound: 'Lama helin isticmaaleyaal.',
         reasoning: 'Sababayn',
-        reportProblem: 'Dhibaatada Ka Warbixi',
+        chatSupport: 'Taageerada Wada-hadalka',
 
         // New Freelancer Marketplace & Services
         findFreelancers: 'Raadi Shaqaale Madaxbanaan',
