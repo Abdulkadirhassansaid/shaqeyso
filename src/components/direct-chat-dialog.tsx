@@ -20,7 +20,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from './../hooks/use-language';
 import { Send } from 'lucide-react';
 import { useUsers } from '@/hooks/use-users';
-import { LoadingDots } from './loading-dots';
 
 interface DirectChatDialogProps {
   otherUser: User;
@@ -37,7 +36,6 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
   const [messages, setMessages] = React.useState<LiveChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-  const [isTyping, setIsTyping] = React.useState(false);
 
   // Derive a consistent key for localStorage based on participant IDs
   const chatKey = React.useMemo(() => {
@@ -45,10 +43,11 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     return `mock-chat-${[currentUser.id, otherUser.id].sort().join('-')}`;
   }, [currentUser, otherUser]);
 
-  // Load messages and listen for real-time changes from other tabs
+  // Effect to load messages from localStorage and listen for cross-tab changes
   React.useEffect(() => {
     if (!chatKey || !isOpen) return;
 
+    // Function to load/sync messages from localStorage
     const syncMessages = () => {
       try {
         const storedMessages = localStorage.getItem(chatKey);
@@ -61,9 +60,13 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     
     // Initial sync when chat opens
     syncMessages();
-    setNewMessage(initialMessage || '');
+    
+    // If there's an initial message to send, set it
+    if(initialMessage) {
+        setNewMessage(initialMessage);
+    }
 
-    // Listen for changes from other tabs
+    // Listener for changes made in other tabs
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === chatKey) {
         syncMessages();
@@ -77,44 +80,29 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     };
   }, [chatKey, isOpen, initialMessage]);
 
-  // Save messages to localStorage whenever they change
-  React.useEffect(() => {
-    // We only save if the chat dialog is open to prevent background writes.
-    if (chatKey && isOpen) {
-      localStorage.setItem(chatKey, JSON.stringify(messages));
-    }
-  }, [messages, chatKey, isOpen]);
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser) return;
+    if (!newMessage.trim() || !currentUser || !chatKey) return;
 
     const userMessage: LiveChatMessage = {
       senderId: currentUser.id,
       text: newMessage,
       timestamp: new Date().toISOString(),
     };
-
-    const shouldReply = !messages.length || messages[messages.length - 1].senderId === currentUser.id;
-
-    setMessages(prevMessages => [...prevMessages, userMessage]);
-    setNewMessage('');
     
-    if (shouldReply) {
-        setIsTyping(true);
-        // Simulate a response from the other user
-        setTimeout(() => {
-          const cannedResponse: LiveChatMessage = {
-            senderId: otherUser.id,
-            text: currentUser.role === 'admin'
-              ? `Hi ${otherUser.name}, I have received your message and will look into it.`
-              : `Hi ${currentUser.name}, thanks for reaching out to support! An admin is reviewing your message.`,
-            timestamp: new Date().toISOString(),
-          };
-          setMessages(prev => [...prev, cannedResponse]);
-          setIsTyping(false);
-        }, 1500);
-    }
+    // Read the latest state from storage to avoid race conditions
+    const currentStoredMessagesRaw = localStorage.getItem(chatKey);
+    const currentStoredMessages: LiveChatMessage[] = currentStoredMessagesRaw ? JSON.parse(currentStoredMessagesRaw) : [];
+
+    // Append new message
+    const updatedMessages = [...currentStoredMessages, userMessage];
+
+    // Save to localStorage, which triggers the 'storage' event for other tabs
+    localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
+    
+    // Update the UI for the current tab
+    setMessages(updatedMessages);
+    setNewMessage('');
   };
   
   // Scroll to the bottom of the chat when new messages are added.
@@ -125,7 +113,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [messages, isTyping]);
+  }, [messages]);
   
   if (!currentUser) return null;
 
@@ -140,7 +128,7 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
         
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-6">
-            {messages.length === 0 && !isTyping ? (
+            {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     <p>{t.noMessagesYet}</p>
                 </div>
@@ -198,20 +186,6 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
                     </div>
                     );
                 })
-            )}
-            {isTyping && (
-                <div className="flex items-center gap-3 justify-start">
-                    <Avatar className="h-10 w-10 self-start border-2 border-background">
-                        <AvatarImage src={otherUser.avatarUrl} />
-                        <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col gap-1 w-fit max-w-md items-start">
-                         <p className="text-sm font-semibold px-1">{otherUser.name}</p>
-                         <div className="px-4 py-3 shadow-md rounded-t-2xl rounded-br-2xl bg-card">
-                             <LoadingDots />
-                         </div>
-                    </div>
-                </div>
             )}
           </div>
         </ScrollArea>
