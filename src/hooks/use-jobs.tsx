@@ -55,30 +55,28 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
             setJobs(jobsData);
         });
     } else if (user.role === 'freelancer') {
-        let openJobsData: Job[] = [];
-        let myJobsData: Job[] = [];
-
-        const updateJobsState = () => {
-            const allJobsData = [...myJobsData, ...openJobsData];
-            // Use a Map to easily handle duplicates, ensuring hired jobs overwrite open ones if they appear in both lists
-            const uniqueJobs = Array.from(new Map(allJobsData.map(j => [j.id, j])).values());
-            setJobs(uniqueJobs);
-        };
-
-        const qOpen = query(collection(db, 'jobs'), where('status', '==', 'Open'));
-        const unsubOpen = onSnapshot(qOpen, (snapshot) => {
-            openJobsData = snapshot.docs.map(mapDocToJob);
-            updateJobsState();
-        });
-
         const qMy = query(collection(db, 'jobs'), where('hiredFreelancerId', '==', user.id));
-        const unsubMy = onSnapshot(qMy, (snapshot) => {
-            myJobsData = snapshot.docs.map(mapDocToJob);
-            updateJobsState();
+        const unsubMy = onSnapshot(qMy, (myJobsSnapshot) => {
+            const myJobsData = myJobsSnapshot.docs.map(mapDocToJob);
+
+            const fetchAndCombine = async () => {
+                try {
+                    const qOpen = query(collection(db, 'jobs'), where('status', '==', 'Open'));
+                    const openJobsSnapshot = await getDocs(qOpen);
+                    const openJobsData = openJobsSnapshot.docs.map(mapDocToJob);
+                    
+                    const allJobsData = [...myJobsData, ...openJobsData];
+                    const uniqueJobs = Array.from(new Map(allJobsData.map(j => [j.id, j])).values());
+                    setJobs(uniqueJobs);
+                } catch(error) {
+                    console.error("Error fetching open jobs for freelancer:", error);
+                    setJobs(myJobsData);
+                }
+            }
+            fetchAndCombine();
         });
-        
+
         unsubscribe = () => {
-            unsubOpen();
             unsubMy();
         };
     }

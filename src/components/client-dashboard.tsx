@@ -57,11 +57,16 @@ export function ClientDashboard() {
 
   React.useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
-        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
-        setFreelancerProfiles(profilesData);
-    });
-    return () => unsub();
+    const fetchProfiles = async () => {
+        try {
+            const snapshot = await getDocs(collection(db, 'freelancerProfiles'));
+            const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
+            setFreelancerProfiles(profilesData);
+        } catch (error) {
+            console.error("Error fetching freelancer profiles for dashboard:", error);
+        }
+    };
+    fetchProfiles();
   }, []);
 
   if (!user) {

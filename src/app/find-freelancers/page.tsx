@@ -8,7 +8,7 @@ import { useJobs } from '@/hooks/use-jobs';
 import { useReviews } from '@/hooks/use-reviews';
 import { useLanguage } from '@/hooks/use-language';
 import type { User, FreelancerProfile, Service } from '@/lib/types';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
@@ -60,12 +60,18 @@ export default function FindFreelancersPage() {
 
   React.useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'freelancerProfiles'), (snapshot) => {
-        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
-        setFreelancerProfiles(profilesData);
-        setProfilesLoading(false);
-    });
-    return () => unsub();
+    const fetchProfiles = async () => {
+        try {
+            const snapshot = await getDocs(collection(db, 'freelancerProfiles'));
+            const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as FreelancerProfile));
+            setFreelancerProfiles(profilesData);
+        } catch (error) {
+            console.error("Error fetching freelancer profiles: ", error);
+        } finally {
+            setProfilesLoading(false);
+        }
+    };
+    fetchProfiles();
   }, []);
 
   const freelancers = React.useMemo(() => users.filter(u => u.role === 'freelancer' && !u.isBlocked), [users]);

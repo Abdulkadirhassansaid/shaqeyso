@@ -63,11 +63,16 @@ export function ClientProfilePage({ user }: ClientProfilePageProps) {
 
   React.useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'clientProfiles'), (snapshot) => {
-      const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as ClientProfile));
-      setClientProfiles(profilesData);
-    });
-    return () => unsub();
+    const fetchProfiles = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'clientProfiles'));
+        const profilesData = snapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as ClientProfile));
+        setClientProfiles(profilesData);
+      } catch (error) {
+        console.error("Error fetching client profiles:", error);
+      }
+    };
+    fetchProfiles();
   }, []);
 
   React.useEffect(() => {
