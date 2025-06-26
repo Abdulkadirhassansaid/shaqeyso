@@ -45,30 +45,45 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
     return `mock-chat-${[currentUser.id, otherUser.id].sort().join('-')}`;
   }, [currentUser, otherUser]);
 
-  // Load messages from localStorage when the chat is opened
+  // Load messages and listen for real-time changes from other tabs
   React.useEffect(() => {
-    if (chatKey && isOpen) {
+    if (!chatKey || !isOpen) return;
+
+    const syncMessages = () => {
       try {
         const storedMessages = localStorage.getItem(chatKey);
-        if (storedMessages) {
-          setMessages(JSON.parse(storedMessages));
-        } else {
-          setMessages([]); // Start fresh if no history
-        }
-        setNewMessage(initialMessage || '');
+        setMessages(storedMessages ? JSON.parse(storedMessages) : []);
       } catch (error) {
         console.error("Failed to parse chat history from localStorage", error);
         setMessages([]);
       }
-    }
+    };
+    
+    // Initial sync when chat opens
+    syncMessages();
+    setNewMessage(initialMessage || '');
+
+    // Listen for changes from other tabs
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === chatKey) {
+        syncMessages();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [chatKey, isOpen, initialMessage]);
 
   // Save messages to localStorage whenever they change
   React.useEffect(() => {
-    if (chatKey && messages.length > 0) {
+    // We only save if the chat dialog is open to prevent background writes.
+    if (chatKey && isOpen) {
       localStorage.setItem(chatKey, JSON.stringify(messages));
     }
-  }, [messages, chatKey]);
+  }, [messages, chatKey, isOpen]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,17 +95,13 @@ export function DirectChatDialog({ otherUser, isOpen, onClose, initialMessage }:
       timestamp: new Date().toISOString(),
     };
 
-    // Use a functional update to get the most recent state
+    const shouldReply = !messages.length || messages[messages.length - 1].senderId === currentUser.id;
+
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setNewMessage('');
     
-    // Check if the other user should reply
-    const lastMessage = messages[messages.length - 1];
-    const shouldReply = !lastMessage || lastMessage.senderId === currentUser.id;
-
     if (shouldReply) {
         setIsTyping(true);
-
         // Simulate a response from the other user
         setTimeout(() => {
           const cannedResponse: LiveChatMessage = {
